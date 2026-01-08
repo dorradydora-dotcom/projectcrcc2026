@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@layout/l_used,_horizontal,?xml" />
+<!-- احتفظ بجميع drawables و raw files -->
+<keep spec="drawable/**" />
+<keep spec="raw/**" />

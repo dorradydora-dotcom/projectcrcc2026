@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "210726478657",
+    "project_id": "crccproject-98fb0",
+    "storage_bucket": "crccproject-98fb0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210726478657:android:01175b1e1d15e46bb8b7c0",
+        "android_client_info": {
+          "package_name": "com.example2.amiraly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSULs2WtOKWYYRck3hiuN-wSPzLKEKRVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
