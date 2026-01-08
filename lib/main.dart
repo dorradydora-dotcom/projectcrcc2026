@@ -23,7 +23,7 @@ void main() async {
 
     runApp(const MyApp());
   } catch (e, stackTrace) {
-    AppLogger.logError('App initialization failed', e, stackTrace);
+    AppLogger.logError('initialization failed', e, stackTrace);
     runApp(const ErrorApp());
   }
 }
