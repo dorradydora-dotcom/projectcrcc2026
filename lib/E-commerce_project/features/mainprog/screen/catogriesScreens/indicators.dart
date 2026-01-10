@@ -1,7 +1,7 @@
-import 'package:amiraly/E-commerce_project/common/services/mainprogservices.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/announcmentScreen.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
+import 'package:amiraly/main.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

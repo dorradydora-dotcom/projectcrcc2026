@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:amiraly/E-commerce_project/common/services/authserveces.dart';
-import 'package:amiraly/E-commerce_project/common/services/mainprogservices.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/headlinetext.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cmscreen.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
+import 'package:amiraly/main.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

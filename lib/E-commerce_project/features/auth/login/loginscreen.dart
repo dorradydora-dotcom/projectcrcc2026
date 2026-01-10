@@ -1,9 +1,9 @@
-import 'package:amiraly/E-commerce_project/common/services/authserveces.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/headlinetext.dart';
 import 'package:amiraly/E-commerce_project/features/auth/homepage/homepage.dart';
 import 'package:amiraly/E-commerce_project/features/auth/login/loginwidgets.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/E-commerce_project/util/validators/validatorHeper.dart';
+import 'package:amiraly/main.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';

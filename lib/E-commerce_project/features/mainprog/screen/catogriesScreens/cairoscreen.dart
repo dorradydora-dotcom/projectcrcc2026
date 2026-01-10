@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
-import 'package:amiraly/E-commerce_project/common/services/mainprogservices.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
+import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
