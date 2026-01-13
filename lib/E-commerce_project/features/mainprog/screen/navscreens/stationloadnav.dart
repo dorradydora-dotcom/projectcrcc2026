@@ -272,11 +272,15 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
 
   Future<void> _fetchData() async {
     if (!mounted) return;
+
     setState(() => _isLoading = true);
+
     try {
       final loads = await _supabaseService.fetchStationLoads();
+      if (!mounted) return; // التحقق بعد أول await
 
       specificStations = await _supabaseService.fetchSpecificStations();
+      if (!mounted) return; // التحقق بعد ثاني await
 
       setState(() {
         _stationLoads = loads;
@@ -284,6 +288,8 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
         _errorMessage = null;
       });
     } catch (e) {
+      if (!mounted) return; // التحقق قبل setState في حالة الخطأ
+
       setState(() {
         _errorMessage = 'خطأ في جلب البيانات: $e';
         _isLoading = false;

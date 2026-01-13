@@ -128,9 +128,14 @@ class AuthService {
   String? userName;
   String? userEmail;
 
-  // FCM Subscriptions
-  StreamSubscription<RemoteMessage>? _onMessageSubscription;
-  StreamSubscription<RemoteMessage>? _onMessageOpenedAppSubscription;
+  final List<StreamSubscription> _subscriptions = [];
+  final Map<String, dynamic> _cache = {};
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> get prefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
 
   void _showSnackbar(
     BuildContext context,
@@ -231,13 +236,11 @@ class AuthService {
     }
   }
 
-  /// إعداد مستمعي FCM
   void _setupFCMListeners() {
-    // الرسائل أثناء تشغيل التطبيق
-    _onMessageSubscription =
-        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    // حفظ كل subscription في الـ list
+    _subscriptions
+        .add(FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       AppLogger.logInfo('Message received: ${message.data}');
-
       final String title = message.data['title'] ?? 'تعليمات طارئة';
       final String body = message.data['body'] ?? '';
       final String? route = message.data['route'];
@@ -246,16 +249,14 @@ class AuthService {
         NotificationManager()
             .show(title, body, message.messageId, route: route);
       }
-    });
+    }));
 
-    // فتح التطبيق من الإشعار
-    _onMessageOpenedAppSubscription =
+    _subscriptions.add(
         FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       AppLogger.logInfo('Message opened app: ${message.data}');
       _handleMessageRoute(message.data['route']);
-    });
+    }));
 
-    // التطبيق مغلق تماماً
     FirebaseMessaging.instance
         .getInitialMessage()
         .then((RemoteMessage? initialMessage) {
@@ -377,12 +378,18 @@ class AuthService {
   /// تسجيل الخروج
   Future<void> signOut({required BuildContext context}) async {
     try {
-      // إلغاء الاشتراكات أولاً
-      _onMessageSubscription?.cancel();
-      _onMessageOpenedAppSubscription?.cancel();
-      _onMessageSubscription = null;
-      _onMessageOpenedAppSubscription = null;
-      Get.delete<AuthService>();
+      // إلغاء جميع الاشتراكات
+      for (var subscription in _subscriptions) {
+        await subscription.cancel();
+      }
+      _subscriptions.clear();
+
+      // مسح الـ cache
+      _cache.clear();
+
+      // مسح SharedPreferences reference
+      _prefs = null;
+
       await _supabase.auth.signOut();
 
       if (context.mounted) {
@@ -401,12 +408,23 @@ class AuthService {
 
   /// الحصول على تفاصيل المستخدم
   Future<Map<String, String>> getUserDetails() async {
+    // تحقق من الـ cache أولاً
+    if (_cache.containsKey('user_details')) {
+      return _cache['user_details'];
+    }
+
     try {
       final user = _supabase.auth.currentUser;
       if (user != null) {
         userName = user.userMetadata?['name']?.toString() ?? 'User';
         userEmail = user.email ?? 'No email';
-        return {'name': userName!, 'email': userEmail!};
+
+        final details = {'name': userName!, 'email': userEmail!};
+
+        // احفظ في الـ cache
+        _cache['user_details'] = details;
+
+        return details;
       }
       return {'name': 'Guest', 'email': 'No email'};
     } catch (e, stackTrace) {
@@ -443,8 +461,12 @@ class AuthService {
 
   /// تنظيف الموارد
   void dispose() {
-    _onMessageSubscription?.cancel();
-    _onMessageOpenedAppSubscription?.cancel();
+    for (var subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
+    _cache.clear();
+    _prefs = null;
     AppLogger.logInfo('AuthService disposed');
   }
 }
@@ -889,11 +911,26 @@ class NotificationService {
 /// خدمة Supabase لإدارة المحطات
 class SupabaseService {
   final SupabaseClient _client = Supabase.instance.client;
+  final Map<String, CachedData> _cache = {};
+  static const Duration cacheDuration = Duration(minutes: 5);
 
   /// جلب أحمال المحطات
   Future<List<StationLoad>> fetchStationLoads({
     int limit = AppConstants.defaultFetchLimit,
+    bool forceRefresh = false,
   }) async {
+    const cacheKey = 'station_loads';
+
+    // 1. تحقق من الـ cache أولاً
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      final cached = _cache[cacheKey]!;
+      if (!cached.isExpired) {
+        AppLogger.logInfo('📦 Returning cached data');
+        return cached.data as List<StationLoad>;
+      }
+    }
+
+    // 2. اجلب من الشبكة
     try {
       final response = await _client
           .from(AppConstants.tableStation)
@@ -901,23 +938,51 @@ class SupabaseService {
           .limit(limit)
           .timeout(AppConstants.timeoutDuration);
 
-      return (response as List<dynamic>)
+      final stations = (response as List<dynamic>)
           .map((json) => StationLoad.fromJson(json))
           .toList();
+
+      // 3. احفظ في الـ cache
+      _cache[cacheKey] = CachedData(
+        data: stations,
+        timestamp: DateTime.now(),
+      );
+
+      AppLogger.logSuccess('✅ Data fetched and cached');
+      return stations;
     } on TimeoutException {
-      AppLogger.logError('Request timed out');
+      // استخدم الـ cache القديم إذا توفر
+      if (_cache.containsKey(cacheKey)) {
+        AppLogger.logWarning('⚠️ Timeout - using old cache');
+        return _cache[cacheKey]!.data as List<StationLoad>;
+      }
       throw Exception('انتهت مهلة الطلب. تحقق من اتصالك بالإنترنت');
-    } on PostgrestException catch (e) {
-      AppLogger.logError('Database error', e);
-      throw Exception('خطأ في قاعدة البيانات: ${e.message}');
     } catch (e, stackTrace) {
       AppLogger.logError('Failed to fetch station loads', e, stackTrace);
+
+      // Fallback للـ cache
+      if (_cache.containsKey(cacheKey)) {
+        AppLogger.logWarning('Using cached data due to error');
+        return _cache[cacheKey]!.data as List<StationLoad>;
+      }
       throw Exception('فشل في جلب بيانات المحطات');
     }
   }
 
   /// جلب محطات محددة
+  // ✅ ضيف cache لـ fetchSpecificStations
   Future<Map<String, String>> fetchSpecificStations() async {
+    const cacheKey = 'specific_stations';
+
+    // تحقق من الـ cache
+    if (_cache.containsKey(cacheKey)) {
+      final cached = _cache[cacheKey]!;
+      if (!cached.isExpired) {
+        AppLogger.logInfo('📦 Returning cached specific stations');
+        return cached.data as Map<String, String>;
+      }
+    }
+
     try {
       final response = await _client
           .from(AppConstants.tableStationsAuth)
@@ -930,11 +995,28 @@ class SupabaseService {
         specificStations[stName] = stEmail;
       }
 
+      // احفظ في الـ cache
+      _cache[cacheKey] = CachedData(
+        data: specificStations,
+        timestamp: DateTime.now(),
+      );
+
       return specificStations;
     } catch (e, stackTrace) {
       AppLogger.logError('Failed to fetch specific stations', e, stackTrace);
+
+      // Fallback
+      if (_cache.containsKey(cacheKey)) {
+        return _cache[cacheKey]!.data as Map<String, String>;
+      }
       return {};
     }
+  }
+
+  // ✅ ضيف دالة لمسح cache محدد
+  void clearCacheKey(String key) {
+    _cache.remove(key);
+    AppLogger.logInfo('🗑️ Cache key cleared: $key');
   }
 
   /// تحديث حمل المحطة
@@ -951,6 +1033,7 @@ class SupabaseService {
           })
           .eq('station_name', stationName)
           .timeout(AppConstants.timeoutDuration);
+      _cache.remove('station_loads');
 
       AppLogger.logSuccess('Station load updated: $stationName = $newLoad');
     } on PostgrestException catch (e) {
@@ -1004,6 +1087,11 @@ class SupabaseService {
       throw Exception('فشل في جلب الأحمال الأقصى للساعات');
     }
   }
+
+  Future<void> clearCache() async {
+    _cache.clear();
+    AppLogger.logInfo('🗑️ Cache cleared');
+  }
 }
 
 // ============================================================================
@@ -1044,4 +1132,14 @@ class SupabaseServiceHourly {
       throw Exception('فشل في جلب الأحمال الساعية للمحطات');
     }
   }
+}
+
+class CachedData {
+  final dynamic data;
+  final DateTime timestamp;
+
+  CachedData({required this.data, required this.timestamp});
+
+  bool get isExpired =>
+      DateTime.now().difference(timestamp) > SupabaseService.cacheDuration;
 }
