@@ -2,8 +2,10 @@ import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScr
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cmscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/events.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/golive.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/indicators.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/mapscreen.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/projects.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/reports.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/world.dart';
 import 'package:flutter/material.dart';
@@ -196,6 +198,8 @@ final Map<String, Widget Function(BuildContext)> pageRoutes = {
   'العالم': (context) => WorldScreen(),
   'تعليمات': (context) => AnnouncementScreenDark(),
   'خريطة': (context) => Mapscreen(),
+  'مشروعات': (context) => ProjectsScreen(),
+  'Go live': (context) => GoliveScreen(),
 };
 
 class AnnouncImagesModel {
