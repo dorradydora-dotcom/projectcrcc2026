@@ -6,156 +6,209 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-const _kFadeDuration = Duration(milliseconds: 1200);
-const _kZoomDuration = Duration(milliseconds: 700);
-const _kFadeInDuration = Duration(milliseconds: 1200);
-const _kDelay200 = Duration(milliseconds: 400);
-const _kDelay400 = Duration(milliseconds: 500);
+// ==============================
+// الثوابت والأنماط
+// ==============================
 
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
+class OnboardingConstants {
+  // Animation durations
+  static const fadeDuration = Duration(milliseconds: 1200);
+  static const zoomDuration = Duration(milliseconds: 700);
+  static const delay200 = Duration(milliseconds: 400);
+  static const delay400 = Duration(milliseconds: 500);
 
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(OnboardingController());
+  // Layout ratios
+  static const double skipButtonTopRatio = 0.02;
+  static const double skipButtonRightRatio = 0.044;
+  static const double dotsBottomRatio = 0.22;
+  static const double dotsLeftRatio = 0.44;
+  static const double buttonBottomRatio = 0.04;
+  static const double buttonRightRatio = 0.04;
+  static const double contentHorizontalRatio = 0.07;
+  static const double contentVerticalRatio = 0.07;
+  static const double imageTopSpacingRatio = 0.1;
+  static const double imageMaxHeightRatio = 0.5;
+  static const double imageMaxWidthRatio = 0.8;
+  static const double titleSpacingRatio = 0.05;
+  static const double subtitleSpacingRatio = 0.015;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(children: _buildStackChildren(controller, context)),
-      ),
-    );
-  }
+  // UI Constants
+  static const borderRadius = 24.0;
+  static const borderWidth = 0.5;
+  static const shadowBlurRadius = 20.0;
+  static const shadowSpreadRadius = 1.0;
+  static const shadowOpacity = 0.3;
+  static const dotSpacing = 5.0;
+  static const dotRadius = 8.0;
+  static const activeDotWidth = 15.0;
+  static const inactiveDotHeight = 4.0;
+  static const buttonElevation = 6.0;
+  static const buttonPaddingRatio = 0.05;
+  static const buttonIconSizeRatio = 15.0;
+  static const baseScreenWidth = 375.0;
+  static const baseFontSizeTitle = 25.0;
+  static const baseFontSizeSubtitle = 13.0;
+  static const baseFontSizeButton = 14.0;
 
-  List<Widget> _buildStackChildren(
-    OnboardingController controller,
-    BuildContext context,
-  ) {
-    return [
-      _buildPageView(controller),
-      Positioned(
-          top: AppSizes.screenHeight(context) * 0.02,
-          right: AppSizes.screenWidth(context) * 0.044,
-          child: FadeInRight(
-              duration: _kFadeDuration,
-              child: OnboardingSkipWidget(
-                  title: 'Skip',
-                  onTap: () {
-                    controller.skipPage();
-                  }))),
-      Positioned(
-          bottom: AppSizes.screenHeight(context) * 0.22,
-          left: AppSizes.screenWidth(context) * 0.44,
-          child: FadeIn(
-            duration: _kFadeInDuration,
-            child: const Onboardingdots(),
-          )),
-      Positioned(
-          bottom: AppSizes.screenHeight(context) * 0.04,
-          right: AppSizes.screenWidth(context) * 0.04,
-          child: ZoomIn(
-              duration: _kZoomDuration,
-              child: OnboardingElevation(
-                  icon: Iconsax.arrow_right_3,
-                  onTap: () {
-                    controller.nextPage();
-                  })))
-    ];
-  }
-
-  Widget _buildPageView(OnboardingController controller) {
-    return PageView(
-        controller: controller.pageController,
-        onPageChanged: controller.updateIndex,
-        children: [
-          FadeInUp(
-              duration: _kFadeDuration,
-              child: const OnboardingWidget(
-                  image: AppimageString.electric,
-                  title: AppTextString.boarding1text1,
-                  subtitle: AppTextString.boarding1text2)),
-          FadeInUp(
-              duration: _kFadeDuration,
-              delay: _kDelay200,
-              child: const OnboardingWidget(
-                  image: AppimageString.together,
-                  title: AppTextString.boarding2text1,
-                  subtitle: AppTextString.boarding2text2)),
-          FadeInUp(
-              duration: _kFadeDuration,
-              delay: _kDelay400,
-              child: const OnboardingWidget(
-                  image: AppimageString.network,
-                  title: AppTextString.boarding3text1,
-                  subtitle: AppTextString.boarding3text2))
-        ]);
-  }
+  // Colors
+  static const Color backgroundColor = Colors.white;
+  static const Color shadowColor = Colors.blue;
+  static const Color inactiveDotColor = Color.fromARGB(125, 158, 158, 158);
+  static const Color activeDotColor = Colors.blue;
+  static const Color buttonBackgroundColor = Color.fromARGB(252, 180, 214, 243);
+  static const Color borderColor = Colors.black;
+  static const Color subtitleColor = Colors.grey;
+  static const Color skipButtonBorderColor = Color.fromARGB(115, 0, 0, 0);
 }
 
-class OnboardingWidget extends StatelessWidget {
-  final String image;
+// ==============================
+// نموذج بيانات الصفحة
+// ==============================
+
+class OnboardingPageData {
+  final String id;
+  final String imageAsset;
+  final String title;
+  final String subtitle;
+  final Duration? animationDelay;
+
+  const OnboardingPageData({
+    required this.id,
+    required this.imageAsset,
+    required this.title,
+    required this.subtitle,
+    this.animationDelay,
+  });
+}
+
+class OnboardingPagesRepository {
+  static final List<OnboardingPageData> pages = [
+    OnboardingPageData(
+      id: '1',
+      imageAsset: AppimageString.electric,
+      title: AppTextString.boarding1text1,
+      subtitle: AppTextString.boarding1text2,
+    ),
+    OnboardingPageData(
+      id: '2',
+      imageAsset: AppimageString.together,
+      title: AppTextString.boarding2text1,
+      subtitle: AppTextString.boarding2text2,
+      animationDelay: OnboardingConstants.delay200,
+    ),
+    OnboardingPageData(
+      id: '3',
+      imageAsset: AppimageString.network,
+      title: AppTextString.boarding3text1,
+      subtitle: AppTextString.boarding3text2,
+      animationDelay: OnboardingConstants.delay400,
+    ),
+  ];
+
+  static int get pageCount => pages.length;
+
+  static bool isLastPage(int index) => index == pageCount - 1;
+}
+
+// ==============================
+// Widgets
+// ==============================
+
+class OnboardingContent extends StatelessWidget {
+  final String imageAsset;
   final String title;
   final String subtitle;
 
-  const OnboardingWidget({
+  const OnboardingContent({
     super.key,
-    required this.image,
+    required this.imageAsset,
     required this.title,
     required this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final scaleFactor = size.width / OnboardingConstants.baseScreenWidth;
+
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: AppSizes.screenHeight(context) * 0.07,
-        vertical: AppSizes.screenHeight(context) * 0.07,
+        horizontal: size.height * OnboardingConstants.contentHorizontalRatio,
+        vertical: size.height * OnboardingConstants.contentVerticalRatio,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: AppSizes.screenHeight(context) * 0.1),
+          SizedBox(
+              height: size.height * OnboardingConstants.imageTopSpacingRatio),
+
+          // Image Container
           Flexible(
             flex: 3,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                  maxHeight: AppSizes.screenHeight(context) * 0.5,
-                  maxWidth: AppSizes.screenWidth(context) * 0.8),
+                maxHeight:
+                    size.height * OnboardingConstants.imageMaxHeightRatio,
+                maxWidth: size.width * OnboardingConstants.imageMaxWidthRatio,
+              ),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.black, width: 0.5),
+                  borderRadius:
+                      BorderRadius.circular(OnboardingConstants.borderRadius),
+                  border: Border.all(
+                    color: OnboardingConstants.borderColor,
+                    width: OnboardingConstants.borderWidth,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 1),
+                      color: OnboardingConstants.shadowColor
+                          .withOpacity(OnboardingConstants.shadowOpacity),
+                      blurRadius: OnboardingConstants.shadowBlurRadius,
+                      spreadRadius: OnboardingConstants.shadowSpreadRadius,
+                    ),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(image, fit: BoxFit.contain),
+                  borderRadius:
+                      BorderRadius.circular(OnboardingConstants.borderRadius),
+                  child: Image.asset(
+                    imageAsset,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
             ),
           ),
-          SizedBox(height: AppSizes.screenHeight(context) * 0.05),
-          Text(title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: Appfontstring.ChangaLight,
-                fontSize: 25 * (AppSizes.screenWidth(context) / 375.0),
-              )),
-          SizedBox(height: AppSizes.screenHeight(context) * 0.015),
+
+          SizedBox(height: size.height * OnboardingConstants.titleSpacingRatio),
+
+          // Title
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: Appfontstring.ChangaLight,
+              fontSize: OnboardingConstants.baseFontSizeTitle * scaleFactor,
+            ),
+          ),
+
+          SizedBox(
+              height: size.height * OnboardingConstants.subtitleSpacingRatio),
+
+          // Subtitle
           Text(
             subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 13 * (AppSizes.screenWidth(context) / 375.0),
-                fontFamily: Appfontstring.ChangaLight,
-                color: Colors.grey),
+              fontSize: OnboardingConstants.baseFontSizeSubtitle * scaleFactor,
+              fontFamily: Appfontstring.ChangaLight,
+              color: OnboardingConstants.subtitleColor,
+            ),
           ),
+
           const Spacer(flex: 2),
         ],
       ),
@@ -163,84 +216,199 @@ class OnboardingWidget extends StatelessWidget {
   }
 }
 
-class OnboardingSkipWidget extends StatelessWidget {
-  final String title;
-  final VoidCallback? onTap;
+class OnboardingSkipButton extends StatelessWidget {
+  final VoidCallback onSkip;
 
-  const OnboardingSkipWidget({super.key, required this.title, this.onTap});
+  const OnboardingSkipButton({
+    super.key,
+    required this.onSkip,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final scaleFactor = size.width / OnboardingConstants.baseScreenWidth;
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: AppSizes.screenWidth(context) * 0.04,
-        vertical: AppSizes.screenHeight(context) * 0.01,
+        horizontal: size.width * 0.04,
+        vertical: size.height * 0.01,
       ),
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color.fromARGB(115, 0, 0, 0))),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: OnboardingConstants.skipButtonBorderColor,
+        ),
+      ),
       child: TextButton(
-        onPressed: onTap,
+        onPressed: onSkip,
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: Text(title,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 14 * (AppSizes.screenWidth(context) / 375.0))),
-      ),
-    );
-  }
-}
-
-class Onboardingdots extends StatelessWidget {
-  const Onboardingdots({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = OnboardingController.instance;
-    return Center(
-      child: SmoothPageIndicator(
-        count: 3,
-        controller: controller.pageController,
-        onDotClicked: controller.dotNavigationClick,
-        effect: SwapEffect(
-          spacing: 5,
-          radius: 8,
-          dotWidth: 15,
-          dotHeight: 4,
-          paintStyle: PaintingStyle.fill, // Filled dots for better visibility
-          dotColor: const Color.fromARGB(125, 158, 158, 158),
-          activeDotColor: Colors.blue,
+        child: Text(
+          'Skip',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize:
+                        OnboardingConstants.baseFontSizeButton * scaleFactor,
+                  ) ??
+              const TextStyle(),
         ),
       ),
     );
   }
 }
 
-class OnboardingElevation extends StatelessWidget {
-  final IconData icon;
-  final void Function()? onTap;
+class OnboardingPageIndicator extends StatelessWidget {
+  final PageController controller;
+  final Function(int) onDotClicked;
 
-  const OnboardingElevation({
+  const OnboardingPageIndicator({
     super.key,
-    required this.icon,
-    required this.onTap,
+    required this.controller,
+    required this.onDotClicked,
   });
 
   @override
   Widget build(BuildContext context) {
+    return SmoothPageIndicator(
+      count: OnboardingPagesRepository.pageCount,
+      controller: controller,
+      onDotClicked: onDotClicked,
+      effect: SwapEffect(
+        spacing: OnboardingConstants.dotSpacing,
+        radius: OnboardingConstants.dotRadius,
+        dotWidth: OnboardingConstants.activeDotWidth,
+        dotHeight: OnboardingConstants.inactiveDotHeight,
+        paintStyle: PaintingStyle.fill,
+        dotColor: OnboardingConstants.inactiveDotColor,
+        activeDotColor: OnboardingConstants.activeDotColor,
+      ),
+    );
+  }
+}
+
+class OnboardingNextButton extends StatelessWidget {
+  final bool isLastPage;
+  final VoidCallback onNext;
+
+  const OnboardingNextButton({
+    super.key,
+    required this.isLastPage,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final scaleFactor = size.width / OnboardingConstants.baseScreenWidth;
+
     return ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(252, 180, 214, 243),
-            shape: const CircleBorder(
-              side: BorderSide(color: Colors.black, width: 0.5),
-            ),
-            padding: EdgeInsets.all(AppSizes.screenWidth(context) * 0.05),
-            elevation: 6),
-        child: Icon(icon, size: 15 * (AppSizes.screenWidth(context) / 375.0)));
+      onPressed: onNext,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: OnboardingConstants.buttonBackgroundColor,
+        shape: const CircleBorder(
+          side: BorderSide(
+            color: OnboardingConstants.borderColor,
+            width: OnboardingConstants.borderWidth,
+          ),
+        ),
+        padding:
+            EdgeInsets.all(size.width * OnboardingConstants.buttonPaddingRatio),
+        elevation: OnboardingConstants.buttonElevation,
+      ),
+      child: Icon(
+        Iconsax.arrow_right_3,
+        size: OnboardingConstants.buttonIconSizeRatio * scaleFactor,
+      ),
+    );
+  }
+}
+
+// ==============================
+// الشاشة الرئيسية
+// ==============================
+
+class OnboardingScreen extends StatelessWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    Get.put(OnboardingController());
+    return Scaffold(
+      backgroundColor: OnboardingConstants.backgroundColor,
+      body: SafeArea(
+        child: GetBuilder<OnboardingController>(
+          builder: (controller) {
+            final size = MediaQuery.of(context).size;
+
+            return Stack(
+              children: [
+                // Page View
+                _buildPageView(controller),
+
+                // Skip Button
+                Positioned(
+                  top: size.height * OnboardingConstants.skipButtonTopRatio,
+                  right: size.width * OnboardingConstants.skipButtonRightRatio,
+                  child: FadeInRight(
+                    duration: OnboardingConstants.fadeDuration,
+                    child: OnboardingSkipButton(
+                      onSkip: controller.skipOnboarding,
+                    ),
+                  ),
+                ),
+
+                // Page Indicator
+                Positioned(
+                  bottom: size.height * OnboardingConstants.dotsBottomRatio,
+                  left: size.width * OnboardingConstants.dotsLeftRatio,
+                  child: FadeIn(
+                    duration: OnboardingConstants.fadeDuration,
+                    child: OnboardingPageIndicator(
+                      controller: controller.pageController,
+                      onDotClicked: controller.goToPage,
+                    ),
+                  ),
+                ),
+
+                // Next/Finish Button
+                Positioned(
+                  bottom: size.height * OnboardingConstants.buttonBottomRatio,
+                  right: size.width * OnboardingConstants.buttonRightRatio,
+                  child: ZoomIn(
+                    duration: OnboardingConstants.zoomDuration,
+                    child: OnboardingNextButton(
+                      isLastPage: controller.isLastPage,
+                      onNext: controller.nextPage,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageView(OnboardingController controller) {
+    return PageView(
+      controller: controller.pageController,
+      onPageChanged: controller.updateCurrentPage,
+      children: OnboardingPagesRepository.pages.map((page) {
+        return FadeInUp(
+          duration: OnboardingConstants.fadeDuration,
+          delay: OnboardingConstants.delay200,
+          child: OnboardingContent(
+            imageAsset: page.imageAsset,
+            title: page.title,
+            subtitle: page.subtitle,
+          ),
+        );
+      }).toList(),
+    );
   }
 }

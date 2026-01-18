@@ -202,6 +202,50 @@ final Map<String, Widget Function(BuildContext)> pageRoutes = {
   'Go live': (context) => GoliveScreen(),
 };
 
+// ============================================================================
+// Navigation Item Model
+// ============================================================================
+class NavigationItemConfig {
+  final String label;
+  final IconData icon;
+  final Color glowColor;
+
+  const NavigationItemConfig({
+    required this.label,
+    required this.icon,
+    required this.glowColor,
+  });
+}
+
+// تعريف عناصر التنقل في مكان واحد
+const navigationItems = [
+  NavigationItemConfig(
+    label: 'الرئيسية',
+    icon: Icons.home_outlined,
+    glowColor: Color(0xFF4CAF50),
+  ),
+  NavigationItemConfig(
+    label: 'المناطق',
+    icon: Icons.account_tree_outlined,
+    glowColor: Color(0xFF2196F3),
+  ),
+  NavigationItemConfig(
+    label: 'المفضلة',
+    icon: Icons.favorite_border_outlined,
+    glowColor: Color(0xFFE91E63),
+  ),
+  NavigationItemConfig(
+    label: 'محطات',
+    icon: Icons.workspaces_outlined,
+    glowColor: Color(0xFFFF9800),
+  ),
+  NavigationItemConfig(
+    label: 'احمال',
+    icon: Icons.bolt_outlined,
+    glowColor: Color(0xFF9C27B0),
+  ),
+];
+
 class AnnouncImagesModel {
   final String imageUrl;
   AnnouncImagesModel({required this.imageUrl});

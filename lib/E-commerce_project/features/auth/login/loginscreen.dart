@@ -600,7 +600,7 @@ class LogBackGroung extends StatelessWidget {
         image: DecorationImage(
           image: AssetImage(AppimageString.image55),
           fit: BoxFit.fill,
-          filterQuality: FilterQuality.low,
+          filterQuality: FilterQuality.high,
         ),
       ),
     );

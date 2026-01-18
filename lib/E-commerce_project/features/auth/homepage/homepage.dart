@@ -1,7 +1,4 @@
-// ============================================================================
-// HOME PAGE - النسخة المحسّنة (مع الحفاظ على الأنيميشن الأصلي)
-// ============================================================================
-
+import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/Loadnav.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favoritesnav.dart';
@@ -14,67 +11,144 @@ import 'package:get/get.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/areanav.dart';
 import 'package:amiraly/E-commerce_project/util/validators/validatorHeper.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
+import 'package:amiraly/main.dart';
 
 // ============================================================================
-// Navigation Item Model
+// HomePage Widget - مع FutureBuilder
 // ============================================================================
-class NavigationItemConfig {
-  final String label;
-  final IconData icon;
-  final Color glowColor;
-
-  const NavigationItemConfig({
-    required this.label,
-    required this.icon,
-    required this.glowColor,
-  });
-}
-
-// ============================================================================
-// HomePage Widget
-// ============================================================================
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _ensureServicesInitialized(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildInitializationLoading();
+        }
+
+        if (snapshot.hasError) {
+          return _buildInitializationError(snapshot.error.toString());
+        }
+
+        return const _HomePageContent();
+      },
+    );
+  }
+
+  Future<void> _ensureServicesInitialized() async {
+    try {
+      // انتظار تهيئة الخدمات الأساسية
+      await ensureServicesInitialized();
+
+      // تهيئة AuthService إذا لم يكن مهيأ
+      final authService = Get.find<AuthService>();
+      if (!authService.isInitialized) {
+        await authService.initializeServices();
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Widget _buildInitializationLoading() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(Appcolors.primaryColor),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'جاري تحميل الصفحة الرئيسية...',
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: Appfontstring.ChangaLight,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitializationError(String error) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red.shade400,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'فشل في تحميل الصفحة',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  error,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: Appfontstring.ChangaLight,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () => Get.offAll(() => const HomePage()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Appcolors.primaryColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Text('إعادة المحاولة'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage>
+// ============================================================================
+// HomePage Content (المحتوى فقط بعد التهيئة)
+// ============================================================================
+class _HomePageContent extends StatefulWidget {
+  const _HomePageContent();
+
+  @override
+  State<_HomePageContent> createState() => __HomePageContentState();
+}
+
+class __HomePageContentState extends State<_HomePageContent>
     with SingleTickerProviderStateMixin {
   late final HomePageController _controller;
   late final AnimationController _animationController;
   late final Animation<double> _glowAnimation;
   late final Animation<double> _scaleAnimation;
-
-  // تعريف عناصر التنقل في مكان واحد
-  static const _navigationItems = [
-    NavigationItemConfig(
-      label: 'الرئيسية',
-      icon: Icons.home_outlined,
-      glowColor: Color(0xFF4CAF50),
-    ),
-    NavigationItemConfig(
-      label: 'المناطق',
-      icon: Icons.account_tree_outlined,
-      glowColor: Color(0xFF2196F3),
-    ),
-    NavigationItemConfig(
-      label: 'المفضلة',
-      icon: Icons.favorite_border_outlined,
-      glowColor: Color(0xFFE91E63),
-    ),
-    NavigationItemConfig(
-      label: 'محطات',
-      icon: Icons.workspaces_outlined,
-      glowColor: Color(0xFFFF9800),
-    ),
-    NavigationItemConfig(
-      label: 'احمال',
-      icon: Icons.bolt_outlined,
-      glowColor: Color(0xFF9C27B0),
-    ),
-  ];
 
   @override
   void initState() {
@@ -144,8 +218,8 @@ class _HomePageState extends State<HomePage>
   }
 
   List<CurvedNavigationBarItem> _buildNavigationItems() {
-    return List.generate(_navigationItems.length, (index) {
-      final item = _navigationItems[index];
+    return List.generate(navigationItems.length, (index) {
+      final item = navigationItems[index];
       final isSelected = _controller.selectedPage.value == index;
 
       return CurvedNavigationBarItem(
@@ -292,12 +366,13 @@ class _HomePageState extends State<HomePage>
 }
 
 // ============================================================================
-// HomePage Controller - محسّن
+// HomePage Controller - محسّن مع Future
 // ============================================================================
 class HomePageController extends GetxController {
   final RxInt selectedPage = 0.obs;
   final RxBool isLoading = false.obs;
   final Rx<String?> error = Rx<String?>(null);
+  final RxString userEmail = ''.obs;
 
   // الصفحات كـ RxList للتفاعلية
   final RxList<Widget> pages = <Widget>[
@@ -309,12 +384,55 @@ class HomePageController extends GetxController {
   ].obs;
 
   late final PageController pageController;
+  late final AuthService _authService;
 
   @override
   void onInit() {
     super.onInit();
-    pageController = PageController(initialPage: 0);
-    AppLogger.logInfo('HomePageController initialized');
+
+    try {
+      _authService = Get.find<AuthService>();
+      pageController = PageController(initialPage: 0);
+
+      // بدء تحميل البيانات
+      _initializeData();
+
+      AppLogger.logInfo('HomePageController initialized');
+    } catch (e, stackTrace) {
+      AppLogger.logError(
+          'Failed to initialize HomePageController', e, stackTrace);
+      error.value = 'فشل في تهيئة الصفحة الرئيسية';
+    }
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      isLoading.value = true;
+
+      // تحميل بيانات المستخدم
+      await _loadUserData();
+
+      AppLogger.logSuccess('HomePage data initialized successfully');
+    } catch (e, stackTrace) {
+      AppLogger.logError('Failed to initialize HomePage data', e, stackTrace);
+      error.value = 'فشل في تحميل بيانات الصفحة';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      // استخدام الدالة الآمنة للحصول على البريد
+      final email = await _authService.getCurrentUserEmailSafe();
+      userEmail.value = email ?? 'مستخدم';
+
+      AppLogger.logSuccess('User data loaded for HomePage: $email');
+    } catch (e, stackTrace) {
+      AppLogger.logError(
+          'Failed to load user data in HomePageController', e, stackTrace);
+      userEmail.value = 'مستخدم';
+    }
   }
 
   @override
@@ -324,12 +442,9 @@ class HomePageController extends GetxController {
     super.onClose();
   }
 
-  /// تحديث الصفحة المختارة مع Validation
+  /// تحديث الصفحة المختارة
   void updateSelectedPage(int index) {
-    if (index < 0 || index >= pages.length) {
-      AppLogger.logWarning('Invalid page index: $index');
-      return;
-    }
+    if (index < 0 || index >= pages.length) return;
 
     selectedPage.value = index;
     pageController.animateToPage(
@@ -339,7 +454,7 @@ class HomePageController extends GetxController {
     );
   }
 
-  /// معالج تغيير الصفحة من PageView
+  /// معالج تغيير الصفحة
   void onPageChanged(int index) {
     if (index != selectedPage.value) {
       selectedPage.value = index;
@@ -352,25 +467,16 @@ class HomePageController extends GetxController {
       isLoading.value = true;
       error.value = null;
 
-      // محاكاة تحميل البيانات
-      await Future.delayed(const Duration(seconds: 1));
+      // إعادة تحميل بيانات المستخدم
+      await _loadUserData();
 
-      // يمكن إضافة منطق تحميل البيانات الفعلي هنا
-      // مثال:
-      // final result = await ApiService.getData();
-      // if (result.isSuccess) {
-      //   // معالجة البيانات
-      // } else {
-      //   throw Exception(result.error);
-      // }
-
-      AppLogger.logSuccess('Data loaded successfully');
+      AppLogger.logSuccess('HomePage data reloaded successfully');
     } on Exception catch (e, stackTrace) {
       error.value = 'فشل في تحميل البيانات: ${e.toString()}';
-      AppLogger.logError('Failed to load data', e, stackTrace);
+      AppLogger.logError('Failed to reload HomePage data', e, stackTrace);
     } catch (e, stackTrace) {
       error.value = 'حدث خطأ غير متوقع';
-      AppLogger.logError('Unexpected error', e, stackTrace);
+      AppLogger.logError('Unexpected error in HomePage', e, stackTrace);
     } finally {
       isLoading.value = false;
     }
