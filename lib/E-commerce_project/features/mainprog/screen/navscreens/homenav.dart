@@ -41,21 +41,17 @@ class _HomeNavState extends State<HomeNav> {
     super.initState();
     carouselController = CarouselSliderController();
     _initialDataFuture = _initializeData();
-    Timer.periodic(const Duration(minutes: 15), (timer) {
-      _controller.refreshWeather();
-    });
+    _startLoadVariationTimer();
   }
 
   Future<void> _initializeData() async {
     await _loadUserGroup();
-
     await Future.wait([
       _controller.fetchCategories(),
       _controller.fetchAnnouncImages(),
       _controller.fetchCairoWeather(),
       SupabaseService().fetchStationLoads().then((value) {
         _controller.updateStationLoads(value);
-        _startLoadVariationTimer();
       }),
     ]);
     if (mounted) {
@@ -135,68 +131,63 @@ class _HomeNavState extends State<HomeNav> {
   @override
   void dispose() {
     _loadTimer?.cancel();
+    Get.delete<HomenavcontrollerImp>();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller =
-        Get.put<HomenavcontrollerImp>(HomenavcontrollerImp(), permanent: true);
+    HomenavcontrollerImp controller = Get.put(HomenavcontrollerImp());
+
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      splitScreenMode: false,
       builder: (context, child) {
         return WillPopScope(
           onWillPop: () async => Navigator.canPop(context),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: Obx(() => Scaffold(
-                  body: controller.isLoading.value
-                      ? const Center(child: CircularProgressIndicator())
-                      : LiquidPullToRefresh(
-                          color: Appcolors.buttonGradient2.first,
-                          backgroundColor: Colors.white,
-                          height: 50.h,
-                          showChildOpacityTransition: false,
-                          onRefresh: _refreshData,
-                          child: FutureBuilder<void>(
-                            future: _initialDataFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Scaffold(
-                                  body: Center(
-                                      child: CircularProgressIndicator()),
-                                );
-                              }
-                              if (snapshot.hasError) {
-                                return _buildErrorWidget(
-                                  error: snapshot.error.toString(),
-                                  onRetry: _initializeData,
-                                );
-                              }
-                              return CustomScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                slivers: [
-                                  SliverToBoxAdapter(
-                                      child: buildHeaderSection()),
-                                  SliverToBoxAdapter(
-                                      child: buildContentSection()),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                )),
+            child: Scaffold(
+              body: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return LiquidPullToRefresh(
+                  color: Appcolors.buttonGradient2.first,
+                  backgroundColor: Colors.white,
+                  height: 50.h,
+                  showChildOpacityTransition: false,
+                  onRefresh: _initializeData,
+                  child: FutureBuilder<void>(
+                    future: _initialDataFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Scaffold(
+                          body: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return _buildErrorWidget(
+                          error: snapshot.error.toString(),
+                          onRetry: _initializeData,
+                        );
+                      }
+                      return CustomScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        slivers: [
+                          SliverToBoxAdapter(child: buildHeaderSection()),
+                          SliverToBoxAdapter(child: buildContentSection()),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              }),
+            ),
           ),
         );
       },
     );
-  }
-
-  Future<void> _refreshData() async {
-    await _initializeData();
   }
 
   Widget buildHeaderSection() {
@@ -239,10 +230,11 @@ class _HomeNavState extends State<HomeNav> {
     return SizedBox(
       height: 147.h,
       child: ListView.builder(
-        shrinkWrap: true,
+        shrinkWrap: false,
         physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
+        itemExtent: 75.w,
         itemBuilder: (_, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category.name;
@@ -649,6 +641,10 @@ class _HomeNavState extends State<HomeNav> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.r),
                         child: CachedNetworkImage(
+                          maxHeightDiskCache: 400,
+                          maxWidthDiskCache: 400,
+                          memCacheHeight: 400,
+                          memCacheWidth: 400,
                           imageUrl: photo.imageUrl,
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) => Center(
@@ -1038,6 +1034,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   final RxList<AnnouncImagesModel> _announcImages = <AnnouncImagesModel>[].obs;
   final RxList<WeatherData> _weatherData = <WeatherData>[].obs;
   final RxList<StationLoad> _stationLoads = <StationLoad>[].obs;
+  final isLoading = false.obs;
 
   @override
   List<MainCatogoryModel> get categories => _categories;
@@ -1047,7 +1044,6 @@ class HomenavcontrollerImp extends Homenavcontroller {
   List<WeatherData> get weatherData => _weatherData;
   @override
   RxList<StationLoad> get stationLoads => _stationLoads;
-  final isLoading = false.obs;
 
   @override
   void gotocairoscreen() {
