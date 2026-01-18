@@ -48,6 +48,7 @@ class _HomeNavState extends State<HomeNav> {
 
   Future<void> _initializeData() async {
     await _loadUserGroup();
+
     await Future.wait([
       _controller.fetchCategories(),
       _controller.fetchAnnouncImages(),
@@ -65,9 +66,9 @@ class _HomeNavState extends State<HomeNav> {
   Future<void> _loadUserGroup() async {
     final AuthService authService = AuthService();
     userEmail = authService.getCurrentUserEmail();
+
     if (userEmail == null) {
       userGroup = null;
-      if (mounted) setState(() {});
       return;
     }
 
@@ -128,7 +129,6 @@ class _HomeNavState extends State<HomeNav> {
     _loadTimer?.cancel();
     _loadTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _controller.updateStationVariations();
-      // No setState needed; use Obx for reactive updates
     });
   }
 
@@ -140,6 +140,8 @@ class _HomeNavState extends State<HomeNav> {
 
   @override
   Widget build(BuildContext context) {
+    final controller =
+        Get.put<HomenavcontrollerImp>(HomenavcontrollerImp(), permanent: true);
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
@@ -149,38 +151,44 @@ class _HomeNavState extends State<HomeNav> {
           onWillPop: () async => Navigator.canPop(context),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: Scaffold(
-              body: LiquidPullToRefresh(
-                color: Appcolors.buttonGradient2.first,
-                backgroundColor: Colors.white,
-                height: 50.h,
-                showChildOpacityTransition: false,
-                onRefresh: _refreshData,
-                child: FutureBuilder<void>(
-                  future: _initialDataFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Scaffold(
-                        body: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return _buildErrorWidget(
-                        error: snapshot.error.toString(),
-                        onRetry: _initializeData,
-                      );
-                    }
-                    return CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(child: buildHeaderSection()),
-                        SliverToBoxAdapter(child: buildContentSection()),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
+            child: Obx(() => Scaffold(
+                  body: controller.isLoading.value
+                      ? const Center(child: CircularProgressIndicator())
+                      : LiquidPullToRefresh(
+                          color: Appcolors.buttonGradient2.first,
+                          backgroundColor: Colors.white,
+                          height: 50.h,
+                          showChildOpacityTransition: false,
+                          onRefresh: _refreshData,
+                          child: FutureBuilder<void>(
+                            future: _initialDataFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Scaffold(
+                                  body: Center(
+                                      child: CircularProgressIndicator()),
+                                );
+                              }
+                              if (snapshot.hasError) {
+                                return _buildErrorWidget(
+                                  error: snapshot.error.toString(),
+                                  onRetry: _initializeData,
+                                );
+                              }
+                              return CustomScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                slivers: [
+                                  SliverToBoxAdapter(
+                                      child: buildHeaderSection()),
+                                  SliverToBoxAdapter(
+                                      child: buildContentSection()),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                )),
           ),
         );
       },
@@ -286,8 +294,6 @@ class _HomeNavState extends State<HomeNav> {
       _showSnackBar('غير مصرح لك بالوصول إلى هذه الفئة');
       return;
     }
-
-    setState(() => selectedCategory = normalizedCategoryName);
 
     if (category.pageroute.isNotEmpty) {
       try {
@@ -1041,6 +1047,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   List<WeatherData> get weatherData => _weatherData;
   @override
   RxList<StationLoad> get stationLoads => _stationLoads;
+  final isLoading = false.obs;
 
   @override
   void gotocairoscreen() {

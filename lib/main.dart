@@ -194,7 +194,7 @@ class _InitialLoadingScreenState extends State<InitialLoadingScreen> {
       await Get.find<AuthService>().initializeServices();
 
       if (mounted) {
-        Get.offAll(() => const OnboardingScreen());
+        Get.offAll(() => const HomePage());
       }
     } catch (e, stackTrace) {
       if (mounted) {
@@ -765,17 +765,16 @@ class AuthService extends GetxController {
     }
   }
 
-  /// 🔥 **الحل: تعديل getCurrentUser لاستخدام _supabase مباشرة**
-  User? getCurrentUser() => _supabase?.auth.currentUser;
-
   /// 🔥 **الحل: تعديل getCurrentUserEmail لاستخدام _supabase مباشرة**
+
   String? getCurrentUserEmail() {
-    try {
-      return _supabase?.auth.currentUser?.email;
-    } catch (e) {
-      AppLogger.logError('Failed to get current user email', e);
-      return null;
-    }
+    final user = Supabase.instance.client.auth.currentUser;
+    return user?.email?.trim().toLowerCase();
+  }
+
+  // أو أفضل: إرجاع كائن المستخدم كاملاً إذا احتجت بيانات أكثر
+  User? getCurrentUser() {
+    return Supabase.instance.client.auth.currentUser;
   }
 
   /// 🔥 **الحل: إضافة دالة آمنة للحصول على البريد**
