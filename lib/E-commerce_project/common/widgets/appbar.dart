@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key});
+  final VoidCallback? onRefresh;
+  const CustomAppBar({super.key, this.onRefresh});
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -103,6 +104,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
       backgroundColor: Appcolors.primaryColor,
       title: _buildAppBarTitle(context, screenWidth),
       actions: [
+        if (widget.onRefresh != null)
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+              size: responsiveFontSize(screenWidth, 0.066),
+            ),
+            onPressed: widget.onRefresh,
+          ),
         _buildSignOutButton(context, screenWidth),
         SizedBox(width: screenWidth * 0.01),
       ],

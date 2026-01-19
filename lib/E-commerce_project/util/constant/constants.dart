@@ -246,3 +246,21 @@ class AppBarText {
   static const String signOutError = 'حدث خطأ أثناء تسجيل الخروج';
   static const String retry = 'إعادة المحاولة';
 }
+
+class Stringshomenav {
+  static const String noCategories = 'No categories available';
+  static const String noImages = 'No images available';
+  static const String noStationData = 'No station data available';
+  static const String noWeatherData = 'No weather data available';
+  static const String retry = 'Retry';
+  static const String newsHeadline = 'الاخبـار';
+  static const String cairoWeatherHeadline = 'طقس القاهرة';
+  static const String networkLoadHeadline = 'حمل شبكة القاهرة ';
+  static const String exchangeHeadline = 'التبادلات مع التحكمات الاقليمية';
+  static const String generationHeadline = 'التوليد';
+  static const String seeAll = 'الكـل';
+  static const String weatherNow = 'الطقس الآن';
+  static const String msgAccessDenied = 'غير مصرح لك بالوصول إلى هذه الفئة';
+  static const String msgOtherDepts = 'مخصص لادارات اخرى';
+  static const String msgNotReady = 'الفئة غير جاهزة بعد';
+}

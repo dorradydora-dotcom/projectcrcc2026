@@ -56,10 +56,12 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
         _previousTotalLoad = _getTotalLoad();
       });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'خطأ في جلب بيانات المحطات: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'خطأ في جلب بيانات المحطات: $e';
+          _isLoading = false;
+        });
+      }
     }
     // Refresh hourly data independently
     if (_hourlyKey.currentState != null) {

@@ -14,8 +14,8 @@ class FavoritesNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favoritesController = Get.find<FavoritesController>();
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
@@ -150,18 +150,24 @@ class FavoritesNav extends StatelessWidget {
                   crossAxisSpacing: 14.w,
                   childAspectRatio: 0.8,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                    (context, index) => FadeInUp(
-                        duration: Duration(milliseconds: 400 + (index * 150)),
-                        child: GradientStationCard(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  // تحديد سقف للتأخير بحد أقصى ثانية واحدة لضمان سرعة الظهور
+                  final delay = (index * 150).clamp(0, 1000);
+                  return FadeInUp(
+                    duration: Duration(milliseconds: 400 + delay),
+                    child: GradientStationCard(
+                      station: controller.favorites[index],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StationDetailsPage(
                             station: controller.favorites[index],
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => StationDetailsPage(
-                                          station: controller.favorites[index],
-                                        ))))),
-                    childCount: controller.favorites.length))),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }, childCount: controller.favorites.length))),
         SliverToBoxAdapter(
           child: SizedBox(height: MediaQuery.of(context).padding.bottom + 20.h),
         ),
@@ -173,6 +179,10 @@ class FavoritesNav extends StatelessWidget {
 class FavoritesController extends GetxController {
   static FavoritesController get instance => Get.find();
   final RxList<StationDetialesModel> favorites = <StationDetialesModel>[].obs;
+
+  // استخدام Set للتحقق السريع من المفضلات (Lookup Optimization O(1))
+  final RxSet<String> _favoriteNames = <String>{}.obs;
+
   static const String _favoritesKey = 'favorites';
 
   @override
@@ -182,34 +192,58 @@ class FavoritesController extends GetxController {
   }
 
   bool isFavorite(StationDetialesModel station) {
-    return favorites.any((fav) => fav.name == station.name);
+    return _favoriteNames.contains(station.name);
   }
 
   Future<void> toggleFavorite(StationDetialesModel station) async {
-    if (isFavorite(station)) {
-      favorites.removeWhere((fav) => fav.name == station.name);
-    } else {
-      favorites.add(station);
+    try {
+      if (isFavorite(station)) {
+        favorites.removeWhere((fav) => fav.name == station.name);
+        _favoriteNames.remove(station.name);
+      } else {
+        favorites.add(station);
+        _favoriteNames.add(station.name);
+      }
+      await _saveFavorites();
+    } catch (e) {
+      debugPrint('Error toggling favorite: $e');
+      Get.snackbar('خطأ', 'فشل في تحديث المفضلات');
     }
-    await _saveFavorites();
   }
 
   Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final favoriteJsons =
-        favorites.map((fav) => jsonEncode(fav.toJson())).toList();
-    await prefs.setStringList(_favoritesKey, favoriteJsons);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteJsons =
+          favorites.map((fav) => jsonEncode(fav.toJson())).toList();
+      await prefs.setStringList(_favoritesKey, favoriteJsons);
+    } catch (e) {
+      debugPrint('Error saving favorites: $e');
+    }
   }
 
   Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final favoriteJsons = prefs.getStringList(_favoritesKey) ?? [];
-    favorites.clear();
-    favorites.addAll(
-      favoriteJsons
-          .map((jsonStr) => StationDetialesModel.fromJson(jsonDecode(jsonStr)))
-          .where((station) => station.name.isNotEmpty),
-    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteJsons = prefs.getStringList(_favoritesKey) ?? [];
+
+      favorites.clear();
+      _favoriteNames.clear();
+
+      for (var jsonStr in favoriteJsons) {
+        try {
+          final station = StationDetialesModel.fromJson(jsonDecode(jsonStr));
+          if (station.name.isNotEmpty) {
+            favorites.add(station);
+            _favoriteNames.add(station.name);
+          }
+        } catch (e) {
+          debugPrint('Error parsing favorite station: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading favorites: $e');
+    }
   }
 }
 

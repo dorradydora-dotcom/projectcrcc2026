@@ -16,25 +16,20 @@ import 'package:amiraly/main.dart';
 // ============================================================================
 // HomePage Widget - مع FutureBuilder
 // ============================================================================
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _ensureServicesInitialized(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildInitializationLoading();
-        }
+  State<HomePage> createState() => _HomePageState();
+}
 
-        if (snapshot.hasError) {
-          return _buildInitializationError(snapshot.error.toString());
-        }
+class _HomePageState extends State<HomePage> {
+  late final Future<void> _initializationFuture;
 
-        return const _HomePageContent();
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    _initializationFuture = _ensureServicesInitialized();
   }
 
   Future<void> _ensureServicesInitialized() async {
@@ -50,6 +45,24 @@ class HomePage extends StatelessWidget {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initializationFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildInitializationLoading();
+        }
+
+        if (snapshot.hasError) {
+          return _buildInitializationError(snapshot.error.toString());
+        }
+
+        return const _HomePageContent();
+      },
+    );
   }
 
   Widget _buildInitializationLoading() {
@@ -119,10 +132,9 @@ class HomePage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => Get.offAll(() => const HomePage()),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Appcolors.primaryColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
+                    backgroundColor: Appcolors.primaryColor,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12)),
                 child: const Text('إعادة المحاولة'),
               ),
             ],
@@ -149,6 +161,15 @@ class __HomePageContentState extends State<_HomePageContent>
   late final AnimationController _animationController;
   late final Animation<double> _glowAnimation;
   late final Animation<double> _scaleAnimation;
+
+  // تعريف الصفحات هنا في الـ UI
+  final List<Widget> _pages = const [
+    HomeNav(),
+    Areanav(),
+    FavoritesNav(),
+    StationloadnavScreen(),
+    LoadnavScreen(),
+  ];
 
   @override
   void initState() {
@@ -284,7 +305,7 @@ class __HomePageContentState extends State<_HomePageContent>
           controller: _controller.pageController,
           onPageChanged: _controller.onPageChanged,
           physics: const BouncingScrollPhysics(),
-          children: _controller.pages,
+          children: _pages,
         ),
       );
     });
@@ -374,15 +395,6 @@ class HomePageController extends GetxController {
   final Rx<String?> error = Rx<String?>(null);
   final RxString userEmail = ''.obs;
 
-  // الصفحات كـ RxList للتفاعلية
-  final RxList<Widget> pages = <Widget>[
-    const HomeNav(),
-    const Areanav(),
-    const FavoritesNav(),
-    const StationloadnavScreen(),
-    const LoadnavScreen(),
-  ].obs;
-
   late final PageController pageController;
   late final AuthService _authService;
 
@@ -444,8 +456,6 @@ class HomePageController extends GetxController {
 
   /// تحديث الصفحة المختارة
   void updateSelectedPage(int index) {
-    if (index < 0 || index >= pages.length) return;
-
     selectedPage.value = index;
     pageController.animateToPage(
       index,
@@ -490,32 +500,7 @@ class HomePageController extends GetxController {
 
   /// الانتقال إلى صفحة معينة مباشرة
   void jumpToPage(int index) {
-    if (index >= 0 && index < pages.length) {
-      selectedPage.value = index;
-      pageController.jumpToPage(index);
-    }
-  }
-
-  /// الحصول على الصفحة الحالية
-  Widget get currentPage => pages[selectedPage.value];
-
-  /// التحقق من وجود صفحة سابقة
-  bool get hasPreviousPage => selectedPage.value > 0;
-
-  /// التحقق من وجود صفحة تالية
-  bool get hasNextPage => selectedPage.value < pages.length - 1;
-
-  /// الانتقال للصفحة السابقة
-  void goToPreviousPage() {
-    if (hasPreviousPage) {
-      updateSelectedPage(selectedPage.value - 1);
-    }
-  }
-
-  /// الانتقال للصفحة التالية
-  void goToNextPage() {
-    if (hasNextPage) {
-      updateSelectedPage(selectedPage.value + 1);
-    }
+    selectedPage.value = index;
+    pageController.jumpToPage(index);
   }
 }

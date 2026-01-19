@@ -10,9 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import 'dart:ui';
+import 'package:animate_do/animate_do.dart';
 
 class Areanav extends StatefulWidget {
   const Areanav({super.key});
@@ -25,7 +26,8 @@ class _AreanavState extends State<Areanav> {
   @override
   void initState() {
     super.initState();
-    Get.put(AreaNavController());
+    // استخدام permanent: true لضمان بقاء الـ Controller والبيانات حتى غلق التطبيق
+    Get.put(AreaNavController(), permanent: true);
   }
 
   @override
@@ -35,24 +37,27 @@ class _AreanavState extends State<Areanav> {
       child: DefaultTabController(
         length: 4,
         child: Scaffold(
-          body: LiquidPullToRefresh(
-            height: 2.h,
-            showChildOpacityTransition: false,
-            onRefresh: () async {
-              await Get.find<AreaNavController>().fetchStations();
-            },
-            child: NestedScrollView(
-              headerSliverBuilder: (_, innerBoxIsScrolled) => [
-                buildSliverAppBar(),
+          floatingActionButton: SizedBox(
+            height: 25.h,
+            width: 25.w,
+            child: FloatingActionButton(
+              onPressed: () =>
+                  Get.find<AreaNavController>().fetchStations(refresh: true),
+              backgroundColor: Appcolors.primaryColor,
+              child: const Icon(Icons.refresh, color: Colors.white),
+            ),
+          ),
+          body: NestedScrollView(
+            headerSliverBuilder: (_, innerBoxIsScrolled) => [
+              buildSliverAppBar(),
+            ],
+            body: const TabBarView(
+              children: [
+                NonthScreen(),
+                EastScreen(),
+                SouthScreen(),
+                WestScreen(),
               ],
-              body: const TabBarView(
-                children: [
-                  NonthScreen(),
-                  EastScreen(),
-                  SouthScreen(),
-                  WestScreen(),
-                ],
-              ),
             ),
           ),
         ),
@@ -62,7 +67,7 @@ class _AreanavState extends State<Areanav> {
 
   SliverAppBar buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 0.36 * ScreenUtil().screenHeight,
+      expandedHeight: 0.60 * ScreenUtil().screenHeight,
       floating: false,
       pinned: true,
       automaticallyImplyLeading: false,
@@ -74,36 +79,177 @@ class _AreanavState extends State<Areanav> {
   Widget buildFlexibleSpace() {
     return FlexibleSpaceBar(
       background: Container(
-        padding: EdgeInsets.only(right: 4.w, bottom: 4.h),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Appcolors.primaryColor,
-              Color.fromARGB(255, 49, 107, 152),
-              Colors.white,
+              Color.fromARGB(255, 30, 80, 120), // أغمق قليلاً للعمق
+              Color.fromARGB(255, 10, 30, 50), // نهاية داكنة فخمة
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Text(
-              'محـطات جهد 220 كف',
-              style: TextStyle(
-                fontFamily: Appfontstring.ChangaLight,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-              textAlign: TextAlign.center,
+            // Background Pattern (Subtle flashes)
+            Positioned(
+              right: -20.w,
+              top: 50.h,
+              child: Icon(Iconsax.flash5,
+                  size: 200.sp, color: Colors.white.withOpacity(0.05)),
             ),
-            SizedBox(height: 11.h),
-            buildStationContent(),
+            Positioned(
+              left: -30.w,
+              bottom: 100.h,
+              child: Icon(Iconsax.flash5,
+                  size: 150.sp, color: Colors.white.withOpacity(0.03)),
+            ),
+            Column(
+              children: [
+                SizedBox(height: 66.h), // مسافة علوية أقل قليلاً لتوفير مساحة
+                // Dashboard Summary
+                FadeInDown(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: buildDashboardSummary(),
+                  ),
+                ),
+                SizedBox(height: 15.h), // تقليل المسافة
+                // Search Bar
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: buildSearchBar(),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Horizontal List Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FadeInLeft(
+                        child: Text(
+                          'أحدث المحطات',
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                buildStationContent(), // إزالة Expanded لتجنب أخطاء الأبعاد
+                SizedBox(height: 10.h),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget buildSearchBar() {
+    final controller = Get.find<AreaNavController>();
+    return Container(
+      height: 45.h,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(15.r),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: TextField(
+            onChanged: (value) => controller.searchQuery.value = value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'ابحث عن محطة أو منطقة...',
+              hintStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.5), fontSize: 12.sp),
+              prefixIcon: Icon(Iconsax.search_normal,
+                  color: Colors.white.withOpacity(0.7), size: 18.sp),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildDashboardSummary() {
+    final controller = Get.find<AreaNavController>();
+    return Obx(() => Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: 12.w, vertical: 14.h), // حواف أكثر رشاقة
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20.r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem(
+                      'إجمالي المحطات',
+                      controller.totalStations.toString(),
+                      Iconsax.buildings,
+                      Colors.white),
+                  _buildStatItem('نشط', controller.activeStations.toString(),
+                      Iconsax.flash, Colors.greenAccent),
+                  _buildStatItem(
+                      'تحت الصيانة',
+                      controller.maintenanceStations.toString(),
+                      Iconsax.setting_2,
+                      Colors.orangeAccent),
+                ],
+              ),
+            ),
+          ),
+        ));
+  }
+
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min, // تصغير المساحة المستهلكة
+      children: [
+        Icon(icon, color: color, size: 22.sp),
+        SizedBox(height: 6.h),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontFamily: Appfontstring.ChangaLight,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.sp,
+            color: Colors.white.withOpacity(0.8),
+            fontFamily: Appfontstring.ChangaLight,
+          ),
+        ),
+      ],
     );
   }
 
@@ -111,12 +257,22 @@ class _AreanavState extends State<Areanav> {
     return Obx(() {
       final controller = Get.find<AreaNavController>();
       if (controller.isLoading.value) {
-        return Center(child: CircularProgressIndicator(strokeWidth: 2.sp));
+        return Center(
+            child: CircularProgressIndicator(
+                strokeWidth: 2.sp, color: Colors.white70));
       }
-      if (controller.stations.isEmpty) {
-        return Text(
-          'لا توجد محطات متاحة',
-          style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+
+      final filteredList = controller.filteredStations;
+
+      if (filteredList.isEmpty) {
+        return Center(
+          child: Text(
+            'لا توجد نتائج للبحث',
+            style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.white54,
+                fontFamily: Appfontstring.ChangaLight),
+          ),
         );
       }
       return SizedBox(
@@ -125,7 +281,7 @@ class _AreanavState extends State<Areanav> {
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: 8.w),
           child: Row(
-            children: controller.stations.map((station) {
+            children: filteredList.map((station) {
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                 child: VerticalStationCard(
@@ -145,19 +301,20 @@ class _AreanavState extends State<Areanav> {
   PreferredSizeWidget buildTabBar() {
     return TabBar(
       labelStyle: TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w600,
+        fontSize: 13.sp,
+        fontWeight: FontWeight.bold,
         fontFamily: Appfontstring.ChangaLight,
       ),
       indicatorColor: AreapageColors.kSecondaryColor,
-      isScrollable: true,
+      indicatorWeight: 3,
+      isScrollable: false,
       labelColor: AreapageColors.kSecondaryColor,
-      unselectedLabelColor: AreapageColors.kSubtitleColor,
+      unselectedLabelColor: Colors.white70,
       tabs: const [
-        Tab(text: 'الشمالية'),
-        Tab(text: 'الشرقية'),
-        Tab(text: 'الجنوبية'),
-        Tab(text: 'الغربية'),
+        Tab(text: 'الشمالية', icon: Icon(Iconsax.map_1, size: 20)),
+        Tab(text: 'الشرقية', icon: Icon(Iconsax.sun_1, size: 20)),
+        Tab(text: 'الجنوبية', icon: Icon(Iconsax.location_add, size: 20)),
+        Tab(text: 'الغربية', icon: Icon(Iconsax.wind_2, size: 20)),
       ],
     );
   }
@@ -167,33 +324,72 @@ class AreaNavController extends GetxController {
   final RxList<StationDetialesModel> stations = <StationDetialesModel>[].obs;
   final RxBool isLoading = true.obs;
 
+  // متغير للبحث
+  final RxString searchQuery = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
     fetchStations();
   }
 
-  Future<void> fetchStations() async {
+  /// تصفية المحطات بناءً على البحث
+  List<StationDetialesModel> get filteredStations {
+    if (searchQuery.isEmpty) return stations;
+    return stations
+        .where((s) =>
+            s.name.contains(searchQuery.value) ||
+            s.zone.contains(searchQuery.value))
+        .toList();
+  }
+
+  /// إحصائيات للمحطات (للدراسة والعرض في الـ Dashboard)
+  int get totalStations => stations.length;
+  int get activeStations => stations.where((s) => s.image.isNotEmpty).length;
+  int get maintenanceStations => stations.where((s) => s.image.isEmpty).length;
+
+  /// جلب جميع المحطات مع خاصية الـ Caching
+  /// يتم الجلب مرة واحدة فقط وتخزين البيانات حتى غلق التطبيق
+  Future<void> fetchStations({bool refresh = false}) async {
+    // التحقق مما إذا كانت البيانات موجودة بالفعل لمنع الاستدعاء المتكرر
+    if (stations.isNotEmpty && !refresh) return;
+
     try {
       isLoading.value = true;
+
+      // جلب جميع المحطات من الجدول بدون قيود
       final response = await Supabase.instance.client
           .from('station_table')
           .select()
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 10));
 
-      stations.value = response.map((json) {
+      final fetchedData = response.map((json) {
         return StationDetialesModel.fromJson(json);
       }).toList();
+
+      stations.assignAll(fetchedData);
     } catch (e) {
+      // تسجيل الخطأ في الـ Console للمساعدة في التصحيح
+      debugPrint('Error fetching stations: $e');
+
       Get.snackbar(
-        'خطأ',
-        'فشل في جلب المحطات',
+        'خطأ في الاتصال',
+        'فشل في جلب بيانات المحطات. يرجى التأكد من اتصالك بالإنترنت والمحاولة مرة أخرى.',
         snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 5),
         backgroundColor: Colors.red.withOpacity(0.8),
         colorText: Colors.white,
+        mainButton: TextButton(
+          onPressed: () {
+            if (Get.isSnackbarOpen) Get.back();
+            fetchStations(refresh: true);
+          },
+          child: const Text(
+            'إعادة المحاولة',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
       );
-      stations.clear();
     } finally {
       isLoading.value = false;
     }
@@ -212,28 +408,77 @@ class VerticalStationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 0.38 * ScreenUtil().screenWidth,
-        height: 200.h,
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 240, 240, 194),
-          border: Border.all(color: Colors.black, width: 1.3),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              flex: 3,
-              child: HeaderVerticalProduct(station: station),
+    return FadeInRight(
+      duration: const Duration(milliseconds: 500),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 140.w,
+          margin: EdgeInsets.symmetric(vertical: 4.h),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(18.r),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18.r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Image & Status
+                  Expanded(
+                    flex: 3,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: HeaderVerticalProduct(station: station),
+                        ),
+                        // Status Indicator
+                        Positioned(
+                          top: 8.h,
+                          left: 8.w,
+                          child: Container(
+                            width: 8.w,
+                            height: 8.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: station.image.isNotEmpty
+                                  ? Colors.greenAccent
+                                  : Colors.orangeAccent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (station.image.isNotEmpty
+                                          ? Colors.greenAccent
+                                          : Colors.orangeAccent)
+                                      .withOpacity(0.6),
+                                  blurRadius: 6,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Name & Zone
+                  Expanded(
+                    flex: 1,
+                    child: BodyVerticalProduct(station: station),
+                  ),
+                ],
+              ),
             ),
-            Expanded(
-              flex: 1,
-              child: BodyVerticalProduct(station: station),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -342,9 +587,9 @@ class TxtName extends StatelessWidget {
     return Text(
       station.name,
       style: TextStyle(
-        fontSize: 13.sp,
-        fontWeight: FontWeight.w600,
-        color: Colors.black,
+        fontSize: 12.sp,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
         fontFamily: Appfontstring.ChangaLight,
       ),
       maxLines: 1,
@@ -364,11 +609,11 @@ class TxtDescription extends StatelessWidget {
     return Text(
       'المنطقة : ${station.zone}',
       style: TextStyle(
-        fontSize: 12.sp,
+        fontSize: 10.sp,
         fontFamily: Appfontstring.ChangaLight,
-        color: AreapageColors.kSubtitleColor.withOpacity(0.7),
+        color: Colors.white.withOpacity(0.7),
       ),
-      maxLines: 2,
+      maxLines: 1,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.right,
     );

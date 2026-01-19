@@ -1,22 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/headlinetext.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cmscreen.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/main.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:http/http.dart' as http;
-import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 
+// ============================================================================
+// HOME NAVIGATION SCREEN
+// ============================================================================
 class HomeNav extends StatefulWidget {
   const HomeNav({super.key});
 
@@ -25,100 +28,39 @@ class HomeNav extends StatefulWidget {
 }
 
 class _HomeNavState extends State<HomeNav> {
-  late Future<void> _initialDataFuture;
-  String? selectedCategory;
-  String? selectedAnnouncingImage;
-  String? userEmail;
-  String? userGroup;
-  final SupabaseClient _client = Supabase.instance.client;
-  final Homenavcontroller _controller = Get.put(HomenavcontrollerImp());
-  late final CarouselSliderController carouselController;
-  final RxInt currentIndex = 0.obs;
+  late final HomenavcontrollerImp _controller;
+  late final CarouselSliderController _carouselController;
   Timer? _loadTimer;
+  late Future<void> _initialDataFuture;
+
+  // Local UI State
+  String? _selectedCategory;
+  final RxInt _currentCarouselIndex = 0.obs;
 
   @override
   void initState() {
     super.initState();
-    carouselController = CarouselSliderController();
-    _initialDataFuture = _initializeData();
+    _controller = Get.put(HomenavcontrollerImp());
+    _carouselController = CarouselSliderController();
     _startLoadVariationTimer();
+    _initialDataFuture = _initializeData();
   }
 
   Future<void> _initializeData() async {
-    await _loadUserGroup();
     await Future.wait([
+      _controller.checkUserGroup(),
       _controller.fetchCategories(),
       _controller.fetchAnnouncImages(),
       _controller.fetchCairoWeather(),
-      SupabaseService().fetchStationLoads().then((value) {
-        _controller.updateStationLoads(value);
-      }),
+      _controller.fetchStationLoads(),
     ]);
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
-  Future<void> _loadUserGroup() async {
-    final AuthService authService = AuthService();
-    userEmail = authService.getCurrentUserEmail();
-
-    if (userEmail == null) {
-      userGroup = null;
-      return;
-    }
-
-    try {
-      var response = await _client
-          .from('user_cm')
-          .select()
-          .eq('user_email', userEmail!)
-          .limit(1);
-      if (response.isNotEmpty) {
-        userGroup = 'cm';
-        if (mounted) setState(() {});
-        return;
-      }
-
-      response = await _client
-          .from('user_stations')
-          .select()
-          .eq('user_email', userEmail!)
-          .limit(1);
-      if (response.isNotEmpty) {
-        userGroup = 'stations';
-        if (mounted) setState(() {});
-        return;
-      }
-
-      response = await _client
-          .from('user_top')
-          .select()
-          .eq('user_email', userEmail!)
-          .limit(1);
-      if (response.isNotEmpty) {
-        userGroup = 'top';
-        if (mounted) setState(() {});
-        return;
-      }
-
-      response = await _client
-          .from('user_crcc')
-          .select()
-          .eq('user_email', userEmail!)
-          .limit(1);
-      if (response.isNotEmpty) {
-        userGroup = 'crcc';
-        if (mounted) setState(() {});
-        return;
-      }
-
-      userGroup = 'none';
-      if (mounted) setState(() {});
-    } catch (e) {
-      userGroup = 'none';
-      if (mounted) setState(() {});
-    }
+  void _reloadPage() {
+    setState(() {
+      _initialDataFuture = _initializeData();
+    });
   }
 
   void _startLoadVariationTimer() {
@@ -131,14 +73,13 @@ class _HomeNavState extends State<HomeNav> {
   @override
   void dispose() {
     _loadTimer?.cancel();
-    Get.delete<HomenavcontrollerImp>();
+    // No need to delete controller if it is used elsewhere or managed by bindings,
+    // otherwise: Get.delete<HomenavcontrollerImp>();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    HomenavcontrollerImp controller = Get.put(HomenavcontrollerImp());
-
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
@@ -148,39 +89,41 @@ class _HomeNavState extends State<HomeNav> {
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Scaffold(
+              floatingActionButton: SizedBox(
+                height: 25.h,
+                width: 25.w,
+                child: FloatingActionButton(
+                  onPressed: _reloadPage,
+                  backgroundColor: Appcolors.primaryColor,
+                  child: const Icon(Icons.refresh, color: Colors.white),
+                ),
+              ),
               body: Obx(() {
-                if (controller.isLoading.value) {
+                if (_controller.isLoading.value) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                return LiquidPullToRefresh(
-                  color: Appcolors.buttonGradient2.first,
-                  backgroundColor: Colors.white,
-                  height: 50.h,
-                  showChildOpacityTransition: false,
-                  onRefresh: _initializeData,
-                  child: FutureBuilder<void>(
-                    future: _initialDataFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Scaffold(
-                          body: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return _buildErrorWidget(
-                          error: snapshot.error.toString(),
-                          onRetry: _initializeData,
-                        );
-                      }
-                      return CustomScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        slivers: [
-                          SliverToBoxAdapter(child: buildHeaderSection()),
-                          SliverToBoxAdapter(child: buildContentSection()),
-                        ],
+                return FutureBuilder<void>(
+                  future: _initialDataFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
                       );
-                    },
-                  ),
+                    }
+                    if (snapshot.hasError) {
+                      return _buildErrorWidget(
+                        error: snapshot.error.toString(),
+                        onRetry: _reloadPage,
+                      );
+                    }
+                    return CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(child: _buildHeaderSection()),
+                        SliverToBoxAdapter(child: _buildContentSection()),
+                      ],
+                    );
+                  },
                 );
               }),
             ),
@@ -190,7 +133,9 @@ class _HomeNavState extends State<HomeNav> {
     );
   }
 
-  Widget buildHeaderSection() {
+  // --- Header Section ---
+
+  Widget _buildHeaderSection() {
     return ClipPath(
       clipper: CustomClipPathWidget(),
       child: Container(
@@ -208,7 +153,7 @@ class _HomeNavState extends State<HomeNav> {
               top: 8.h,
               left: 0,
               right: 0,
-              child: buildCategoryList(),
+              child: _buildCategoryList(),
             ),
           ],
         ),
@@ -216,16 +161,17 @@ class _HomeNavState extends State<HomeNav> {
     );
   }
 
-  Widget buildCategoryList() {
+  Widget _buildCategoryList() {
     final categories = _controller.categories;
     if (categories.isEmpty) {
       return SizedBox(
         height: 147.h,
-        child: const Center(child: Text('No categories available')),
+        child: const Center(child: Text(Stringshomenav.noCategories)),
       );
     }
 
-    selectedCategory ??= categories.first.name;
+    // Initialize selection if needed
+    _selectedCategory ??= categories.first.name;
 
     return SizedBox(
       height: 147.h,
@@ -237,7 +183,7 @@ class _HomeNavState extends State<HomeNav> {
         itemExtent: 75.w,
         itemBuilder: (_, index) {
           final category = categories[index];
-          final isSelected = selectedCategory == category.name;
+          final isSelected = _selectedCategory == category.name;
           return Padding(
             padding: const EdgeInsets.only(right: 1.0),
             child: GestureDetector(
@@ -253,68 +199,14 @@ class _HomeNavState extends State<HomeNav> {
     );
   }
 
-  void _onCategoryTap(MainCatogoryModel category) async {
-    if (userEmail == null) {
-      _showSnackBar('مخصص لادارات اخرى');
-      return;
-    }
-    if (userGroup == null) {
-      _showSnackBar('جاري التحقق من الصلاحيات...');
-      return;
-    }
-
-    final normalizedCategoryName = category.name.trim();
-    bool isAllowed = false;
-    List<String> allowedCategories = [];
-    switch (userGroup) {
-      case 'cm':
-        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'الازمات', 'خريطة'];
-        break;
-      case 'stations':
-        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'خريطة'];
-        break;
-      case 'top':
-      case 'crcc':
-        isAllowed = true;
-        break;
-      case 'none':
-        allowedCategories = [];
-        break;
-    }
-
-    if (!isAllowed && !allowedCategories.contains(normalizedCategoryName)) {
-      _showSnackBar('غير مصرح لك بالوصول إلى هذه الفئة');
-      return;
-    }
-
-    if (category.pageroute.isNotEmpty) {
-      try {
-        Get.toNamed(category.pageroute);
-      } catch (e) {
-        _showSnackBar('خطأ في التنقل: $e');
-      }
-    } else {
-      _showSnackBar('الفئة غير جاهزة بعد');
-    }
+  void _onCategoryTap(MainCatogoryModel category) {
+    // Logic delegated to controller
+    _controller.handleCategoryTap(context, category);
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
+  // --- Content Section ---
 
-  Widget buildContentSection() {
-    final announcImages = _controller.announcImages;
-    if (announcImages.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(7.5),
-        child: Center(child: Text('No images available')),
-      );
-    }
-
-    selectedAnnouncingImage ??= announcImages.first.imageUrl;
-
+  Widget _buildContentSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 10.75.w),
       child: Column(
@@ -322,7 +214,7 @@ class _HomeNavState extends State<HomeNav> {
           HeadlineText(
             fontfamily: Appfontstring.ChangaLight,
             fontSize: 18.75.sp,
-            headlineText: 'الاخبـار',
+            headlineText: Stringshomenav.newsHeadline,
             buttomheadlineText: '- - -',
             color: Colors.black87,
             isSeeAllVisible: true,
@@ -330,12 +222,12 @@ class _HomeNavState extends State<HomeNav> {
             screenWidth: 375.w,
           ),
           SizedBox(height: 5.h),
-          buildCarousel(),
+          _buildCarousel(),
           SizedBox(height: 5.h),
           HeadlineText(
             fontfamily: Appfontstring.ChangaLight,
             fontSize: 18.75.sp,
-            headlineText: 'طقس القاهرة',
+            headlineText: Stringshomenav.cairoWeatherHeadline,
             buttomheadlineText: '- - -',
             color: Colors.black87,
             screenHeight: 230.h,
@@ -343,7 +235,7 @@ class _HomeNavState extends State<HomeNav> {
             isSeeAllVisible: true,
           ),
           SizedBox(height: 5.h),
-          buildWeatherSection(),
+          _buildWeatherSection(),
           SizedBox(height: 5.h),
           Obx(() => _buildStationSections()),
         ],
@@ -351,116 +243,115 @@ class _HomeNavState extends State<HomeNav> {
     );
   }
 
-  Widget _buildStationSections() {
-    final stationData = _controller.stationLoads;
-    if (stationData.isEmpty) {
+  Widget _buildCarousel() {
+    final announcImages = _controller.announcImages;
+    if (announcImages.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(7.5),
-        child: Center(child: Text('No station data available')),
+        child: Center(child: Text(Stringshomenav.noImages)),
       );
     }
 
-    final Map<String, bool> direction = {
-      for (final s in stationData) s.stationName: true
-    };
-
-    double getTotalLoad() {
-      final total = stationData.fold(0.0, (sum, station) {
-        final absLoad = station.load.abs();
-        final isPositive = direction[station.stationName] ?? true;
-        return sum + (isPositive ? absLoad : -absLoad);
-      });
-      return total;
-    }
-
-    double getStationLoad(String stationName) {
-      try {
-        final station =
-            stationData.firstWhere((s) => s.stationName == stationName);
-        final absLoad = station.load.abs();
-        final isPositive = direction[stationName] ?? true;
-        final load = isPositive ? absLoad : -absLoad;
-        return load;
-      } catch (e) {
-        return 0.0;
-      }
-    }
-
-    return Column(
-      children: [
-        HeadlineText(
-          fontfamily: Appfontstring.ChangaLight,
-          fontSize: 18.75.sp,
-          headlineText: 'حمل شبكة القاهرة ',
-          buttomheadlineText: 'الكـل',
-          color: Colors.black,
-          screenHeight: 243.h,
-          screenWidth: 375.w,
-          isSeeAllVisible: true,
-          onSeeAllPressed: _controller.gotocairoscreen,
-        ),
-        SizedBox(height: 6.h),
-        buildGaugeSection(
-          context,
-          'حمل الشبكة',
-          0,
-          17000,
-          getTotalLoad(),
-        ),
-        SizedBox(height: 6.h),
-        HeadlineText(
-          fontfamily: Appfontstring.ChangaLight,
-          fontSize: 18.75.sp,
-          headlineText: 'التبادلات مع التحكمات الاقليمية',
-          buttomheadlineText: 'الكـل',
-          color: Colors.black,
-          screenHeight: 243.h,
-          screenWidth: 375.w,
-          isSeeAllVisible: true,
-          onSeeAllPressed: _controller.gotocairoscreen,
-        ),
-        buildGaugeSection(
-          context,
-          'عبور3/عاشر',
-          0,
-          130,
-          getStationLoad('عبور3/عاشر'),
-        ),
-        buildGaugeSection(
-          context,
-          'القناطر',
-          0,
-          70,
-          getStationLoad('قليوب/قناطر'),
-        ),
-        SizedBox(height: 6.h),
-        HeadlineText(
-          fontfamily: Appfontstring.ChangaLight,
-          fontSize: 18.75.sp,
-          headlineText: 'التوليد',
-          buttomheadlineText: 'الكـل',
-          color: Colors.black,
-          isSeeAllVisible: true,
-          screenHeight: 243.h,
-          screenWidth: 375.w,
-          onSeeAllPressed: _controller.gotocairoscreen,
-        ),
-        buildGaugeSection(
-          context,
-          'الكريمات الشمسية',
-          0,
-          110,
-          getStationLoad('الكريمات الشمسية'),
-        ),
-      ],
+    return Container(
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8.r,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16.r),
+            child: CarouselSlider(
+              carouselController: _carouselController,
+              options: CarouselOptions(
+                autoPlayCurve: Curves.linear,
+                enlargeCenterPage: true,
+                enlargeStrategy: CenterPageEnlargeStrategy.height,
+                height: 191.h,
+                enlargeFactor: 0.4,
+                viewportFraction: 0.7,
+                reverse: true,
+                enableInfiniteScroll: true,
+                initialPage: 0,
+                autoPlay: true,
+                autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                onPageChanged: (index, reason) =>
+                    _currentCarouselIndex.value = index,
+              ),
+              items: announcImages.map((photo) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return Container(
+                      width: 330.5.w,
+                      margin: EdgeInsets.symmetric(horizontal: 5.w),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: Colors.black, width: 1),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: CachedNetworkImage(
+                          maxHeightDiskCache: 400,
+                          maxWidthDiskCache: 400,
+                          memCacheHeight: 400,
+                          memCacheWidth: 400,
+                          imageUrl: photo.imageUrl,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => Center(
+                            child: Icon(
+                              Icons.error,
+                              color: Colors.redAccent,
+                              size: 40.sp,
+                            ),
+                          ),
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Obx(
+            () => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                announcImages.length,
+                (i) => Circularcontainer(
+                  padding: 0,
+                  height: 5.h,
+                  width: _currentCarouselIndex.value == i ? 20.w : 10.w,
+                  backgroundColor: _currentCarouselIndex.value == i
+                      ? Colors.blueAccent
+                      : Colors.grey.shade300,
+                  radius: 50.r,
+                  margin: EdgeInsets.symmetric(horizontal: 2.w),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget buildWeatherSection() {
+  Widget _buildWeatherSection() {
     final weatherData = _controller.weatherData;
     if (weatherData.isEmpty) {
       return _buildErrorWidget(
-        error: 'No weather data available',
+        error: Stringshomenav.noWeatherData,
         onRetry: _controller.refreshWeather,
       );
     }
@@ -468,7 +359,7 @@ class _HomeNavState extends State<HomeNav> {
     final currentWeather = weatherData.firstWhere(
       (weather) => weather.isCurrent,
       orElse: () => WeatherData(
-        dayName: 'الطقس الآن',
+        dayName: Stringshomenav.weatherNow,
         maxTemp: 0,
         minTemp: 0,
         description: 'Unknown',
@@ -557,6 +448,109 @@ class _HomeNavState extends State<HomeNav> {
     );
   }
 
+  Widget _buildStationSections() {
+    final stationData = _controller.stationLoads;
+    if (stationData.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(7.5),
+        child: Center(child: Text(Stringshomenav.noStationData)),
+      );
+    }
+
+    final Map<String, bool> direction = {
+      for (final s in stationData) s.stationName: true
+    };
+
+    double getStationLoad(String stationName) {
+      try {
+        final station =
+            stationData.firstWhere((s) => s.stationName == stationName);
+        final absLoad = station.load.abs();
+        final isPositive = direction[stationName] ?? true;
+        return isPositive ? absLoad : -absLoad;
+      } catch (e) {
+        return 0.0;
+      }
+    }
+
+    double getTotalLoad() {
+      return stationData.fold(0.0, (sum, station) {
+        final absLoad = station.load.abs();
+        final isPositive = direction[station.stationName] ?? true;
+        return sum + (isPositive ? absLoad : -absLoad);
+      });
+    }
+
+    return Column(
+      children: [
+        HeadlineText(
+          fontfamily: Appfontstring.ChangaLight,
+          fontSize: 18.75.sp,
+          headlineText: Stringshomenav.networkLoadHeadline,
+          buttomheadlineText: Stringshomenav.seeAll,
+          color: Colors.black,
+          screenHeight: 243.h,
+          screenWidth: 375.w,
+          isSeeAllVisible: true,
+          onSeeAllPressed: _controller.gotocairoscreen,
+        ),
+        SizedBox(height: 6.h),
+        buildGaugeSection(
+          context,
+          'حمل الشبكة',
+          0,
+          17000,
+          getTotalLoad(),
+        ),
+        SizedBox(height: 6.h),
+        HeadlineText(
+          fontfamily: Appfontstring.ChangaLight,
+          fontSize: 18.75.sp,
+          headlineText: Stringshomenav.exchangeHeadline,
+          buttomheadlineText: Stringshomenav.seeAll,
+          color: Colors.black,
+          screenHeight: 243.h,
+          screenWidth: 375.w,
+          isSeeAllVisible: true,
+          onSeeAllPressed: _controller.gotocairoscreen,
+        ),
+        buildGaugeSection(
+          context,
+          'عبور3/عاشر',
+          0,
+          130,
+          getStationLoad('عبور3/عاشر'),
+        ),
+        buildGaugeSection(
+          context,
+          'القناطر',
+          0,
+          70,
+          getStationLoad('قليوب/قناطر'),
+        ),
+        SizedBox(height: 6.h),
+        HeadlineText(
+          fontfamily: Appfontstring.ChangaLight,
+          fontSize: 18.75.sp,
+          headlineText: Stringshomenav.generationHeadline,
+          buttomheadlineText: Stringshomenav.seeAll,
+          color: Colors.black,
+          isSeeAllVisible: true,
+          screenHeight: 243.h,
+          screenWidth: 375.w,
+          onSeeAllPressed: _controller.gotocairoscreen,
+        ),
+        buildGaugeSection(
+          context,
+          'الكريمات الشمسية',
+          0,
+          110,
+          getStationLoad('الكريمات الشمسية'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildErrorWidget({
     required String error,
     required VoidCallback onRetry,
@@ -585,110 +579,18 @@ class _HomeNavState extends State<HomeNav> {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text('Retry'),
+              child: const Text(Stringshomenav.retry),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget buildCarousel() {
-    final announcImages = _controller.announcImages;
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.r),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8.r,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
-            child: CarouselSlider(
-              carouselController: carouselController,
-              options: CarouselOptions(
-                autoPlayCurve: Curves.linear,
-                enlargeCenterPage: true,
-                enlargeStrategy: CenterPageEnlargeStrategy.height,
-                height: 191.h,
-                enlargeFactor: 0.4,
-                viewportFraction: 0.7,
-                reverse: true,
-                enableInfiniteScroll: true,
-                initialPage: 0,
-                autoPlay: true,
-                autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                onPageChanged: (index, reason) => currentIndex.value = index,
-              ),
-              items: announcImages.map((photo) {
-                return Builder(
-                  builder: (BuildContext context) {
-                    return Container(
-                      width: 330.5.w,
-                      margin: EdgeInsets.symmetric(horizontal: 5.w),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.black, width: 1),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12.r),
-                        child: CachedNetworkImage(
-                          maxHeightDiskCache: 400,
-                          maxWidthDiskCache: 400,
-                          memCacheHeight: 400,
-                          memCacheWidth: 400,
-                          imageUrl: photo.imageUrl,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Center(
-                            child: Icon(
-                              Icons.error,
-                              color: Colors.redAccent,
-                              size: 40.sp,
-                            ),
-                          ),
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Obx(
-            () => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                announcImages.length,
-                (i) => Circularcontainer(
-                  padding: 0,
-                  height: 5.h,
-                  width: currentIndex.value == i ? 20.w : 10.w,
-                  backgroundColor: currentIndex.value == i
-                      ? Colors.blueAccent
-                      : Colors.grey.shade300,
-                  radius: 50.r,
-                  margin: EdgeInsets.symmetric(horizontal: 2.w),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
+// ============================================================================
+// WIDGET HELPERS
+// ============================================================================
 
 class CategoryItem extends StatelessWidget {
   final MainCatogoryModel category;
@@ -825,7 +727,7 @@ Widget buildGaugeSection(
 ) {
   return Container(
     width: 356.25.w,
-    height: 80.h, // Increased height for better gauge fit
+    height: 80.h,
     padding: EdgeInsets.only(left: 10.75.w, right: 10.75.w, top: 8.w),
     margin: EdgeInsets.symmetric(horizontal: 6.5.w),
     decoration: BoxDecoration(
@@ -917,9 +819,7 @@ class MyGaugeWidget extends StatelessWidget {
       maxValuescale.toDouble(),
     );
 
-    final formattedValue = clampedValue >= 0
-        ? clampedValue.toStringAsFixed(0)
-        : clampedValue.toStringAsFixed(0);
+    final formattedValue = clampedValue.toStringAsFixed(0);
 
     return IntrinsicHeight(
       child: Row(
@@ -929,7 +829,7 @@ class MyGaugeWidget extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Padding(
-              padding: EdgeInsets.only(top: 20.h), // Align vertically
+              padding: EdgeInsets.only(top: 20.h),
               child: Text(
                 capital,
                 style: TextStyle(
@@ -944,7 +844,7 @@ class MyGaugeWidget extends StatelessWidget {
           Expanded(
             flex: 2,
             child: SizedBox(
-              height: 60.h, // Fixed height for gauge, using .h consistently
+              height: 60.h,
               child: SfRadialGauge(
                 axes: [
                   RadialAxis(
@@ -1013,6 +913,10 @@ class MyGaugeWidget extends StatelessWidget {
   }
 }
 
+// ============================================================================
+// CONTROLLER
+// ============================================================================
+
 abstract class Homenavcontroller extends GetxController {
   void gotocairoscreen();
   void gotonewsscreen();
@@ -1021,12 +925,15 @@ abstract class Homenavcontroller extends GetxController {
   List<AnnouncImagesModel> get announcImages;
   List<WeatherData> get weatherData;
   RxList<StationLoad> get stationLoads;
+  String get userGroup;
 
   Future<void> fetchCategories();
   Future<void> fetchAnnouncImages();
   Future<void> fetchCairoWeather();
-  void updateStationLoads(List<StationLoad> loads);
+  Future<void> fetchStationLoads();
+  Future<void> checkUserGroup();
   void updateStationVariations();
+  void handleCategoryTap(BuildContext context, MainCatogoryModel category);
 }
 
 class HomenavcontrollerImp extends Homenavcontroller {
@@ -1034,6 +941,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   final RxList<AnnouncImagesModel> _announcImages = <AnnouncImagesModel>[].obs;
   final RxList<WeatherData> _weatherData = <WeatherData>[].obs;
   final RxList<StationLoad> _stationLoads = <StationLoad>[].obs;
+  final RxString _userGroup = 'none'.obs;
   final isLoading = false.obs;
 
   @override
@@ -1044,6 +952,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
   List<WeatherData> get weatherData => _weatherData;
   @override
   RxList<StationLoad> get stationLoads => _stationLoads;
+  @override
+  String get userGroup => _userGroup.value;
 
   @override
   void gotocairoscreen() {
@@ -1053,6 +963,91 @@ class HomenavcontrollerImp extends Homenavcontroller {
   @override
   void gotonewsscreen() {
     Get.to(() => const Cmscreen());
+  }
+
+  @override
+  Future<void> checkUserGroup() async {
+    final email = Get.find<AuthService>().getCurrentUserEmail();
+    if (email == null) {
+      _userGroup.value = 'none';
+      return;
+    }
+
+    try {
+      final client = Supabase.instance.client;
+
+      // Parallel execution of queries for better performance
+      final results = await Future.wait([
+        client.from('user_cm').select().eq('user_email', email).limit(1),
+        client.from('user_stations').select().eq('user_email', email).limit(1),
+        client.from('user_top').select().eq('user_email', email).limit(1),
+        client.from('user_crcc').select().eq('user_email', email).limit(1),
+      ]);
+
+      if (results[0].isNotEmpty)
+        _userGroup.value = 'cm';
+      else if (results[1].isNotEmpty)
+        _userGroup.value = 'stations';
+      else if (results[2].isNotEmpty)
+        _userGroup.value = 'top';
+      else if (results[3].isNotEmpty)
+        _userGroup.value = 'crcc';
+      else
+        _userGroup.value = 'none';
+    } catch (e) {
+      _userGroup.value = 'none';
+      debugPrint('Error checking user group: $e');
+    }
+  }
+
+  @override
+  void handleCategoryTap(BuildContext context, MainCatogoryModel category) {
+    if (Get.find<AuthService>().getCurrentUserEmail() == null) {
+      _showSnackBar(context, Stringshomenav.msgOtherDepts);
+      return;
+    }
+
+    // Check permissions logic moved here
+    final normalizedCategoryName = category.name.trim();
+    bool isAllowed = false;
+    List<String> allowedCategories = [];
+
+    switch (userGroup) {
+      case 'cm':
+        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'الازمات', 'خريطة'];
+        break;
+      case 'stations':
+        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'خريطة'];
+        break;
+      case 'top':
+      case 'crcc':
+        isAllowed = true;
+        break;
+      case 'none':
+        allowedCategories = [];
+        break;
+    }
+
+    if (!isAllowed && !allowedCategories.contains(normalizedCategoryName)) {
+      _showSnackBar(context, Stringshomenav.msgAccessDenied);
+      return;
+    }
+
+    if (category.pageroute.isNotEmpty) {
+      try {
+        Get.toNamed(category.pageroute);
+      } catch (e) {
+        _showSnackBar(context, 'خطأ في التنقل: $e');
+      }
+    } else {
+      _showSnackBar(context, Stringshomenav.msgNotReady);
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
   }
 
   @override
@@ -1088,6 +1083,16 @@ class HomenavcontrollerImp extends Homenavcontroller {
   }
 
   @override
+  Future<void> fetchStationLoads() async {
+    try {
+      final loads = await SupabaseService().fetchStationLoads();
+      updateStationLoads(loads);
+    } catch (e) {
+      _stationLoads.value = [];
+    }
+  }
+
+  @override
   Future<void> fetchCairoWeather() async {
     const apiUrl =
         'https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto&forecast_days=5';
@@ -1098,71 +1103,61 @@ class HomenavcontrollerImp extends Homenavcontroller {
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['daily'] == null || data['current_weather'] == null) {
-          throw Exception('Invalid API response: Missing required fields');
+        // ... (Parsing logic similar to previous implementation, kept concise)
+        if (data['daily'] != null && data['current_weather'] != null) {
+          _parseWeatherData(data);
         }
-
-        final daily = data['daily'];
-        final current = data['current_weather'];
-
-        if (daily['time'] == null ||
-            daily['temperature_2m_max'] == null ||
-            daily['temperature_2m_min'] == null ||
-            daily['weathercode'] == null ||
-            current['temperature'] == null ||
-            current['weathercode'] == null) {
-          throw Exception('Invalid API response: Missing weather fields');
-        }
-
-        final currentWeather = WeatherData(
-          dayName: 'الطقس الآن',
-          maxTemp: (current['temperature'] as num?)?.toInt() ?? 0,
-          minTemp: (current['temperature'] as num?)?.toInt() ?? 0,
-          description: _getWeatherDescription(
-            (current['weathercode'] as num?)?.toInt() ?? 0,
-          ),
-          icon: _getWeatherIcon(
-            _getWeatherDescription(
-              (current['weathercode'] as num?)?.toInt() ?? 0,
-            ),
-          ),
-          isToday: false,
-          isCurrent: true,
-          date: DateTime.now(),
-        );
-
-        final forecast = List.generate(
-          (daily['time'] as List<dynamic>).length - 1,
-          (i) {
-            final index = i + 1;
-            return WeatherData(
-              dayName: _getDayName(DateTime.parse(daily['time'][index])),
-              maxTemp:
-                  (daily['temperature_2m_max'][index] as num?)?.toInt() ?? 0,
-              minTemp:
-                  (daily['temperature_2m_min'][index] as num?)?.toInt() ?? 0,
-              description: _getWeatherDescription(
-                (daily['weathercode'][index] as num?)?.toInt() ?? 0,
-              ),
-              icon: _getWeatherIcon(
-                _getWeatherDescription(
-                  (daily['weathercode'][index] as num?)?.toInt() ?? 0,
-                ),
-              ),
-              isToday: false,
-              isCurrent: false,
-              date: DateTime.parse(daily['time'][index]),
-            );
-          },
-        ).take(4).toList();
-
-        _weatherData.value = [currentWeather, ...forecast];
-      } else {
-        throw Exception('Failed to fetch weather: ${response.statusCode}');
       }
     } catch (e) {
       _weatherData.value = [];
     }
+  }
+
+  void _parseWeatherData(Map<String, dynamic> data) {
+    final daily = data['daily'];
+    final current = data['current_weather'];
+
+    final currentWeather = WeatherData(
+      dayName: Stringshomenav.weatherNow,
+      maxTemp: (current['temperature'] as num?)?.toInt() ?? 0,
+      minTemp: (current['temperature'] as num?)?.toInt() ?? 0,
+      description: _getWeatherDescription(
+        (current['weathercode'] as num?)?.toInt() ?? 0,
+      ),
+      icon: _getWeatherIcon(
+        _getWeatherDescription(
+          (current['weathercode'] as num?)?.toInt() ?? 0,
+        ),
+      ),
+      isToday: false,
+      isCurrent: true,
+      date: DateTime.now(),
+    );
+
+    final forecast = List.generate(
+      (daily['time'] as List<dynamic>).length - 1,
+      (i) {
+        final index = i + 1;
+        return WeatherData(
+          dayName: _getDayName(DateTime.parse(daily['time'][index])),
+          maxTemp: (daily['temperature_2m_max'][index] as num?)?.toInt() ?? 0,
+          minTemp: (daily['temperature_2m_min'][index] as num?)?.toInt() ?? 0,
+          description: _getWeatherDescription(
+            (daily['weathercode'][index] as num?)?.toInt() ?? 0,
+          ),
+          icon: _getWeatherIcon(
+            _getWeatherDescription(
+              (daily['weathercode'][index] as num?)?.toInt() ?? 0,
+            ),
+          ),
+          isToday: false,
+          isCurrent: false,
+          date: DateTime.parse(daily['time'][index]),
+        );
+      },
+    ).take(4).toList();
+
+    _weatherData.value = [currentWeather, ...forecast];
   }
 
   @override
@@ -1170,7 +1165,6 @@ class HomenavcontrollerImp extends Homenavcontroller {
     await fetchCairoWeather();
   }
 
-  @override
   void updateStationLoads(List<StationLoad> loads) {
     _stationLoads.value = loads;
   }
@@ -1183,7 +1177,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
       final variation = random.nextDouble() * delta + station.minVariation;
       station.load = station.baseLoad + variation;
     }
-    _stationLoads.refresh(); // Trigger reactive update
+    _stationLoads.refresh();
   }
 
   String _getDayName(DateTime date) {
