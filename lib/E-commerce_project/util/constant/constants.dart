@@ -226,3 +226,23 @@ class Appfontstring {
 class FF {
   static const FontWeight B = FontWeight.bold;
 }
+
+class AppBarText {
+  static const String companyName = 'الشـركـة المصريـة لنـقـل الكهـرباء';
+  static const String cairo = '(القاهـرة) ';
+  static const String regionalControl = 'التحكم الاقليمى';
+  static const String userPrefix = 'User : ';
+  static const String unknownUser = 'غير معروف';
+  static const String loadingFailed = 'فشل التحميل - انقر للمحاولة';
+
+  // Sign Out Dialog
+  static const String signOutTitle = 'تاكيد الخروج';
+  static const String signOutMessage = 'هل تريد تسجيل الخروج؟';
+  static const String signOutButton = 'تسجيل الخروج';
+  static const String cancelButton = 'إلغاء';
+
+  // Status Messages
+  static const String signOutLoading = 'جاري تسجيل الخروج...';
+  static const String signOutError = 'حدث خطأ أثناء تسجيل الخروج';
+  static const String retry = 'إعادة المحاولة';
+}

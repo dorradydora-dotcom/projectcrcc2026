@@ -24,41 +24,29 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   void initState() {
     super.initState();
-    _loadUserEmail();
+    // محاولة جلب البيانات بشكل متزامن أولاً لتجنب الوميض (Flicker)
+    _tryLoadSynchronously();
   }
 
-  Future<void> _loadUserEmail() async {
+  void _tryLoadSynchronously() {
     try {
-      // الانتظار حتى تكتمل تهيئة الخدمات
-      await ensureServicesInitialized();
-
-      // التأكد من أن AuthService مهيأ
-      if (!_authService.isInitialized) {
-        await _authService.initializeServices();
-      }
-
-      // الحصول على البريد الإلكتروني باستخدام الدالة الآمنة
-      final email = _authService.getCurrentUserEmail();
-
-      if (mounted) {
-        setState(() {
+      // محاولة الوصول المباشر
+      // نتحقق إذا كان الـ AuthService مهيأ بالفعل
+      if (_authService.isInitialized) {
+        final email = _authService.getCurrentUserEmail();
+        if (email != null) {
           _userEmail = email;
           _isLoading = false;
           _hasError = false;
-        });
+          return;
+        }
       }
-    } catch (e, stackTrace) {
-      debugPrint('Error loading user email: $e');
-      AppLogger.logError(
-          'Failed to load user email in CustomAppBar', e, stackTrace);
 
-      if (mounted) {
-        setState(() {
-          _userEmail = null;
-          _isLoading = false;
-          _hasError = true;
-        });
-      }
+      // إذا لم ننجح متزامناً، نبدأ التحميل غير المتزامن
+      _loadUserEmail();
+    } catch (e) {
+      // في حالة حدوث أي خطأ، نلجأ للطريقة الآمنة غير المتزامنة
+      _loadUserEmail();
     }
   }
 
@@ -70,6 +58,40 @@ class _CustomAppBarState extends State<CustomAppBar> {
       });
     }
     _loadUserEmail();
+  }
+
+  Future<void> _loadUserEmail() async {
+    // إذا تم التحميل بالفعل متزامناً، لا داعي للإكمال
+    if (!_isLoading && _userEmail != null) return;
+
+    try {
+      // الحصول على البريد الإلكتروني مباشرة - الخدمات مضمونة من قبل AuthWrapper
+      final email = await _authService.getCurrentUserEmailSafe();
+
+      if (mounted) {
+        setState(() {
+          _userEmail = email;
+          _isLoading = false;
+          _hasError = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Error loading user email: $e');
+      // نفترض وجود AppLogger في النطاق (من main.dart أو غيره)
+      try {
+        AppLogger.logError('Failed to load user email', e, stackTrace);
+      } catch (_) {
+        // Fallback if AppLogger is not available/initialized
+      }
+
+      if (mounted) {
+        setState(() {
+          _userEmail = null;
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
+    }
   }
 
   @override
@@ -92,20 +114,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'الشـركـة المصريـة لنـقـل الكهـرباء',
+          AppBarText.companyName,
           style: TextStyle(
-            color: C.white,
-            fontFamily: Appfontstring.ChangaLight,
-            fontSize: responsiveFontSize(screenWidth, 0.044),
-            fontWeight: FontWeight.bold,
-          ),
+              color: C.white,
+              fontFamily: Appfontstring.ChangaLight,
+              fontSize: responsiveFontSize(screenWidth, 0.044),
+              fontWeight: FontWeight.bold),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '(القاهـرة) ',
+              AppBarText.cairo,
               style: TextStyle(
                 color: C.yellow,
                 fontFamily: Appfontstring.ChangaLight,
@@ -115,7 +136,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
             SizedBox(width: screenWidth * 0.01),
             Text(
-              'التحكم الاقليمى',
+              AppBarText.regionalControl,
               style: TextStyle(
                 color: C.white,
                 fontFamily: Appfontstring.ChangaLight,
@@ -156,7 +177,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'فشل التحميل - انقر للمحاولة',
+              AppBarText.loadingFailed,
               style: TextStyle(
                 color: const Color.fromARGB(255, 255, 123, 123),
                 fontFamily: Appfontstring.ChangaLight,
@@ -176,7 +197,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     }
 
     return Text(
-      'User : ${_userEmail ?? "غير معروف"}',
+      '${AppBarText.userPrefix}${_userEmail ?? AppBarText.unknownUser}',
       style: TextStyle(
         color: const Color.fromARGB(116, 178, 223, 155),
         fontFamily: Appfontstring.ChangaLight,
@@ -208,23 +229,23 @@ class _CustomAppBarState extends State<CustomAppBar> {
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             title: const Text(
-              'تاكيد الخروج',
+              AppBarText.signOutTitle,
               style: TextStyle(fontFamily: Appfontstring.ChangaLight),
               textAlign: TextAlign.right,
             ),
             content: const Text(
-              'هل تريد تسجيل الخروج؟',
+              AppBarText.signOutMessage,
               style: TextStyle(fontFamily: Appfontstring.ChangaLight),
               textAlign: TextAlign.right,
             ),
             actions: [
               TextButton(
                 onPressed: () async {
-                  Navigator.of(dialogContext).pop();
+                  Get.back(); // إغلاق الـ Dialog
                   await _handleSignOut(context);
                 },
                 child: const Text(
-                  'تسجيل الخروج',
+                  AppBarText.signOutButton,
                   style: TextStyle(
                     fontFamily: Appfontstring.ChangaLight,
                     color: C.red,
@@ -232,9 +253,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 ),
               ),
               TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
+                onPressed: () => Get.back(), // إغلاق الـ Dialog
                 child: const Text(
-                  'إلغاء',
+                  AppBarText.cancelButton,
                   style: TextStyle(fontFamily: Appfontstring.ChangaLight),
                 ),
               ),
@@ -253,28 +274,35 @@ class _CustomAppBarState extends State<CustomAppBar> {
       await _authService.signOut(context: context);
 
       if (mounted) {
-        Navigator.of(context, rootNavigator: true)
-            .pop(); // إغلاق dialog التحميل
+        // إغلاق dialog التحميل (Root Navigator لأنه dialog)
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
         await Get.offAll(() => const LoginScreen());
       }
     } catch (e, stackTrace) {
       debugPrint('Error during sign out: $e');
-      AppLogger.logError('Error during sign out', e, stackTrace);
+      try {
+        AppLogger.logError('Error during sign out', e, stackTrace);
+      } catch (_) {}
 
       if (mounted) {
-        Navigator.of(context, rootNavigator: true)
-            .pop(); // إغلاق dialog التحميل
+        // إغلاق dialog التحميل عند الخطأ أيضاً
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
-              'حدث خطأ أثناء تسجيل الخروج',
+              AppBarText.signOutError,
               textDirection: TextDirection.rtl,
               style: TextStyle(fontFamily: Appfontstring.ChangaLight),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
-              label: 'إعادة المحاولة',
+              label: AppBarText.retry,
               onPressed: () => _handleSignOut(context),
             ),
           ),
@@ -296,7 +324,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               SizedBox(width: 20),
               Expanded(
                 child: Text(
-                  'جاري تسجيل الخروج...',
+                  AppBarText.signOutLoading,
                   style: TextStyle(fontFamily: Appfontstring.ChangaLight),
                 ),
               ),
