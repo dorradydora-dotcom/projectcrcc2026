@@ -1,3 +1,4 @@
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/zone_screen.dart';
 import 'package:flutter/material.dart';
 
 class EastScreen extends StatelessWidget {
@@ -5,12 +6,9 @@ class EastScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return SizedBox(
-        width: screenWidth,
-        height: screenHeight,
-        child: Center(child: Text('EastScreen')));
+    return const ZoneScreen(
+      zoneName: 'east',
+      displayName: 'المنطقة الشرقية',
+    );
   }
 }

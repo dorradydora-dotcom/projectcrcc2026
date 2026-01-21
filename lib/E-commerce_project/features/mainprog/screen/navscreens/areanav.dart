@@ -1,6 +1,6 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favoritesnav.dart';
-import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/NonthScreen.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/northscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/eastscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/southscreen.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/sectionscreens/westscreen.dart';
@@ -12,7 +12,7 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
-import 'dart:ui';
+
 import 'package:animate_do/animate_do.dart';
 
 class Areanav extends StatefulWidget {
@@ -53,7 +53,7 @@ class _AreanavState extends State<Areanav> {
             ],
             body: const TabBarView(
               children: [
-                NonthScreen(),
+                NorthScreen(),
                 EastScreen(),
                 SouthScreen(),
                 WestScreen(),
@@ -67,9 +67,10 @@ class _AreanavState extends State<Areanav> {
 
   SliverAppBar buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 0.60 * ScreenUtil().screenHeight,
+      expandedHeight: 0.66 * ScreenUtil().screenHeight, // تقليل الارتفاع قليلاً
       floating: false,
       pinned: true,
+      elevation: 0,
       automaticallyImplyLeading: false,
       flexibleSpace: buildFlexibleSpace(),
       bottom: buildTabBar(),
@@ -83,8 +84,9 @@ class _AreanavState extends State<Areanav> {
           gradient: LinearGradient(
             colors: [
               Appcolors.primaryColor,
-              Color.fromARGB(255, 30, 80, 120), // أغمق قليلاً للعمق
-              Color.fromARGB(255, 10, 30, 50), // نهاية داكنة فخمة
+              Color(0xFF163C5E),
+              Color(0xFF0F2B44),
+              Color(0xFF081A2A), // نهاية داكنة جداً
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -107,7 +109,7 @@ class _AreanavState extends State<Areanav> {
             ),
             Column(
               children: [
-                SizedBox(height: 66.h), // مسافة علوية أقل قليلاً لتوفير مساحة
+                SizedBox(height: 55.h), // مسافة علوية أقل قليلاً لتوفير مساحة
                 // Dashboard Summary
                 FadeInDown(
                   child: Padding(
@@ -115,7 +117,7 @@ class _AreanavState extends State<Areanav> {
                     child: buildDashboardSummary(),
                   ),
                 ),
-                SizedBox(height: 15.h), // تقليل المسافة
+                SizedBox(height: 10.h), // تقليل المسافة
                 // Search Bar
                 FadeInUp(
                   delay: const Duration(milliseconds: 200),
@@ -124,7 +126,7 @@ class _AreanavState extends State<Areanav> {
                     child: buildSearchBar(),
                   ),
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 10.h),
                 // Horizontal List Header
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -132,13 +134,21 @@ class _AreanavState extends State<Areanav> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       FadeInLeft(
-                        child: Text(
-                          'أحدث المحطات',
-                          style: TextStyle(
-                            fontFamily: Appfontstring.ChangaLight,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Text(
+                            'أحدث المحطات المضافة',
+                            style: TextStyle(
+                              fontFamily: Appfontstring.ChangaLight,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
                           ),
                         ),
                       ),
@@ -159,31 +169,32 @@ class _AreanavState extends State<Areanav> {
   Widget buildSearchBar() {
     final controller = Get.find<AreaNavController>();
     return Container(
-      height: 45.h,
+      height: 50.h,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15.r),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: TextField(
-            onChanged: (value) => controller.searchQuery.value = value,
-            textAlign: TextAlign.right,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'ابحث عن محطة أو منطقة...',
-              hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.5), fontSize: 12.sp),
-              prefixIcon: Icon(Iconsax.search_normal,
-                  color: Colors.white.withOpacity(0.7), size: 18.sp),
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
-            ),
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: TextField(
+        onChanged: (value) => controller.searchQuery.value = value,
+        textAlign: TextAlign.right,
+        style: TextStyle(color: Colors.white, fontSize: 13.sp),
+        decoration: InputDecoration(
+          hintText: 'ابحث عن محطة أو منطقة...',
+          hintStyle:
+              TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12.sp),
+          prefixIcon: Icon(Iconsax.search_normal,
+              color: Appcolors.primaryColor2, size: 20.sp),
+          border: InputBorder.none,
+          contentPadding:
+              EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
         ),
       ),
     );
@@ -192,64 +203,70 @@ class _AreanavState extends State<Areanav> {
   Widget buildDashboardSummary() {
     final controller = Get.find<AreaNavController>();
     return Obx(() => Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: 12.w, vertical: 14.h), // حواف أكثر رشاقة
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(24.r),
+            border: Border.all(color: Colors.white.withOpacity(0.12)),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatItem(
-                      'إجمالي المحطات',
-                      controller.totalStations.toString(),
-                      Iconsax.buildings,
-                      Colors.white),
-                  _buildStatItem('نشط', controller.activeStations.toString(),
-                      Iconsax.flash, Colors.greenAccent),
-                  _buildStatItem(
-                      'تحت الصيانة',
-                      controller.maintenanceStations.toString(),
-                      Iconsax.setting_2,
-                      Colors.orangeAccent),
-                ],
-              ),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem('المحطات', controller.totalStations.toString(),
+                  Iconsax.buildings, Colors.blueAccent),
+              _buildVerticalDivider(),
+              _buildStatItem('نشطة', controller.activeStations.toString(),
+                  Iconsax.flash, Colors.greenAccent),
+              _buildVerticalDivider(),
+              _buildStatItem('صيانة', controller.maintenanceStations.toString(),
+                  Iconsax.setting_2, Colors.orangeAccent),
+            ],
           ),
         ));
   }
 
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 30.h,
+      width: 1,
+      color: Colors.white.withOpacity(0.1),
+    );
+  }
+
   Widget _buildStatItem(
       String label, String value, IconData icon, Color color) {
-    return Column(
-      mainAxisSize: MainAxisSize.min, // تصغير المساحة المستهلكة
-      children: [
-        Icon(icon, color: color, size: 22.sp),
-        SizedBox(height: 6.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontFamily: Appfontstring.ChangaLight,
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.r),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20.sp),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10.sp,
-            color: Colors.white.withOpacity(0.8),
-            fontFamily: Appfontstring.ChangaLight,
+          SizedBox(height: 8.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: Appfontstring.ChangaLight,
+            ),
           ),
-        ),
-      ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9.sp,
+              color: Colors.white.withOpacity(0.6),
+              fontFamily: Appfontstring.ChangaLight,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -301,15 +318,19 @@ class _AreanavState extends State<Areanav> {
   PreferredSizeWidget buildTabBar() {
     return TabBar(
       labelStyle: TextStyle(
-        fontSize: 13.sp,
+        fontSize: 12.sp,
         fontWeight: FontWeight.bold,
         fontFamily: Appfontstring.ChangaLight,
       ),
+      unselectedLabelStyle: TextStyle(
+        fontSize: 11.sp,
+        fontFamily: Appfontstring.ChangaLight,
+      ),
       indicatorColor: AreapageColors.kSecondaryColor,
-      indicatorWeight: 3,
+      indicatorWeight: 4,
       isScrollable: false,
       labelColor: AreapageColors.kSecondaryColor,
-      unselectedLabelColor: Colors.white70,
+      unselectedLabelColor: Colors.white60,
       tabs: const [
         Tab(text: 'الشمالية', icon: Icon(Iconsax.map_1, size: 20)),
         Tab(text: 'الشرقية', icon: Icon(Iconsax.sun_1, size: 20)),
@@ -409,75 +430,91 @@ class VerticalStationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FadeInRight(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 140.w,
-          margin: EdgeInsets.symmetric(vertical: 4.h),
+          width: 150.w, // زيادة العرض قليلاً للتوازن
+          margin: EdgeInsets.symmetric(vertical: 6.h, horizontal: 4.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(22.r),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: -5,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Image & Status
-                  Expanded(
-                    flex: 3,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: HeaderVerticalProduct(station: station),
-                        ),
-                        // Status Indicator
-                        Positioned(
-                          top: 8.h,
-                          left: 8.w,
-                          child: Container(
-                            width: 8.w,
-                            height: 8.w,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: station.image.isNotEmpty
-                                  ? Colors.greenAccent
-                                  : Colors.orangeAccent,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (station.image.isNotEmpty
-                                          ? Colors.greenAccent
-                                          : Colors.orangeAccent)
-                                      .withOpacity(0.6),
-                                  blurRadius: 6,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Image Section
+              Expanded(
+                flex: 12, // زيادة نسبة الصورة
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: HeaderVerticalProduct(station: station),
+                    ),
+                    // Gradient Overlay for Image
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18.r),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.4),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  // Name & Zone
-                  Expanded(
-                    flex: 1,
-                    child: BodyVerticalProduct(station: station),
-                  ),
-                ],
+                    // Status Badge
+                    Positioned(
+                      top: 10.h,
+                      left: 10.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: (station.image.isNotEmpty
+                                  ? Colors.greenAccent
+                                  : Colors.orangeAccent)
+                              .withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(8.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          station.image.isNotEmpty ? 'نشطة' : 'صيانة',
+                          style: TextStyle(
+                            fontSize: 8.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              // Content Section
+              Expanded(
+                flex: 5,
+                child: BodyVerticalProduct(station: station),
+              ),
+            ],
           ),
         ),
       ),
@@ -495,12 +532,12 @@ class HeaderVerticalProduct extends StatelessWidget {
     return Stack(
       children: [
         Container(
+          margin: EdgeInsets.all(4.r),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: Colors.black, width: 1),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14.r), // Consistent radius
+            borderRadius: BorderRadius.circular(18.r),
             child: Image.network(
               station.image.isNotEmpty
                   ? station.image
@@ -509,12 +546,15 @@ class HeaderVerticalProduct extends StatelessWidget {
               width: double.infinity,
               height: double.infinity,
               errorBuilder: (context, error, stackTrace) => Center(
-                child: Icon(Icons.error, color: Colors.red, size: 40.sp),
+                child: Icon(Icons.error, color: Colors.white24, size: 30.sp),
               ),
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.sp));
+                    child: CircularProgressIndicator(
+                  strokeWidth: 2.sp,
+                  color: Colors.white24,
+                ));
               },
             ),
           ),
@@ -587,8 +627,8 @@ class TxtName extends StatelessWidget {
     return Text(
       station.name,
       style: TextStyle(
-        fontSize: 12.sp,
-        fontWeight: FontWeight.bold,
+        fontSize: 11.sp, // تصغير بسيط ليناسب التصميم الأنيق
+        fontWeight: FontWeight.w600,
         color: Colors.white,
         fontFamily: Appfontstring.ChangaLight,
       ),
@@ -609,9 +649,9 @@ class TxtDescription extends StatelessWidget {
     return Text(
       'المنطقة : ${station.zone}',
       style: TextStyle(
-        fontSize: 10.sp,
+        fontSize: 9.sp,
         fontFamily: Appfontstring.ChangaLight,
-        color: Colors.white.withOpacity(0.7),
+        color: Colors.white.withOpacity(0.5), // تقليل الوضوح قليلاً للتباين
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
