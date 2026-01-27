@@ -108,28 +108,25 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
   double _getTotalLoad() =>
       _stationLoads.fold(0.0, (sum, station) => sum + station.load);
 
-  Color _getHeaderColor() =>
-      const Color.fromARGB(255, 119, 235, 166).withOpacity(0.15);
-
   Widget _buildHeaderCell(String text, double width) {
     return SizedBox(
         width: width,
         child: Container(
-            height: 36.h,
+            height: 40.h,
             decoration: BoxDecoration(
-                color: _getHeaderColor(),
+                color: Colors.white.withOpacity(0.05),
                 border: Border.all(
-                    color: Colors.black.withOpacity(0.2), width: 0.5),
+                    color: Colors.white.withOpacity(0.1), width: 0.5),
                 borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8), topRight: Radius.circular(8))),
             alignment: Alignment.center,
             child: Text(text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 12,
+                style: TextStyle(
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: Appfontstring.ChangaLight,
-                    color: Color(0xFF0D47A1)),
+                    color: Colors.blueAccent),
                 textDirection: TextDirection.rtl)));
   }
 
@@ -137,22 +134,22 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
     final bool hasChange = isIncreasing.containsKey(station.stationName);
     final Color loadColor = hasChange
         ? (isIncreasing[station.stationName]! ? Colors.green : Colors.red)
-        : const Color(0xFF0D47A1);
+        : Colors.white70;
 
     return SizedBox(
       width: 70.w,
       child: Container(
-        height: 32.h,
+        height: 36.h,
         decoration: BoxDecoration(
           color: bgColor,
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
         ),
         alignment: Alignment.center,
         child: Text(
           station.load.toStringAsFixed(0),
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 11.sp,
             fontWeight: FontWeight.w600,
             fontFamily: Appfontstring.ChangaLight,
             color: loadColor,
@@ -167,20 +164,20 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
     return SizedBox(
       width: 100.w,
       child: Container(
-        height: 32.h,
+        height: 36.h,
         decoration: BoxDecoration(
           color: bgColor,
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
         ),
         alignment: Alignment.center,
         child: Text(
           stationName,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 11,
+          style: TextStyle(
+            fontSize: 11.sp,
             fontWeight: FontWeight.w600,
             fontFamily: Appfontstring.ChangaLight,
-            color: Color(0xFF0D47A1),
+            color: Colors.white70,
           ),
           textDirection: TextDirection.rtl,
           overflow: TextOverflow.ellipsis,
@@ -193,11 +190,60 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
     return SizedBox(
       width: width,
       child: Container(
-        height: 32.h,
+        height: 36.h,
         decoration: BoxDecoration(
           color: bgColor,
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Appcolors.primaryColor,
+            Color(0xFF163C5E),
+            Color(0xFF0F2B44),
+            Color(0xFF081A2A)
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      height: 120.h,
+      child: Stack(
+        children: [
+          Positioned(
+            right: 10.w,
+            top: 30.h,
+            child: Icon(
+              Icons.electric_bolt,
+              size: 80.sp,
+              color: Colors.white.withOpacity(0.09),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'أحمال الشبكة',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22.sp,
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -256,7 +302,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 fontFamily: Appfontstring.ChangaLight,
-                color: Colors.blueAccent,
+                color: Colors.white70,
               ),
               textDirection: TextDirection.rtl),
         ),
@@ -282,103 +328,101 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
       height: 60.h,
       showChildOpacityTransition: false,
       onRefresh: _fetchData,
-      child: WillPopScope(
-        onWillPop: () async => false,
+      child: PopScope(
+        canPop: false,
         child: Scaffold(
-          body: Container(
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [
-              Appcolors.primaryColor,
-              Colors.white,
-              Colors.white
-            ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  LoadDisplayWidget(
-                      totalLoad: _getTotalLoad(), isLoading: _isLoading),
-                  SizedBox(height: 16.h),
-                  HourlyMaxLoadTable(
-                    key: _hourlyKey,
-                    tableName: AppConstants.tableHourlyMaxLoads,
-                  ),
-                  SizedBox(height: 16.h),
-                  if (_errorMessage != null)
-                    Container(
-                        margin: EdgeInsets.symmetric(
-                            horizontal: 16.w, vertical: 12.h),
-                        padding: EdgeInsets.all(16.h),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12.r),
-                          border:
-                              Border.all(color: Colors.red.withOpacity(0.3)),
-                        ),
-                        child: Column(children: [
-                          Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontFamily: Appfontstring.ChangaLight,
-                              color: Colors.redAccent,
-                            ),
-                            textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
-                          ),
-                          SizedBox(height: 12.h),
-                          ElevatedButton(
-                              onPressed: _fetchData,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E88E5),
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24.w,
-                                  vertical: 12.h,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                              ),
-                              child: const Text('إعادة المحاولة',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: Appfontstring.ChangaLight,
-                                  )))
-                        ]))
-                  else
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 12.h,
+          backgroundColor: const Color(0xFF0F172A),
+          body: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                _buildHeaderSection(),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 5.w),
+                  child: Column(
+                    children: [
+                      LoadDisplayWidget(
+                          totalLoad: _getTotalLoad(), isLoading: _isLoading),
+                      SizedBox(height: 16.h),
+                      HourlyMaxLoadTable(
+                        key: _hourlyKey,
+                        tableName: AppConstants.tableHourlyMaxLoads,
                       ),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12.r),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4))
-                          ]),
-                      child: _isLoading
-                          ? SizedBox(
-                              height: 200.h,
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF1E88E5),
-                                ),
-                              ),
-                            )
-                          : RepaintBoundary(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: _buildStationTable(),
-                              ),
+                      SizedBox(height: 16.h),
+                      if (_errorMessage != null)
+                        Container(
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 16.w, vertical: 12.h),
+                            padding: EdgeInsets.all(16.h),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                  color: Colors.red.withOpacity(0.3)),
                             ),
-                    ),
-                  SizedBox(height: 60.h),
-                ],
-              ),
+                            child: Column(children: [
+                              Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: Appfontstring.ChangaLight,
+                                  color: Colors.redAccent,
+                                ),
+                                textAlign: TextAlign.center,
+                                textDirection: TextDirection.rtl,
+                              ),
+                              SizedBox(height: 12.h),
+                              ElevatedButton(
+                                  onPressed: _fetchData,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueAccent,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 24.w,
+                                      vertical: 12.h,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                  ),
+                                  child: const Text('إعادة المحاولة',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                      )))
+                            ]))
+                      else
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 12.h,
+                          ),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.1))),
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: 200.h,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ),
+                                )
+                              : RepaintBoundary(
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: _buildStationTable(),
+                                  ),
+                                ),
+                        ),
+                      SizedBox(height: 60.h),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -498,8 +542,8 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: primaryColor.withOpacity(0.25),
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          color: Colors.white.withOpacity(0.05),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(8),
             topRight: Radius.circular(8),
@@ -510,10 +554,10 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 12.sp,
             fontWeight: FontWeight.w700,
             fontFamily: Appfontstring.ChangaLight,
-            color: primaryColor,
+            color: Colors.blueAccent,
           ),
           textDirection: TextDirection.rtl,
         ),
@@ -530,7 +574,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
         height: height,
         decoration: BoxDecoration(
           color: rowColor,
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
         ),
         alignment: Alignment.center,
         child: Row(
@@ -540,7 +584,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
               const Icon(
                 Icons.electric_bolt_sharp,
                 size: 14,
-                color: Colors.red,
+                color: Colors.orangeAccent,
               ),
             if (isPeak) SizedBox(width: 4.w),
             Flexible(
@@ -551,7 +595,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
                   fontSize: fontSize,
                   fontWeight: isPeak ? FontWeight.w800 : FontWeight.w600,
                   fontFamily: Appfontstring.ChangaLight,
-                  color: isPeak ? Colors.red : primaryColor,
+                  color: isPeak ? Colors.orangeAccent : Colors.white70,
                 ),
                 textDirection: TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
@@ -572,7 +616,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
         height: height,
         decoration: BoxDecoration(
           color: rowColor,
-          border: Border.all(color: Colors.black.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -582,7 +626,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
             fontSize: fontSize,
             fontWeight: FontWeight.w600,
             fontFamily: Appfontstring.ChangaLight,
-            color: primaryColor,
+            color: Colors.blueAccent.withOpacity(0.8),
           ),
           textDirection: TextDirection.rtl,
         ),
@@ -597,20 +641,9 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        image: DecorationImage(
-            image: AssetImage(AppimageString.rtop),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-                const Color.fromARGB(39, 0, 0, 0).withOpacity(0.9),
-                BlendMode.xor)),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -666,14 +699,14 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
   }
 
   Widget _buildTableHeader(BuildContext context) {
-    return const Center(
+    return Center(
       child: Text(
         'أقصى حمل لكل ساعة (اليوم)',
         style: TextStyle(
-          fontSize: 16,
+          fontSize: 16.sp,
           fontWeight: FontWeight.w700,
           fontFamily: Appfontstring.ChangaLight,
-          color: Colors.black87,
+          color: Colors.white70,
         ),
         textDirection: TextDirection.rtl,
       ),
@@ -811,10 +844,10 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
 
               final baseRowColor = pairIndex % 2 == 0
                   ? Colors.transparent
-                  : primaryColor.withOpacity(0.08);
+                  : Colors.white.withOpacity(0.01);
               final hasPeak = isPeak1 || isPeak2;
               final rowColor =
-                  hasPeak ? primaryColor.withOpacity(0.2) : baseRowColor;
+                  hasPeak ? Colors.orangeAccent.withOpacity(0.1) : baseRowColor;
 
               return Row(
                 children: [
@@ -933,7 +966,7 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   fontFamily: Appfontstring.ChangaLight,
-                  color: Colors.blue,
+                  color: Colors.white70,
                 ),
                 textDirection: TextDirection.rtl),
           ),
@@ -941,9 +974,9 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendItem('اليوم', todayColor),
+              _buildLegendItem('اليوم', Colors.blueAccent),
               SizedBox(width: isLargeScreen ? 28.w : 20.w),
-              _buildLegendItem('الأمس', yesterdayColor),
+              _buildLegendItem('الأمس', Colors.greenAccent),
             ],
           ),
           SizedBox(height: 16.h),
@@ -1025,18 +1058,18 @@ class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: yesterdayColor.withOpacity(0.2),
+                      color: yesterdayColor.withOpacity(0.1),
                     ),
                   ),
                   LineChartBarData(
                     spots: todaySpots,
                     isCurved: true,
-                    color: todayColor,
+                    color: Colors.blueAccent,
                     barWidth: isLargeScreen ? 3 : 2,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: todayColor.withOpacity(0.2),
+                      color: todayColor.withOpacity(0.1),
                     ),
                   ),
                 ],

@@ -130,57 +130,53 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: 1.sw,
-      margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
-      padding: EdgeInsets.all(12.h),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF06141C), Color(0xFF2C3D49)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
-            'Total Electrical Load',
+          Text(
+            'الحمل الكلي للشبكة',
             style: TextStyle(
               color: Colors.white70,
-              fontSize: 17,
+              fontSize: 16.sp,
+              fontFamily: Appfontstring.ChangaLight,
               fontWeight: FontWeight.bold,
             ),
             textDirection: TextDirection.rtl,
           ),
-          SizedBox(height: 2.h),
+          SizedBox(height: 8.h),
           Text(
             widget.isLoading ? '...' : widget.totalLoad.toStringAsFixed(0),
             style: TextStyle(
               color: Colors.redAccent,
-              fontSize: 44.sp,
+              fontSize: 48.sp,
               fontFamily: Appfontstring.tejwa1,
               fontWeight: FontWeight.w600,
-              shadows: const [Shadow(color: Colors.red, blurRadius: 10)],
+              shadows: [
+                Shadow(
+                  color: Colors.redAccent.withOpacity(0.5),
+                  blurRadius: 15,
+                )
+              ],
             ),
             textDirection: TextDirection.rtl,
           ),
-          SizedBox(height: 2.h),
+          SizedBox(height: 8.h),
           RichText(
             textDirection: TextDirection.rtl,
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: 'القيمة القصوى في الساعة الأخيرة: ',
+                  text: 'أقصى حمل في الساعة الأخيرة: ',
                   style: TextStyle(
-                    color: const Color(0xDBF0E769),
+                    color: Colors.white54,
                     fontSize: 12.sp,
                     fontFamily: Appfontstring.ChangaLight,
                   ),
@@ -188,15 +184,16 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                 TextSpan(
                   text: maxLoadInLastHour.toStringAsFixed(0),
                   style: TextStyle(
-                    color: const Color(0xFF03C6D0),
+                    color: Colors.blueAccent,
                     fontSize: 20.sp,
                     fontFamily: Appfontstring.ChangaLight,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 TextSpan(
                   text: ' م.و',
                   style: TextStyle(
-                    color: const Color(0xDBF0E769),
+                    color: Colors.white54,
                     fontSize: 12.sp,
                     fontFamily: Appfontstring.ChangaLight,
                   ),
@@ -314,6 +311,55 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
   double _getTotalLoad() =>
       _stationLoads.fold(0.0, (sum, station) => sum + station.load);
 
+  Widget _buildHeaderSection() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Appcolors.primaryColor,
+            Color(0xFF163C5E),
+            Color(0xFF0F2B44),
+            Color(0xFF081A2A)
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      height: 120.h,
+      child: Stack(
+        children: [
+          Positioned(
+            right: 10.w,
+            top: 30.h,
+            child: Icon(
+              Icons.analytics,
+              size: 80.sp,
+              color: Colors.white.withOpacity(0.09),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'مراقبة الأحمال',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22.sp,
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleStationAction(
       BuildContext context, StationLoad station) async {
     final currentUserEmail = Supabase.instance.client.auth.currentUser?.email;
@@ -388,71 +434,52 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
       onWillPop: () async => false,
       child: Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            Container(
-              margin: EdgeInsets.only(left: 20.w, top: 10.h),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: _fetchData,
-              ),
-            ),
-          ],
-        ),
         body: _errorMessage != null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: Appfontstring.ChangaLight,
-                        color: Colors.red,
-                      ),
-                      textDirection: TextDirection.rtl,
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: _fetchData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E88E5),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 20.w, vertical: 10.h),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.r)),
-                      ),
-                      child: Text(
-                        'إعادة المحاولة',
+            ? Container(
+                color: const Color(0xFF0F172A),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _errorMessage!,
                         style: TextStyle(
-                            fontSize: 14.sp,
-                            fontFamily: Appfontstring.ChangaLight),
+                          fontSize: 16.sp,
+                          fontFamily: Appfontstring.ChangaLight,
+                          color: Colors.redAccent,
+                        ),
+                        textDirection: TextDirection.rtl,
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 24.w, vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.r)),
+                        ),
+                        child: Text(
+                          'إعادة المحاولة',
+                          style: TextStyle(
+                              fontSize: 14.sp,
+                              fontFamily: Appfontstring.ChangaLight),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Appcolors.primaryColor,
-                      const Color.fromARGB(177, 255, 255, 255)
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
+                color: const Color(0xFF0F172A),
                 child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
+                    SliverToBoxAdapter(
+                      child: _buildHeaderSection(),
+                    ),
                     SliverToBoxAdapter(
                       child: LoadDisplayWidget(
                         totalLoad: _getTotalLoad(),
@@ -461,18 +488,12 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Container(
-                        margin: EdgeInsets.symmetric(
-                            horizontal: 7.w, vertical: 8.h),
+                        margin: EdgeInsets.fromLTRB(10.w, 0, 10.w, 20.h),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(169, 255, 255, 255),
+                          color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10.r,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.1)),
                         ),
                         child: DataTable(
                           columnSpacing: 9.w,
@@ -480,7 +501,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                           headingRowHeight: 40.h,
                           dataRowHeight: 36.h,
                           headingRowColor: WidgetStateProperty.all(
-                            const Color(0xFF1E88E5).withOpacity(0.1),
+                            Colors.white.withOpacity(0.05),
                           ),
                           columns: [
                             DataColumn(
@@ -493,7 +514,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: Appfontstring.ChangaLight,
-                                    color: const Color(0xFF0D47A1),
+                                    color: Colors.blueAccent,
                                   ),
                                   textDirection: TextDirection.rtl,
                                 ),
@@ -509,7 +530,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: Appfontstring.ChangaLight,
-                                    color: const Color(0xFF0D47A1),
+                                    color: Colors.blueAccent,
                                   ),
                                   textDirection: TextDirection.rtl,
                                 ),
@@ -525,7 +546,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: Appfontstring.ChangaLight,
-                                    color: const Color(0xFF0D47A1),
+                                    color: Colors.blueAccent,
                                   ),
                                   textDirection: TextDirection.rtl,
                                 ),
@@ -541,7 +562,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: Appfontstring.ChangaLight,
-                                    color: const Color(0xFF0D47A1),
+                                    color: Colors.blueAccent,
                                   ),
                                   textDirection: TextDirection.rtl,
                                 ),
@@ -561,8 +582,8 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                             return DataRow(
                               color: WidgetStateProperty.all(
                                 index % 2 == 0
-                                    ? Colors.white
-                                    : const Color(0xFFE3F2FD).withOpacity(0.05),
+                                    ? Colors.transparent
+                                    : Colors.white.withOpacity(0.01),
                               ),
                               cells: [
                                 DataCell(
@@ -572,7 +593,7 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                             onPressed: () =>
                                                 _handleStationAction(
                                                     context, station),
-                                            icon: Icons.settings,
+                                            icon: Icons.edit_note,
                                           )
                                         : const SizedBox.shrink(),
                                   ),
@@ -591,8 +612,8 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                         fontWeight: FontWeight.w600,
                                         fontFamily: Appfontstring.ChangaLight,
                                         color: isUserAssigned
-                                            ? Colors.red
-                                            : const Color(0xFF0D47A1),
+                                            ? Colors.orangeAccent
+                                            : Colors.white70,
                                       ),
                                       textDirection: TextDirection.rtl,
                                     ),
@@ -610,8 +631,8 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                         fontWeight: FontWeight.w600,
                                         fontFamily: Appfontstring.ChangaLight,
                                         color: isUserAssigned
-                                            ? Colors.red
-                                            : const Color(0xFF0D47A1),
+                                            ? Colors.orangeAccent
+                                            : Colors.white70,
                                       ),
                                       textDirection: TextDirection.rtl,
                                     ),
@@ -629,8 +650,8 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                                         fontWeight: FontWeight.w600,
                                         fontFamily: Appfontstring.ChangaLight,
                                         color: isUserAssigned
-                                            ? Colors.red
-                                            : const Color(0xFF0D47A1),
+                                            ? Colors.orangeAccent
+                                            : Colors.white38,
                                       ),
                                       textDirection: TextDirection.rtl,
                                     ),
@@ -738,15 +759,18 @@ class StationDialogState extends State<StationDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      backgroundColor: const Color(0xFF163C5E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
       title: Text(
-        'تحديث المحطة',
+        'تحديث بيانات المحطة',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 20.sp,
           fontWeight: FontWeight.bold,
           fontFamily: Appfontstring.ChangaLight,
-          color: const Color(0xFF0D47A1),
+          color: Colors.white,
         ),
         textDirection: TextDirection.rtl,
       ),
@@ -760,6 +784,7 @@ class StationDialogState extends State<StationDialog> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
+                color: Colors.white70,
                 fontFamily: Appfontstring.ChangaLight,
               ),
               textDirection: TextDirection.rtl,
@@ -770,6 +795,7 @@ class StationDialogState extends State<StationDialog> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
+                color: Colors.white70,
                 fontFamily: Appfontstring.ChangaLight,
               ),
               textDirection: TextDirection.rtl,

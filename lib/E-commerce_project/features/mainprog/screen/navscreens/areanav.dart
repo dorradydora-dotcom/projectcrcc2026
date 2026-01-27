@@ -41,6 +41,7 @@ class _AreanavState extends State<Areanav> {
             height: 25.h,
             width: 25.w,
             child: FloatingActionButton(
+              heroTag: 'area_nav_fab',
               onPressed: () =>
                   Get.find<AreaNavController>().fetchStations(refresh: true),
               backgroundColor: Appcolors.primaryColor,

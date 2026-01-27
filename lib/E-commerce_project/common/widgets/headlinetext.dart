@@ -102,7 +102,8 @@ class HeadlineText extends StatelessWidget {
   final double fontSize;
   final String headlineText;
   final String fontfamily;
-  final Color color;
+  final Color color1;
+  final Color color2;
   final String buttomheadlineText;
 
   final bool isSeeAllVisible;
@@ -117,7 +118,8 @@ class HeadlineText extends StatelessWidget {
     required this.isSeeAllVisible,
     this.onSeeAllPressed,
     required this.fontfamily,
-    required this.color,
+    required this.color1,
+    required this.color2,
   });
 
   @override
@@ -135,7 +137,7 @@ class HeadlineText extends StatelessWidget {
                 fontSize: fontSize,
                 fontWeight: FontWeight.bold,
                 fontFamily: fontfamily,
-                color: color,
+                color: color1,
               ),
             ),
           TextButton(
@@ -153,7 +155,7 @@ class HeadlineText extends StatelessWidget {
                 style: TextStyle(
                   fontSize: fontSize * 0.7,
                   fontFamily: fontfamily,
-                  color: C.black,
+                  color: color2,
                 ),
               ),
             ),

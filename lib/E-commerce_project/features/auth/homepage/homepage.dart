@@ -201,11 +201,60 @@ class __HomePageContentState extends State<_HomePageContent>
   Widget build(BuildContext context) {
     final height = AppSizes.heightcurved(context);
 
-    return Scaffold(
-      appBar: const CustomAppBar(),
-      bottomNavigationBar: _buildBottomNavigationBar(height),
-      body: _buildBody(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_controller.selectedPage.value != 0) {
+          _controller.updateSelectedPage(0);
+        } else {
+          // If already on the first page, we could show a dialog or allow exit.
+          // For now, let's allow exit if we're at index 0 and press back again.
+          // Note: In modern Flutter, we need to handle this carefully.
+          // Setting canPop dynamically or using SystemNavigator.pop()
+          _showExitDialog(context);
+        }
+      },
+      child: Scaffold(
+        appBar: const CustomAppBar(),
+        bottomNavigationBar: _buildBottomNavigationBar(height),
+        body: _buildBody(),
+      ),
     );
+  }
+
+  void _showExitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: Text('تنبيه',
+              style: TextStyle(fontFamily: Appfontstring.ChangaLight)),
+          content: Text('هل تريد الخروج من التطبيق؟',
+              style: TextStyle(fontFamily: Appfontstring.ChangaLight)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('إلغاء',
+                  style: TextStyle(fontFamily: Appfontstring.ChangaLight)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('خروج',
+                  style: TextStyle(
+                      fontFamily: Appfontstring.ChangaLight,
+                      color: Colors.red)),
+            ),
+          ],
+        ),
+      ),
+    ).then((value) {
+      if (value == true) {
+        // Exit the app
+        Get.back(); // Or use SystemNavigator.pop()
+      }
+    });
   }
 
   Widget _buildBottomNavigationBar(double height) {

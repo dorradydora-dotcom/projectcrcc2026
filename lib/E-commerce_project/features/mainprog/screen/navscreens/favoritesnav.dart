@@ -17,18 +17,111 @@ class FavoritesNav extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [
+        backgroundColor: const Color(0xFF0F172A),
+        body: Obx(
+          () => CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _buildHeaderSection(context),
+              ),
+              if (favoritesController.favorites.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(context),
+                )
+              else ...[
+                _buildFavoriteTitle(favoritesController),
+                _buildGridLayout(context, favoritesController),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
             Appcolors.primaryColor,
-            Color.fromARGB(255, 49, 107, 152),
-            Colors.white,
-          ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-          child: SafeArea(
-            child: Obx(
-              () => favoritesController.favorites.isEmpty
-                  ? _buildEmptyState(context)
-                  : _buildGridLayout(context, favoritesController),
+            Color(0xFF163C5E),
+            Color(0xFF0F2B44),
+            Color(0xFF081A2A)
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      height: 120.h,
+      child: Stack(
+        children: [
+          Positioned(
+            right: 10.w,
+            top: 30.h,
+            child: Icon(
+              Icons.favorite,
+              size: 80.sp,
+              color: Colors.white.withOpacity(0.09),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FadeInDown(
+                  duration: const Duration(milliseconds: 600),
+                  child: Text(
+                    'المفضلات',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFavoriteTitle(FavoritesController controller) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+        child: FadeInDown(
+          duration: const Duration(milliseconds: 600),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.favorite, color: Colors.redAccent, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'المحطات المفضلة (${controller.favorites.length})',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -37,66 +130,52 @@ class FavoritesNav extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: FadeInUp(
-            duration: const Duration(milliseconds: 600),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ZoomIn(
-                  duration: const Duration(milliseconds: 800),
-                  child: Container(
-                    padding: EdgeInsets.all(32.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 20.r,
-                          offset: Offset(0, 8.h),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.favorite_border,
-                      size: 64.sp,
-                      color: Appcolors.primaryColor.withOpacity(0.3),
-                    ),
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: FadeInUp(
+          duration: const Duration(milliseconds: 600),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ZoomIn(
+                duration: const Duration(milliseconds: 800),
+                child: Container(
+                  padding: EdgeInsets.all(32.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  ),
+                  child: Icon(
+                    Icons.favorite_border,
+                    size: 64.sp,
+                    color: Colors.white24,
                   ),
                 ),
-                SizedBox(height: 24.h),
-                FadeInUp(
-                  duration: const Duration(milliseconds: 700),
-                  child: Text(
-                    'No Favorites Yet',
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'لا توجد مفضلات',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.white70,
                 ),
-                SizedBox(height: 12.h),
-                FadeInUp(
-                  duration: const Duration(milliseconds: 800),
-                  child: Text(
-                    'Start adding your favorite stations to access them quickly anytime.',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              ],
-            ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'ابدأ بإضافة محطاتك المفضلة للوصول إليها بسرعة في أي وقت.',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.white54,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              )
+            ],
           ),
         ),
       ),
@@ -107,72 +186,32 @@ class FavoritesNav extends StatelessWidget {
     BuildContext context,
     FavoritesController controller,
   ) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 8.h),
-            child: FadeInDown(
-              duration: const Duration(milliseconds: 600),
-              child: Container(
-                clipBehavior: Clip.hardEdge,
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                    border: Border.all(width: 1),
-                    borderRadius: BorderRadius.circular(16.r),
-                    color: const Color.fromARGB(156, 255, 255, 255)),
-                child: Row(
-                  children: [
-                    Icon(Icons.favorite, color: Colors.redAccent, size: 22.sp),
-                    SizedBox(width: 11.w),
-                    Expanded(
-                      child: Text(
-                        'Your Favorite Stations (${controller.favorites.length})',
-                        style: TextStyle(
-                          fontSize: 17.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+    return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12.h,
+              crossAxisSpacing: 12.w,
+              childAspectRatio: 0.85,
             ),
-          ),
-        ),
-        SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 14.h,
-                  crossAxisSpacing: 14.w,
-                  childAspectRatio: 0.8,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  // تحديد سقف للتأخير بحد أقصى ثانية واحدة لضمان سرعة الظهور
-                  final delay = (index * 150).clamp(0, 1000);
-                  return FadeInUp(
-                    duration: Duration(milliseconds: 400 + delay),
-                    child: GradientStationCard(
-                      station: controller.favorites[index],
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StationDetailsPage(
-                            station: controller.favorites[index],
-                          ),
-                        ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final delay = (index * 100).clamp(0, 800);
+              return FadeInUp(
+                duration: Duration(milliseconds: 400 + delay),
+                child: GradientStationCard(
+                  station: controller.favorites[index],
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StationDetailsPage(
+                        station: controller.favorites[index],
                       ),
                     ),
-                  );
-                }, childCount: controller.favorites.length))),
-        SliverToBoxAdapter(
-          child: SizedBox(height: MediaQuery.of(context).padding.bottom + 20.h),
-        ),
-      ],
-    );
+                  ),
+                ),
+              );
+            }, childCount: controller.favorites.length)));
   }
 }
 
@@ -265,13 +304,8 @@ class GradientStationCard extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
+          color: Colors.white.withOpacity(0.05),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Stack(
           children: [
@@ -285,7 +319,7 @@ class GradientStationCard extends StatelessWidget {
                 width: double.infinity,
                 height: double.infinity,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[200],
+                  color: Colors.white.withOpacity(0.05),
                   child: Center(
                     child: Icon(Icons.error, color: Colors.red, size: 32.sp),
                   ),
@@ -293,7 +327,7 @@ class GradientStationCard extends StatelessWidget {
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    color: Colors.grey[200],
+                    color: Colors.white.withOpacity(0.05),
                     child: Center(
                         child: CircularProgressIndicator(strokeWidth: 2.sp)),
                   );
@@ -310,15 +344,15 @@ class GradientStationCard extends StatelessWidget {
               left: 0,
               right: 0,
               child: Container(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(16),
                   ),
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.7),
-                      const Color.fromARGB(98, 0, 0, 0)
+                      Colors.black.withOpacity(0.8),
+                      Colors.transparent,
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -327,20 +361,20 @@ class GradientStationCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('محطة :  ${station.name}',
+                    Text(station.name,
                         style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                             fontFamily: Appfontstring.ChangaLight),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     SizedBox(height: 2.h),
-                    Text('المنطقة :  ${station.zone}',
+                    Text(station.zone,
                         style: TextStyle(
                           fontSize: 9.sp,
                           fontFamily: Appfontstring.ChangaLight,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white70,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),

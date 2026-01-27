@@ -20,6 +20,7 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/E-commerce_project/features/auth/homepage/homepage.dart';
 import 'package:amiraly/E-commerce_project/features/auth/onboarding/onboardingscreen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // 🔧 إضافة متغيرات تتبع حالة التهيئة
 bool _isServicesInitialized = false;
@@ -27,6 +28,7 @@ Completer<void> _servicesInitializedCompleter = Completer<void>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ar', null);
 
   try {
     // 1. التهيئة الأساسية فقط
