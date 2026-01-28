@@ -1,5 +1,5 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
-import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favoritesnav.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favorites_controller.dart';
 import 'package:amiraly/E-commerce_project/util/validators/validatorHeper.dart';
 import 'package:carousel_slider/carousel_controller.dart';
 import 'package:flutter/material.dart';

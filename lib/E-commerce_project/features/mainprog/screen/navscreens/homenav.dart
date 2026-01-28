@@ -44,16 +44,13 @@ class _HomeNavState extends State<HomeNav> {
           child: Scaffold(
             backgroundColor: const Color(0xFF0F172A),
             floatingActionButton: SizedBox(
-                height: 28.h,
-                width: 28.w,
-                child: Pulse(
-                    infinite: false,
-                    duration: const Duration(seconds: 7),
-                    child: FloatingActionButton(
-                        onPressed: () => _controller.refreshWeather(),
-                        backgroundColor: Appcolors.primaryColor,
-                        child: const Icon(Icons.refresh,
-                            color: Colors.white, size: 14)))),
+                height: 38.h,
+                width: 38.w,
+                child: FloatingActionButton(
+                    onPressed: () => _controller.refreshAllData(),
+                    backgroundColor: const Color.fromARGB(109, 3, 218, 197),
+                    child: const Icon(Icons.refresh,
+                        color: Colors.white, size: 19))),
             body: Obx(() {
               if (_controller.isLoading.value) {
                 return const Center(

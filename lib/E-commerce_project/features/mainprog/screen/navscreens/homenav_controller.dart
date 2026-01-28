@@ -19,6 +19,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 abstract class Homenavcontroller extends GetxController {
   void gotocairoscreen();
   void gotonewsscreen();
+  Future<void> refreshAllData();
   Future<void> refreshWeather();
   List<MainCatogoryModel> get categories;
   List<AnnouncImagesModel> get announcImages;
@@ -349,6 +350,11 @@ class HomenavcontrollerImp extends Homenavcontroller {
     } catch (e) {
       AppLogger.logError('Error loading cached weather', e);
     }
+  }
+
+  @override
+  Future<void> refreshAllData() async {
+    await _initializeData();
   }
 
   @override
