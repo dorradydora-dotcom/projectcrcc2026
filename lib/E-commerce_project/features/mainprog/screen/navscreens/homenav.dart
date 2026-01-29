@@ -61,7 +61,6 @@ class _HomeNavState extends State<HomeNav> {
                 );
               }
               return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(child: _buildHeaderSection()),
                   if (_controller.isOffline.value)
@@ -113,27 +112,28 @@ class _HomeNavState extends State<HomeNav> {
           end: Alignment.bottomCenter,
         ),
       ),
-      height: 170.h,
+      height: 140.h,
       child: Stack(
         children: [
-          // Decorative background icon
           Positioned(
             right: 10.w,
             top: 40.h,
             child: Icon(
               Iconsax.flash5,
-              size: 100.sp,
+              size: 130.sp,
               color: Colors.white.withOpacity(0.09),
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+            padding: EdgeInsets.only(right: 5.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 2.h),
-                _buildGreetingRow(),
-                SizedBox(height: 15.h),
+                Container(
+                  margin: EdgeInsets.only(right: 10.w),
+                  child: _buildGreetingRow(),
+                ),
+                SizedBox(height: 10.h),
                 _buildCategoryList(),
               ],
             ),
@@ -162,12 +162,13 @@ class _HomeNavState extends State<HomeNav> {
               Obx(() => Text(_controller.userEmail.value.split('@')[0],
                   style: TextStyle(
                       color: C.green,
-                      fontSize: 11.sp,
+                      fontSize: 10.sp,
                       fontFamily: Appfontstring.tejw2)))
             ],
           ),
           Obx(() => Container(
               padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 3.h),
+              margin: EdgeInsets.only(left: 10.w),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(12.r),
@@ -185,7 +186,7 @@ class _HomeNavState extends State<HomeNav> {
     final categories = _controller.categories;
     if (categories.isEmpty) {
       return SizedBox(
-        height: 110.h,
+        height: 90.h,
         child: const Center(child: Text(Stringshomenav.noCategories)),
       );
     }
@@ -197,12 +198,11 @@ class _HomeNavState extends State<HomeNav> {
         physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        itemExtent: 60.w,
         itemBuilder: (_, index) {
           final category = categories[index];
           final isSelected = false;
           return Padding(
-            padding: const EdgeInsets.only(right: 1.0),
+            padding: const EdgeInsets.only(right: 4.0),
             child: GestureDetector(
               onTap: () => _onCategoryTap(category),
               child: CategoryItem(

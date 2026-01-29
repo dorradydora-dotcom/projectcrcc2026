@@ -51,9 +51,9 @@ class _ZoneScreenState extends State<ZoneScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      body: Stack(
+    return Container(
+      color: const Color(0xFF0F172A),
+      child: Stack(
         children: [
           // Background Gradient to add depth
           Positioned.fill(

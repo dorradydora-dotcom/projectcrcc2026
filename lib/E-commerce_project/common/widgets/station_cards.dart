@@ -200,8 +200,7 @@ class BodyVerticalProduct extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
         TxtName(station: station),
@@ -243,7 +242,7 @@ class TxtDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Iconsax.location, color: const Color(0xFF0ED2D2), size: 10.sp),
         SizedBox(width: 4.w),

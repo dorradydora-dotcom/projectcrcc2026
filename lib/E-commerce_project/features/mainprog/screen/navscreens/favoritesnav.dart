@@ -28,19 +28,22 @@ class FavoritesNav extends StatelessWidget {
                   size: 200.sp, color: Colors.white.withOpacity(0.04)),
             ),
             Obx(
-              () => CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  buildSliverAppBar(favoritesController),
-                  if (favoritesController.favorites.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _buildEmptyState(context),
-                    )
-                  else ...[
-                    _buildGridLayout(context, favoritesController),
+              () => Directionality(
+                textDirection: TextDirection.rtl,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    buildSliverAppBar(favoritesController),
+                    if (favoritesController.favorites.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _buildEmptyState(context),
+                      )
+                    else ...[
+                      _buildGridLayout(context, favoritesController),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],
@@ -66,8 +69,10 @@ class FavoritesNav extends StatelessWidget {
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF1E293B),
-                    Color(0xFF0F172A),
+                    Appcolors.primaryColor,
+                    Color(0xFF163C5E),
+                    Color(0xFF0F2B44),
+                    Color(0xFF081A2A)
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -80,7 +85,7 @@ class FavoritesNav extends StatelessWidget {
               right: 20.w,
               child: FadeInDown(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'المفضلات',

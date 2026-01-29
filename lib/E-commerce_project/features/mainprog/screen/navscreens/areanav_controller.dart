@@ -8,6 +8,7 @@ class AreaNavController extends GetxController {
   final RxBool isLoading = true.obs;
 
   final RxString searchQuery = ''.obs;
+  final RxInt selectedIndex = 0.obs;
 
   @override
   void onInit() {
@@ -17,13 +18,17 @@ class AreaNavController extends GetxController {
 
   /// تصفية المحطات بناءً على البحث
   List<StationDetialesModel> get filteredStations {
-    if (searchQuery.isEmpty) return stations;
+    if (searchQuery.value.trim().isEmpty) return stations;
+    final query = searchQuery.value.trim().toLowerCase();
     return stations
         .where((s) =>
-            s.name.contains(searchQuery.value) ||
-            s.zone.contains(searchQuery.value))
+            s.name.toLowerCase().contains(query) ||
+            s.zone.toLowerCase().contains(query))
         .toList();
   }
+
+  bool get isSearchActive => searchQuery.value.trim().isNotEmpty;
+  bool get hasNoSearchResults => isSearchActive && filteredStations.isEmpty;
 
   int get totalStations => stations.length;
   int get activeStations => stations.where((s) => s.image.isNotEmpty).length;

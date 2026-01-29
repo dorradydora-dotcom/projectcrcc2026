@@ -1154,6 +1154,7 @@ class SupabaseService {
       final response = await _client
           .from(AppConstants.tableStation)
           .select()
+          .order('station_name', ascending: true)
           .limit(limit)
           .timeout(AppConstants.timeoutDuration);
 
