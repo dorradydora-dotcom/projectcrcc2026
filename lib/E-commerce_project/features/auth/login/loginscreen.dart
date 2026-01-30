@@ -559,10 +559,10 @@ class LoginControllerImp extends LoginController {
           if (fcmToken != null) {
             Get.snackbar(
               'نجاح',
-              'تم حفظ التوكن بنجاح',
+              'تم حفظ البيانات بنجاح',
               snackPosition: SnackPosition.BOTTOM,
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 3),
             );
           }
 

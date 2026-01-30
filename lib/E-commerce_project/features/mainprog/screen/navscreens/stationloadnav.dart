@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+const double _maxStationLoad = 700.0;
+
 class LoadDisplayWidget extends StatefulWidget {
   final double totalLoad;
   final bool isLoading;
@@ -22,7 +24,7 @@ class LoadDisplayWidget extends StatefulWidget {
 }
 
 class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
-  static const _updateInterval = Duration(seconds: 5);
+  static const _updateInterval = Duration(seconds: 6);
   static const _historyRetentionMinutes = 60;
 
   double maxLoadInLastHour = 0.0;
@@ -129,75 +131,134 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: 1.sw,
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      padding: EdgeInsets.all(20.h),
+      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 2.h),
+      padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.08),
+            Colors.white.withOpacity(0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.15),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'الحمل الكلي للشبكة',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16.sp,
-              fontFamily: Appfontstring.ChangaLight,
-              fontWeight: FontWeight.bold,
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10.r),
             ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            widget.isLoading ? '...' : widget.totalLoad.toStringAsFixed(0),
-            style: TextStyle(
-              color: Colors.redAccent,
-              fontSize: 48.sp,
-              fontFamily: Appfontstring.tejwa1,
-              fontWeight: FontWeight.w600,
-              shadows: [
-                Shadow(
-                  color: Colors.redAccent.withOpacity(0.5),
-                  blurRadius: 15,
-                )
-              ],
+            child: Text(
+              'الحمل الكلي للشبكة',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 15.sp,
+                fontFamily: Appfontstring.ChangaLight,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              textDirection: TextDirection.rtl,
             ),
-            textDirection: TextDirection.rtl,
           ),
-          SizedBox(height: 8.h),
-          RichText(
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'أقصى حمل في الساعة الأخيرة: ',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12.sp,
-                    fontFamily: Appfontstring.ChangaLight,
+          SizedBox(height: 7.h),
+          Container(
+            child: widget.isLoading
+                ? Text(
+                    '......',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 42.sp,
+                      fontFamily: Appfontstring.tejwa1,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: widget.totalLoad),
+                    duration: const Duration(seconds: 1),
+                    curve: Curves.easeOutQuart,
+                    builder: (context, value, child) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            value.toStringAsFixed(0),
+                            style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 50.sp,
+                                fontFamily: Appfontstring.digital),
+                            textDirection: TextDirection.rtl,
+                          ),
+                          Text(
+                            'ميجا واط',
+                            style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 10.sp,
+                                fontFamily: Appfontstring.ChangaLight),
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                ),
-                TextSpan(
-                  text: maxLoadInLastHour.toStringAsFixed(0),
-                  style: TextStyle(
-                    color: Colors.blueAccent,
-                    fontSize: 20.sp,
-                    fontFamily: Appfontstring.ChangaLight,
-                    fontWeight: FontWeight.bold,
+          ),
+          SizedBox(height: 6.h),
+          Container(
+            padding: EdgeInsets.all(5.h),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(
+                color: Colors.blueAccent.withOpacity(0.2),
+              ),
+            ),
+            child: RichText(
+              textDirection: TextDirection.rtl,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'أقصى حمل في الساعة الأخيرة: ',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: ' م.و',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12.sp,
-                    fontFamily: Appfontstring.ChangaLight,
+                  TextSpan(
+                    text: maxLoadInLastHour.toStringAsFixed(0),
+                    style: TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 18.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                  TextSpan(
+                    text: ' م.و',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -219,21 +280,16 @@ class CustomActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(4.w),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.all(8.w),
-          backgroundColor: const Color(0xFF1E88E5),
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        child: Icon(icon, size: 16.sp),
-      ),
-    );
+        margin: EdgeInsets.all(3.w),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.r)),
+        child: ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.all(5.w),
+                backgroundColor: const Color.fromARGB(255, 228, 178, 124),
+                foregroundColor: Colors.white,
+                elevation: 3),
+            child: Icon(icon, size: 17.sp)));
   }
 }
 
@@ -245,7 +301,7 @@ class StationloadnavScreen extends StatefulWidget {
 }
 
 class _StationloadnavScreenState extends State<StationloadnavScreen> {
-  static const _updateInterval = Duration(seconds: 4);
+  static const _updateInterval = Duration(seconds: 6);
   Map<String, String> specificStations = {};
 
   final SupabaseService _supabaseService = SupabaseService();
@@ -254,15 +310,33 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
   String? _errorMessage;
 
   Timer? _timer;
-  List<String> adminEmails = [];
   String? userEmail;
+  bool _isCrccUser = false;
 
   @override
   void initState() {
     super.initState();
     userEmail = Supabase.instance.client.auth.currentUser?.email;
+    _checkPermissions();
     _fetchData();
     _timer = Timer.periodic(_updateInterval, (_) => _updateLoads());
+  }
+
+  Future<void> _checkPermissions() async {
+    if (userEmail == null) return;
+    try {
+      final response =
+          await Supabase.instance.client.from('user_crcc').select('user_email');
+      final crccEmails =
+          response.map((e) => e['user_email'] as String).toList();
+      if (mounted) {
+        setState(() {
+          _isCrccUser = crccEmails.contains(userEmail);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking permissions: $e');
+    }
   }
 
   Future<void> _fetchData() async {
@@ -272,10 +346,10 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
 
     try {
       final loads = await _supabaseService.fetchStationLoads();
-      if (!mounted) return; // التحقق بعد أول await
+      if (!mounted) return;
 
       specificStations = await _supabaseService.fetchSpecificStations();
-      if (!mounted) return; // التحقق بعد ثاني await
+      if (!mounted) return;
 
       setState(() {
         _stationLoads = loads;
@@ -283,10 +357,10 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
         _errorMessage = null;
       });
     } catch (e) {
-      if (!mounted) return; // التحقق قبل setState في حالة الخطأ
+      if (!mounted) return;
 
       setState(() {
-        _errorMessage = 'خطأ في جلب البيانات: $e';
+        _errorMessage = 'خطأ في جلب البيانات';
         _isLoading = false;
       });
     }
@@ -309,103 +383,33 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
   double _getTotalLoad() =>
       _stationLoads.fold(0.0, (sum, station) => sum + station.load);
 
-  Widget _buildHeaderSection() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Appcolors.primaryColor,
-            Color(0xFF163C5E),
-            Color(0xFF0F2B44),
-            Color(0xFF081A2A)
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      height: 120.h,
-      child: Stack(
-        children: [
-          Positioned(
-            right: 10.w,
-            top: 30.h,
-            child: Icon(
-              Icons.analytics,
-              size: 80.sp,
-              color: Colors.white.withOpacity(0.09),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'مراقبة الأحمال',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22.sp,
-                    fontFamily: Appfontstring.ChangaLight,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleStationAction(
-      BuildContext context, StationLoad station) async {
-    final currentUserEmail = Supabase.instance.client.auth.currentUser?.email;
+  void _handleStationAction(BuildContext context, StationLoad station) async {
     final requiredEmail = specificStations[station.stationName];
+    bool authorized = false;
 
-    bool isCrccUser = false;
-    try {
-      final response =
-          await Supabase.instance.client.from('user_crcc').select('user_email');
-      final crccEmails =
-          response.map((e) => e['user_email'] as String).toList();
-      isCrccUser = crccEmails.contains(currentUserEmail);
-    } catch (e) {
-      debugPrint('Error checking user_crcc table');
+    if (_isCrccUser) {
+      authorized = true;
+    } else if (requiredEmail != null && userEmail == requiredEmail) {
+      authorized = true;
     }
 
-    if (isCrccUser) {
-      showDialog(
+    if (authorized) {
+      final shouldRefresh = await showDialog<bool>(
         context: context,
         builder: (context) => StationDialog(
           station: station,
           onUpdate: () {
-            setState(() {});
-            _fetchData();
+            // Callback passed but handle reload centrally after pop
           },
         ),
       );
-      return;
-    }
 
-    if (requiredEmail != null && currentUserEmail != requiredEmail) {
-      _showErrorSnackBar(
-          context, 'غير مصرح لك بتعديل حمل محطة ${station.stationName}');
-      return;
-    }
-
-    if (adminEmails.contains(currentUserEmail) ||
-        requiredEmail == currentUserEmail) {
-      showDialog(
-        context: context,
-        builder: (context) => StationDialog(
-          station: station,
-          onUpdate: () {
-            setState(() {});
-            _fetchData();
-          },
-        ),
-      );
+      if (shouldRefresh == true) {
+        // Trigger explicit refresh logic here
+        // Set loading to true immediately for visual feedback
+        setState(() => _isLoading = true);
+        await _fetchData();
+      }
     } else {
       _showErrorSnackBar(context, 'غير مصرح لك بتحديث بيانات المحطة');
     }
@@ -435,14 +439,13 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
         child: Scaffold(
           extendBodyBehindAppBar: true,
           floatingActionButton: SizedBox(
-            height: 38.h,
-            width: 38.w,
-            child: FloatingActionButton(
-              onPressed: () => _fetchData(),
-              backgroundColor: const Color.fromARGB(109, 3, 218, 197),
-              child: const Icon(Icons.refresh, color: Colors.white, size: 19),
-            ),
-          ),
+              height: 38.h,
+              width: 38.w,
+              child: FloatingActionButton(
+                  onPressed: () => _fetchData(),
+                  backgroundColor: const Color.fromARGB(109, 3, 218, 197),
+                  child: const Icon(Icons.refresh,
+                      color: Colors.white, size: 19))),
           body: _errorMessage != null
               ? Container(
                   color: const Color(0xFF0F172A),
@@ -487,9 +490,6 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                     physics: const BouncingScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
-                        child: _buildHeaderSection(),
-                      ),
-                      SliverToBoxAdapter(
                         child: LoadDisplayWidget(
                           totalLoad: _getTotalLoad(),
                           isLoading: _isLoading,
@@ -497,171 +497,209 @@ class _StationloadnavScreenState extends State<StationloadnavScreen> {
                       ),
                       SliverToBoxAdapter(
                         child: Container(
-                          margin: EdgeInsets.fromLTRB(10.w, 0, 10.w, 20.h),
+                          margin: EdgeInsets.fromLTRB(12.w, 2.h, 12.w, 20.h),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.1)),
-                          ),
-                          child: DataTable(
-                            columnSpacing: 9.w,
-                            dividerThickness: 0.9,
-                            headingRowHeight: 40.h,
-                            dataRowHeight: 36.h,
-                            headingRowColor: WidgetStateProperty.all(
-                              Colors.white.withOpacity(0.05),
-                            ),
-                            columns: [
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 40.w,
-                                  child: Text(
-                                    'رقم',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 120.w,
-                                  child: Text(
-                                    'المحطة',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 80.w,
-                                  child: Text(
-                                    'الحمل\n(م.و)',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 60.w,
-                                  child: Text(
-                                    'الإجراء',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: _stationLoads.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final station = entry.value;
-                              final showUpdateButton =
-                                  station.load >= 0 && station.load <= 700;
-                              final requiredEmail =
-                                  specificStations[station.stationName];
-                              final isUserAssigned = userEmail != null &&
-                                  requiredEmail != null &&
-                                  userEmail == requiredEmail;
-                              return DataRow(
-                                color: WidgetStateProperty.all(
-                                  index % 2 == 0
-                                      ? Colors.transparent
-                                      : Colors.white.withOpacity(0.01),
-                                ),
-                                cells: [
-                                  DataCell(
-                                    SizedBox(
-                                      width: 40.w,
-                                      child: Text(
-                                        '${index + 1}',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize:
-                                              isUserAssigned ? 13.sp : 12.sp,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: Appfontstring.ChangaLight,
-                                          color: isUserAssigned
-                                              ? Colors.orangeAccent
-                                              : Colors.white38,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 120.w,
-                                      child: Text(
-                                        station.stationName,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize:
-                                              isUserAssigned ? 13.sp : 12.sp,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: Appfontstring.ChangaLight,
-                                          color: isUserAssigned
-                                              ? Colors.orangeAccent
-                                              : Colors.white70,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 80.w,
-                                      child: Text(
-                                        _isLoading
-                                            ? '...'
-                                            : station.load.toStringAsFixed(2),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize:
-                                              isUserAssigned ? 13.sp : 12.sp,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: Appfontstring.ChangaLight,
-                                          color: isUserAssigned
-                                              ? Colors.orangeAccent
-                                              : Colors.white70,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Center(
-                                      child: showUpdateButton
-                                          ? CustomActionButton(
-                                              onPressed: () =>
-                                                  _handleStationAction(
-                                                      context, station),
-                                              icon: Icons.edit_note,
-                                            )
-                                          : const SizedBox.shrink(),
-                                    ),
-                                  ),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.08),
+                                  Colors.white.withOpacity(0.03),
                                 ],
-                              );
-                            }).toList(),
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.15),
+                                width: 1.5,
+                              )),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: DataTable(
+                              columnSpacing: 8.w,
+                              dividerThickness: 0.5,
+                              headingRowHeight: 40.h,
+                              headingRowColor: WidgetStateProperty.all(
+                                Colors.blueAccent.withOpacity(0.1),
+                              ),
+                              columns: [
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 35.w,
+                                    child: Text(
+                                      'رقم',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 100.w,
+                                    child: Text(
+                                      'المحطة',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 70.w,
+                                    child: Text(
+                                      'الحمل',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 50.w,
+                                    child: Text(
+                                      'تعديل',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              rows: _stationLoads.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final station = entry.value;
+                                final showUpdateButton = station.load >= 0 &&
+                                    station.load <= _maxStationLoad;
+                                final requiredEmail =
+                                    specificStations[station.stationName];
+                                final isUserAssigned = userEmail != null &&
+                                    requiredEmail != null &&
+                                    userEmail == requiredEmail;
+
+                                return DataRow(
+                                  color: WidgetStateProperty.resolveWith(
+                                    (states) {
+                                      if (index % 2 == 0) {
+                                        return Colors.white.withOpacity(0.02);
+                                      }
+                                      return Colors.white.withOpacity(0.05);
+                                    },
+                                  ),
+                                  cells: [
+                                    DataCell(
+                                      Container(
+                                        width: 35.w,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${index + 1}',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize:
+                                                isUserAssigned ? 13.sp : 12.sp,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                            color: isUserAssigned
+                                                ? Colors.orangeAccent
+                                                : Colors.white54,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Container(
+                                        width: 100.w,
+                                        alignment: Alignment.center,
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 4.h, horizontal: 8.w),
+                                        decoration: isUserAssigned
+                                            ? BoxDecoration(
+                                                color: Colors.orangeAccent
+                                                    .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(8.r),
+                                                border: Border.all(
+                                                  color: Colors.orangeAccent
+                                                      .withOpacity(0.3),
+                                                ),
+                                              )
+                                            : null,
+                                        child: Text(
+                                          station.stationName,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize:
+                                                isUserAssigned ? 13.sp : 12.sp,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                            color: isUserAssigned
+                                                ? Colors.orangeAccent
+                                                : Colors.white70,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Container(
+                                        width: 70.w,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          _isLoading
+                                              ? '...'
+                                              : station.load.toStringAsFixed(2),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize:
+                                                isUserAssigned ? 13.sp : 12.sp,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                            color: isUserAssigned
+                                                ? Colors.orangeAccent
+                                                : Colors.greenAccent,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Center(
+                                        child: showUpdateButton
+                                            ? CustomActionButton(
+                                                onPressed: () =>
+                                                    _handleStationAction(
+                                                        context, station),
+                                                icon: Icons.edit,
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
                       ),
@@ -713,6 +751,7 @@ class StationDialogState extends State<StationDialog> {
           widget.station.stationName, newLoad);
       setState(() => widget.station.load = newLoad);
       if (mounted) {
+        Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -723,7 +762,6 @@ class StationDialogState extends State<StationDialog> {
           ),
         );
         widget.onUpdate();
-        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
@@ -746,10 +784,10 @@ class StationDialogState extends State<StationDialog> {
     final input =
         _loadController.text.trim().replaceAll('٫', '.').replaceAll(',', '.');
     final newLoad = double.tryParse(input);
-    if (newLoad == null || newLoad < 0 || newLoad > 700) {
+    if (newLoad == null || newLoad < 0 || newLoad > _maxStationLoad) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('يرجى إدخال قيمة صحيحة بين 0 و 700',
+          content: Text('يرجى إدخال قيمة صحيحة بين 0 و $_maxStationLoad',
               textDirection: TextDirection.rtl),
           backgroundColor: Colors.red,
         ),
@@ -770,7 +808,7 @@ class StationDialogState extends State<StationDialog> {
         'تحديث بيانات المحطة',
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: 20.sp,
+          fontSize: 17.sp,
           fontWeight: FontWeight.bold,
           fontFamily: Appfontstring.ChangaLight,
           color: Colors.white,
@@ -780,7 +818,7 @@ class StationDialogState extends State<StationDialog> {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               'اسم المحطة: ${widget.station.stationName}',
@@ -792,7 +830,7 @@ class StationDialogState extends State<StationDialog> {
               ),
               textDirection: TextDirection.rtl,
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 3.h),
             Text(
               'الحمل الحالي: ${widget.station.load.toStringAsFixed(2)}',
               style: TextStyle(
@@ -803,7 +841,7 @@ class StationDialogState extends State<StationDialog> {
               ),
               textDirection: TextDirection.rtl,
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 10.h),
             TextField(
               controller: _loadController,
               keyboardType:
@@ -820,7 +858,6 @@ class StationDialogState extends State<StationDialog> {
                     borderRadius: BorderRadius.circular(8.r)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: Color(0xFF1E88E5)),
                 ),
                 errorText: _errorText,
                 errorMaxLines: 2,
@@ -834,8 +871,11 @@ class StationDialogState extends State<StationDialog> {
                     _errorText = 'يرجى إدخال قيمة الحمل';
                   } else {
                     final parsed = double.tryParse(input);
-                    if (parsed == null || parsed < 0 || parsed > 700) {
-                      _errorText = 'يرجى إدخال رقم صحيح بين 0 و 700';
+                    if (parsed == null ||
+                        parsed < 0 ||
+                        parsed > _maxStationLoad) {
+                      _errorText =
+                          'يرجى إدخال رقم صحيح بين 0 و $_maxStationLoad';
                     } else {
                       _errorText = null;
                     }
@@ -855,7 +895,7 @@ class StationDialogState extends State<StationDialog> {
                   ? null
                   : _validateAndUpdate,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E88E5),
+                backgroundColor: const Color.fromARGB(255, 198, 223, 246),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r)),
@@ -872,8 +912,10 @@ class StationDialogState extends State<StationDialog> {
                   : Text(
                       'تحديث',
                       style: TextStyle(
-                          fontSize: 14.sp,
-                          fontFamily: Appfontstring.ChangaLight),
+                        color: Colors.green,
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 14.sp,
+                      ),
                     ),
             ),
             TextButton(
