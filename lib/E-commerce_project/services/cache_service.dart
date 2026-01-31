@@ -154,4 +154,32 @@ class CacheService {
       return null;
     }
   }
+
+  /// Save international loads to local cache
+  Future<void> saveIntlLoads(Map<String, double?> loads) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_intl_loads', jsonEncode(loads));
+      await prefs.setInt(
+          'intl_cache_timestamp', DateTime.now().millisecondsSinceEpoch);
+    } catch (e) {
+      print('Intl cache save error: $e');
+    }
+  }
+
+  /// Get cached international loads
+  Future<Map<String, double?>?> getIntlLoads() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString('cached_intl_loads');
+      if (jsonString == null) return null;
+
+      final Map<String, dynamic> decoded = jsonDecode(jsonString);
+      return decoded.map((key, value) =>
+          MapEntry(key, value != null ? (value as num).toDouble() : null));
+    } catch (e) {
+      print('Intl cache load error: $e');
+      return null;
+    }
+  }
 }

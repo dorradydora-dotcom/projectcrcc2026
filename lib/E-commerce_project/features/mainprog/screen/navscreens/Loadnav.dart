@@ -1,14 +1,12 @@
-import 'dart:async';
 import 'dart:math';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
-import 'package:amiraly/E-commerce_project/services/cache_service.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
-import 'package:amiraly/main.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/controllers/loadnav_controller.dart';
+import 'package:get/get.dart';
 
 class LoadnavScreen extends StatefulWidget {
   const LoadnavScreen({super.key});
@@ -18,91 +16,16 @@ class LoadnavScreen extends StatefulWidget {
 }
 
 class _LoadnavScreenState extends State<LoadnavScreen> {
-  final SupabaseService _supabaseService = SupabaseService();
-  final CacheService _cacheService = CacheService();
-
-  List<StationLoad> _stationLoads = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-  Timer? _timer;
-  Timer? _simulationTimer;
+  late final LoadnavController controller;
 
   @override
   void initState() {
     super.initState();
-    _loadData(); // Will fetch fresh first
-    // Auto-refresh from API
-    _timer = Timer.periodic(
-        const Duration(seconds: 60), (_) => _fetchFromApi(showLoading: false));
-    // Simulation timer
-    _simulationTimer = Timer.periodic(
-        const Duration(seconds: 6), (_) => _simulateLoadChanges());
-  }
-
-  Future<void> _loadData() async {
-    // Directly fetch fresh data. Cache will be used as fallback inside _fetchFromApi on failure.
-    await _fetchFromApi(showLoading: true);
-  }
-
-  Future<void> _fetchFromApi({bool showLoading = true}) async {
-    // Only show loading if we have NO data
-    if (showLoading && mounted && _stationLoads.isEmpty) {
-      // Corrected !mounted to mounted
-      setState(() => _isLoading = true);
-    }
-    try {
-      final loads = await _supabaseService.fetchStationLoads();
-      if (mounted) {
-        setState(() {
-          _stationLoads = loads;
-          _isLoading = false;
-          _errorMessage = null;
-        });
-        _cacheService.saveStationLoads(loads);
-      }
-    } catch (e) {
-      // Cache fallback removed. Only show fresh data.
-
-      if (mounted && showLoading) {
-        setState(() {
-          if (_stationLoads.isEmpty) {
-            _errorMessage = 'خطأ في جلب بيانات المحطات: $e';
-          }
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _simulateLoadChanges() {
-    if (_stationLoads.isEmpty) return;
-
-    final random = Random();
-    setState(() {
-      for (var station in _stationLoads) {
-        final variationRange = station.maxVariation - station.minVariation;
-        final randomVariation =
-            station.minVariation + random.nextDouble() * variationRange;
-        station.load =
-            (station.baseLoad + randomVariation).clamp(0.0, double.infinity);
-      }
-    });
-  }
-
-  double _getTotalLoad() =>
-      _stationLoads.fold(0.0, (sum, station) => sum + station.load);
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _simulationTimer?.cancel();
-    super.dispose();
+    controller = Get.put(LoadnavController());
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalLoad = _getTotalLoad();
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -124,65 +47,129 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
             color: Colors.orangeAccent,
             backgroundColor: Colors.white,
             onRefresh: () async {
-              await _fetchFromApi();
+              await controller.fetchStationLoads();
+              controller.fetchAllIntlData();
+              await controller.fetchFreshHourlyData();
             },
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Total Load Display (Replaced with LoadDisplayWidget)
+                // Total Load Display
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.only(top: 40.h), // reduced top padding
-                    child: LoadDisplayWidget(
-                      totalLoad: totalLoad,
-                      isLoading: _isLoading && _stationLoads.isEmpty,
-                      isFromCache: false,
-                    ),
+                    padding: EdgeInsets.only(top: 30.h),
+                    child: Obx(() => LoadDisplayWidget(
+                          totalLoad: controller.totalStationLoad,
+                          isLoading: controller.isLoadingStations.value &&
+                              controller.stationLoads.isEmpty,
+                          isFromCache: controller.isStationFromCache.value,
+                        )),
                   ),
                 ),
 
-                SliverToBoxAdapter(
-                    child: SizedBox(height: 12.h)), // reduced spacing
+                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
+
+                // Real Capital Load Cards
+                const SliverToBoxAdapter(
+                  child: RealCapitalLoadCards(),
+                ),
+
+                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
                 // Hourly Chart
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    child: HourlyMaxLoadTable(
-                      tableName: AppConstants.tableHourlyMaxLoads,
+                    child: const HourlyMaxLoadTable(),
+                  ),
+                ),
+
+                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
+
+                // Station Cards Header
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 10.w, right: 10.w, top: 6.h),
+                    padding: EdgeInsets.all(10.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.03),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16.r)),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.flash_on,
+                            color: Colors.orangeAccent, size: 16),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'محطات شبكه القاهرة',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        const Icon(Icons.flash_on,
+                            color: Colors.orangeAccent, size: 16),
+                      ],
                     ),
                   ),
                 ),
 
-                SliverToBoxAdapter(child: SizedBox(height: 12.h)),
-
                 // Station Cards Grid
-                if (_errorMessage != null && _stationLoads.isEmpty)
-                  SliverToBoxAdapter(child: _buildErrorWidget())
-                else if (_isLoading && _stationLoads.isEmpty)
-                  const SliverToBoxAdapter(child: ShimmerLoadingGrid())
-                else
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // Changed to 3
-                        childAspectRatio: 2.2, // Adjusted for narrower cards
-                        crossAxisSpacing: 4.w,
-                        mainAxisSpacing: 4.h,
+                Obx(() {
+                  if (controller.stnError.value &&
+                      controller.stationLoads.isEmpty) {
+                    return SliverToBoxAdapter(child: _buildErrorWidget());
+                  } else if (controller.isLoadingStations.value &&
+                      controller.stationLoads.isEmpty) {
+                    return const SliverToBoxAdapter(
+                        child: ShimmerLoadingGrid());
+                  } else {
+                    return SliverToBoxAdapter(
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 10.w),
+                        padding: EdgeInsets.all(4.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(16.r)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 2.2,
+                            crossAxisSpacing: 4.w,
+                            mainAxisSpacing: 4.h,
+                          ),
+                          itemCount: controller.stationLoads.length,
+                          itemBuilder: (context, index) {
+                            final station = controller.stationLoads[index];
+                            return StationCard(
+                              index: index,
+                              station: station,
+                            );
+                          },
+                        ),
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final station = _stationLoads[index];
-                          return StationCard(
-                            index: index,
-                            station: station,
-                          );
-                        },
-                        childCount: _stationLoads.length,
-                      ),
-                    ),
-                  ),
+                    );
+                  }
+                }),
 
                 SliverToBoxAdapter(child: SizedBox(height: 80.h)),
               ],
@@ -194,32 +181,33 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
   }
 
   Widget _buildErrorWidget() {
-    return Column(
-      children: [
-        Text(
-          _errorMessage!,
-          style: TextStyle(
-              color: Colors.redAccent, fontFamily: Appfontstring.ChangaLight),
-          textAlign: TextAlign.center,
-        ),
-        TextButton(
-          onPressed: _fetchFromApi,
-          child: Text('إعادة المحاولة',
-              style: TextStyle(
-                  fontFamily: Appfontstring.ChangaLight,
-                  color: Colors.blueAccent)),
-        )
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+          SizedBox(height: 16.h),
+          Obx(() => Text(
+                controller.errorMessage.value ?? 'حدث خطأ غير متوقع',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70),
+              )),
+          ElevatedButton(
+            onPressed: () => controller.fetchStationLoads(),
+            child: const Text('إعادة المحاولة'),
+          ),
+        ],
+      ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// COMPONENTS COPIED FROM STATIONLOADNAV
+// COMPONENTS
 // ---------------------------------------------------------------------------
 
 // LOAD DISPLAY WIDGET
-class LoadDisplayWidget extends StatefulWidget {
+class LoadDisplayWidget extends StatelessWidget {
   final double totalLoad;
   final bool isLoading;
   final bool isFromCache;
@@ -232,110 +220,16 @@ class LoadDisplayWidget extends StatefulWidget {
   });
 
   @override
-  State<LoadDisplayWidget> createState() => _LoadDisplayWidgetState();
-}
-
-class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
-  static const _updateInterval = Duration(seconds: 6);
-  static const _historyRetentionMinutes = 60;
-
-  double maxLoadInLastHour = 0.0;
-  double _hourlyMax = 0.0;
-  int? _trackedHour;
-  DateTime? _trackedDate;
-  final SupabaseService _supabaseService = SupabaseService();
-  final List<Map<String, dynamic>> _loadHistory = [];
-  Timer? timer;
-
-  @override
-  void initState() {
-    super.initState();
-    initializeHourlyMax();
-    timer = Timer.periodic(_updateInterval, (_) => updateLoadHistory());
-  }
-
-  Future<void> initializeHourlyMax() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final thisHour = now.hour;
-    try {
-      final hourlyData = await _supabaseService.fetchHourlyMaxLoads(today);
-      final Map<String, dynamic>? currentEntry = hourlyData.firstWhere(
-        (e) => e['hour'] == thisHour,
-        orElse: () => <String, dynamic>{},
-      );
-      _hourlyMax = currentEntry != null && currentEntry['max_load'] != null
-          ? (currentEntry['max_load'] as num).toDouble()
-          : 0.0;
-    } catch (e) {
-      _hourlyMax = 0.0;
-    }
-    _trackedHour = thisHour;
-    _trackedDate = today;
-  }
-
-  Future<void> updateLoadHistory() async {
-    if (!mounted) return;
-    final now = DateTime.now();
-    _loadHistory.add({'timestamp': now, 'totalLoad': widget.totalLoad});
-    _loadHistory.removeWhere(
-      (entry) =>
-          now.difference(entry['timestamp'] as DateTime).inMinutes >
-          _historyRetentionMinutes,
-    );
-    setState(() {
-      maxLoadInLastHour = _loadHistory.isNotEmpty
-          ? _loadHistory.map((e) => e['totalLoad'] as double).reduce(max)
-          : widget.totalLoad;
-    });
-
-    if (_trackedHour == null || _trackedDate == null) return;
-
-    final today = DateTime(now.year, now.month, now.day);
-    final thisHour = now.hour;
-    final dateChanged = now.year != _trackedDate!.year ||
-        now.month != _trackedDate!.month ||
-        now.day != _trackedDate!.day;
-    final hourChanged = _trackedHour != thisHour || dateChanged;
-
-    if (hourChanged) {
-      // (Simplified logic for read-only view, we probably don't want to UPSERT from here if it's a viewer page,
-      // but sticking to original code logic for consistency)
-      _trackedHour = thisHour;
-      _trackedDate = today;
-      _hourlyMax = widget.totalLoad;
-    } else if (widget.totalLoad > _hourlyMax) {
-      _hourlyMax = widget.totalLoad;
-      // Assuming we shouldn't write to DB from this view?
-      // Sticking to local display update.
-    }
-  }
-
-  @override
-  void didUpdateWidget(LoadDisplayWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.totalLoad != oldWidget.totalLoad) updateLoadHistory();
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<LoadnavController>();
+
     return Container(
-      height: 120.h, // Further Reduced from 140.h
-      margin: EdgeInsets.only(left: 45.w, right: 45.w, top: 1.h, bottom: 10.h),
-      padding: EdgeInsets.symmetric(
-          horizontal: 10.w, vertical: 4.h), // Further Reduced padding
+      height: 115.h,
+      margin: EdgeInsets.only(left: 40.w, right: 40.w, top: 1.h, bottom: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            const Color(0xFF2C2C2C),
-            const Color(0xFF000000),
-          ],
+          colors: [const Color(0xFF2C2C2C), const Color(0xFF000000)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -353,12 +247,12 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize:
+            min(4, 4).toDouble() > 0 ? MainAxisSize.min : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding:
-                EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // Reduced
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10.r),
@@ -371,26 +265,23 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                   'الحمل الكلي للشبكة',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 11.sp, // Reduced font size (was 13)
+                    fontSize: 11.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
                   textDirection: TextDirection.rtl,
                 ),
-                if (widget.isFromCache) ...[
+                if (isFromCache) ...[
                   SizedBox(width: 6.w),
-                  Icon(
-                    Icons.offline_bolt,
-                    color: Colors.orangeAccent,
-                    size: 12.sp, // Reduced icon size
-                  ),
+                  Icon(Icons.offline_bolt,
+                      color: Colors.orangeAccent, size: 11.sp),
                 ],
               ],
             ),
           ),
           SizedBox(height: 2.h),
-          widget.isLoading
+          isLoading
               ? Shimmer.fromColors(
                   baseColor: Colors.red.withOpacity(0.3),
                   highlightColor: Colors.red.withOpacity(0.7),
@@ -398,14 +289,14 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                     '---',
                     style: TextStyle(
                       color: Colors.redAccent,
-                      fontSize: 40.sp, // Reduced from 50
+                      fontSize: 38.sp,
                       fontFamily: Appfontstring.digital,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 )
               : TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: widget.totalLoad),
+                  tween: Tween<double>(begin: 0, end: totalLoad),
                   duration: const Duration(milliseconds: 1500),
                   curve: Curves.easeOutQuart,
                   builder: (context, value, child) {
@@ -415,14 +306,14 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         SizedBox(
-                          width: 120.w, // Reduced width
+                          width: 110.w,
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
                               value.toStringAsFixed(0),
                               style: TextStyle(
                                 color: Colors.redAccent,
-                                fontSize: 40.sp, // Reduced font size (was 50)
+                                fontSize: 38.sp,
                                 fontFamily: Appfontstring.digital,
                                 shadows: [
                                   Shadow(
@@ -440,7 +331,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                           'ميجا واط',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.9),
-                            fontSize: 10.sp, // Reduced
+                            fontSize: 11.sp,
                             fontFamily: Appfontstring.ChangaLight,
                           ),
                           textDirection: TextDirection.rtl,
@@ -451,49 +342,409 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                 ),
           SizedBox(height: 4.h),
           Container(
-            padding: EdgeInsets.all(2.h), // Reduced
+            padding: EdgeInsets.all(2.h),
             decoration: BoxDecoration(
               color: Colors.blueAccent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(
-                color: Colors.blueAccent.withOpacity(0.2),
-              ),
+              border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
             ),
-            child: RichText(
-              textDirection: TextDirection.rtl,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'أقصى حمل في الساعة الأخيرة: ',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 9.sp, // Reduced
-                      fontFamily: Appfontstring.ChangaLight,
-                    ),
+            child: Obx(() => RichText(
+                  textDirection: TextDirection.rtl,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'أقصى حمل في الساعة الأخيرة: ',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10.sp,
+                          fontFamily: Appfontstring.ChangaLight,
+                        ),
+                      ),
+                      TextSpan(
+                        text: controller.maxLoadInLastHour.value
+                            .toStringAsFixed(0),
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 12.sp,
+                          fontFamily: Appfontstring.ChangaLight,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' م.و',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10.sp,
+                          fontFamily: Appfontstring.ChangaLight,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextSpan(
-                    text: maxLoadInLastHour.toStringAsFixed(0),
-                    style: TextStyle(
-                      color: Colors.blueAccent,
-                      fontSize: 13.sp, // Reduced
-                      fontFamily: Appfontstring.ChangaLight,
-                      fontWeight: FontWeight.bold,
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// REAL CAPITAL LOAD CARDS
+class RealCapitalLoadCards extends StatelessWidget {
+  const RealCapitalLoadCards({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final LoadnavController controller = Get.find<LoadnavController>();
+
+    return Obx(() {
+      final List<Map<String, dynamic>> cardItems = [
+        {
+          'city': 'الـقـاهـرة',
+          'country': 'مصر',
+          'load': controller.intlLoads['القاهرة'],
+          'color': Colors.redAccent,
+          'update': 'اليوم',
+          'flag': '🇪🇬',
+        },
+        {
+          'city': 'طوكيو',
+          'country': 'اليابان',
+          'load': controller.intlLoads['طوكيو'],
+          'color': Colors.orangeAccent,
+          'update': controller.intlLastUpdate['طوكيو'] ?? 'يومي',
+          'flag': '🇯🇵',
+        },
+        {
+          'city': 'المانيا',
+          'country': 'ألمانيا',
+          'load': controller.intlLoads['المانيا'],
+          'color': Colors.blueAccent,
+          'update': controller.intlLastUpdate['المانيا'] ?? 'يومي',
+          'flag': '🇩🇪',
+        },
+        {
+          'city': 'فرنسا',
+          'country': 'فرنسا',
+          'load': controller.intlLoads['فرنسا'],
+          'color': const Color.fromARGB(255, 145, 21, 234),
+          'update': controller.intlLastUpdate['فرنسا'] ?? 'يومي',
+          'flag': '🇫🇷',
+        },
+        {
+          'city': 'السعودية',
+          'country': 'السعودية',
+          'load': controller.intlLoads['السعودية'],
+          'color': Colors.greenAccent,
+          'update': controller.intlLastUpdate['السعودية'] ?? 'تقرير شهري',
+          'flag': '🇸🇦',
+        },
+      ];
+
+      return Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 3.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'أحمال عالمية مسجلة',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 10.sp,
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: ' م.و',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 9.sp, // Reduced
-                      fontFamily: Appfontstring.ChangaLight,
-                    ),
-                  ),
-                ],
+                    if (controller.intlError.value) ...[
+                      SizedBox(width: 8.w),
+                      GestureDetector(
+                        onTap: controller.fetchAllIntlData,
+                        child: Icon(Icons.refresh,
+                            color: Colors.orangeAccent, size: 14.sp),
+                      ),
+                    ],
+                  ],
+                ),
+                Icon(Icons.public,
+                    color: Colors.blueAccent.withOpacity(0.4), size: 10.sp),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.06),
+                    Colors.white.withOpacity(0.01),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.08),
+                  width: 0.8,
+                ),
+              ),
+              child: Column(
+                children: cardItems.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isLast = index == cardItems.length - 1;
+                  final cityKey =
+                      item['city'] == 'الـقـاهـرة' ? 'القاهرة' : item['city'];
+                  final isFromCache =
+                      controller.intlFromCache.contains(cityKey);
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 1.h),
+                        child: Row(
+                          children: [
+                            Text(item['flag'],
+                                style: TextStyle(fontSize: 10.sp)),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['city'],
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 10.sp,
+                                      fontFamily: Appfontstring.ChangaLight,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        item['country'],
+                                        style: TextStyle(
+                                          color: Colors.white38,
+                                          fontSize: 7.sp,
+                                          fontFamily: Appfontstring.ChangaLight,
+                                        ),
+                                      ),
+                                      if (isFromCache) ...[
+                                        SizedBox(width: 4.w),
+                                        Text(
+                                          '(من الذاكرة)',
+                                          style: TextStyle(
+                                            color: Colors.orangeAccent
+                                                .withOpacity(0.6),
+                                            fontSize: 6.sp,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                item['load'] == null
+                                    ? SizedBox(
+                                        width: 15.w,
+                                        height: 10.h,
+                                        child: Shimmer.fromColors(
+                                          baseColor: Colors.white10,
+                                          highlightColor: Colors.white24,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(2.r),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Opacity(
+                                        opacity: isFromCache ? 0.35 : 1.0,
+                                        child: Row(
+                                          textDirection: TextDirection.ltr,
+                                          children: [
+                                            Text(
+                                              (item['load'] as double)
+                                                  .toStringAsFixed(0),
+                                              style: TextStyle(
+                                                color: item['color'],
+                                                fontSize: 16.sp,
+                                                fontFamily:
+                                                    Appfontstring.digital,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            SizedBox(width: 2.w),
+                                            Text(
+                                              'م.و',
+                                              style: TextStyle(
+                                                color: item['color'],
+                                                fontSize: 8.sp,
+                                                fontFamily:
+                                                    Appfontstring.ChangaLight,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                Text(
+                                  item['update'],
+                                  style: TextStyle(
+                                    color: Colors.white24,
+                                    fontSize: 8.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isLast)
+                        Divider(
+                          color: Colors.white.withOpacity(0.03),
+                          height: 1,
+                          thickness: 0.5,
+                        ),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
           ),
         ],
-      ),
+      );
+    });
+  }
+}
+
+// HOURLY MAX LOAD TABLE
+class HourlyMaxLoadTable extends StatelessWidget {
+  const HourlyMaxLoadTable({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<LoadnavController>();
+
+    return Obx(() {
+      if (controller.isLoadingHourly.value &&
+          controller.hourlyMaxLoadsToday.isEmpty) {
+        return Center(
+            child: CircularProgressIndicator(color: Colors.orangeAccent));
+      }
+      if (controller.hourlyError.value != null &&
+          controller.hourlyMaxLoadsToday.isEmpty) {
+        return Text(controller.hourlyError.value!,
+            style: TextStyle(color: Colors.red));
+      }
+
+      final primaryColor = Colors.orangeAccent;
+
+      return Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              'أقصى حمل لكل ساعة (اليوم vs الأمس)',
+              style: TextStyle(
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.white,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12.h),
+            _buildChart(primaryColor, controller),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildChart(Color primary, LoadnavController controller) {
+    return Container(
+      height: 144.h,
+      padding: EdgeInsets.only(right: 10.w),
+      child: LineChart(LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: (controller.maxHourlyLoad.value ?? 0) > 0
+                ? controller.maxHourlyLoad.value! / 4
+                : 500,
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: Colors.white12, strokeWidth: 1),
+          ),
+          titlesData: FlTitlesData(
+              rightTitles:
+                  AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40.w,
+                      getTitlesWidget: (value, meta) => Text(
+                            value.toInt().toString(),
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 11.sp),
+                          ))),
+              bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 4,
+                      getTitlesWidget: (value, meta) => Text(
+                            "${value.toInt()}:00",
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 11.sp),
+                          )))),
+          borderData: FlBorderData(show: false),
+          minX: 0,
+          maxX: 23,
+          minY: 0,
+          maxY: ((controller.maxHourlyLoad.value ?? 0) > 0
+                  ? controller.maxHourlyLoad.value!
+                  : 100) *
+              1.1,
+          lineBarsData: [
+            _buildLineData(controller.hourlyMaxLoadsYesterday, Colors.white30),
+            _buildLineData(controller.hourlyMaxLoadsToday, primary),
+          ])),
+    );
+  }
+
+  LineChartBarData _buildLineData(
+      List<Map<String, dynamic>> data, Color color) {
+    List<FlSpot> spots = List.generate(24, (index) {
+      final item = data.firstWhere((e) => e['hour'] == index,
+          orElse: () => {'max_load': 0});
+      return FlSpot(
+          index.toDouble(), (item['max_load'] as num?)?.toDouble() ?? 0.0);
+    });
+
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      color: color,
+      barWidth: 2,
+      dotData: FlDotData(show: false),
+      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
     );
   }
 }
@@ -529,24 +780,23 @@ class _StationCardState extends State<StationCard> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(10.r), // Reduced radius
+          borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
             color: Colors.white.withOpacity(0.15),
-            width: 0.8, // Reduced border width
+            width: 0.8,
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 4, // Reduced blur
+              blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
-            // Station Number Badge
             Container(
-              width: 20.w, // Reduced badge size
+              width: 20.w,
               height: 20.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -561,7 +811,7 @@ class _StationCardState extends State<StationCard> {
                 child: Text(
                   '${widget.index + 1}',
                   style: TextStyle(
-                    fontSize: 10.sp, // Reduced font
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: Appfontstring.ChangaLight,
                     color: Colors.white,
@@ -569,9 +819,7 @@ class _StationCardState extends State<StationCard> {
                 ),
               ),
             ),
-            SizedBox(width: 4.w), // Reduced spacing
-
-            // Station Info
+            SizedBox(width: 4.w),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -579,10 +827,10 @@ class _StationCardState extends State<StationCard> {
                 children: [
                   Text(
                     widget.station.stationName,
-                    maxLines: 1, // Ensure single line
-                    overflow: TextOverflow.ellipsis, // Handle overflow
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 9.sp, // Reduced font
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: Appfontstring.ChangaLight,
                       color: Colors.white.withOpacity(0.9),
@@ -590,8 +838,6 @@ class _StationCardState extends State<StationCard> {
                     textDirection: TextDirection.rtl,
                   ),
                   SizedBox(height: 2.h),
-
-                  // Animated Load Value
                   TweenAnimationBuilder<double>(
                     tween: Tween<double>(
                       begin: 0,
@@ -607,7 +853,7 @@ class _StationCardState extends State<StationCard> {
                             TextSpan(
                               text: value.toStringAsFixed(0),
                               style: TextStyle(
-                                fontSize: 13.sp, // Reduced font
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.digital,
                                 color: Colors.greenAccent,
@@ -616,7 +862,7 @@ class _StationCardState extends State<StationCard> {
                             TextSpan(
                               text: ' م.و',
                               style: TextStyle(
-                                fontSize: 8.sp, // Reduced
+                                fontSize: 9.sp,
                                 fontFamily: Appfontstring.ChangaLight,
                                 color: Colors.white60,
                               ),
@@ -636,7 +882,7 @@ class _StationCardState extends State<StationCard> {
   }
 }
 
-// SHIMMER LOADING
+// SHIMMER LOADING GRID
 class ShimmerLoadingGrid extends StatelessWidget {
   const ShimmerLoadingGrid({super.key});
 
@@ -646,12 +892,11 @@ class ShimmerLoadingGrid extends StatelessWidget {
       baseColor: Colors.white.withOpacity(0.05),
       highlightColor: Colors.white.withOpacity(0.15),
       child: GridView.builder(
-        // Changed to GridView from original ListView to match layout
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, // Changed to 3
-          childAspectRatio: 2.2, // Adjusted for narrower cards
+          crossAxisCount: 3,
+          childAspectRatio: 2.2,
           crossAxisSpacing: 4.w,
           mainAxisSpacing: 4.h,
         ),
@@ -693,218 +938,6 @@ class ShimmerLoadingGrid extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// KEEPING THE HOURLY CHART LOGIC (As it was part of Loadnav features)
-// ---------------------------------------------------------------------------
-
-class HourlyMaxLoadTable extends StatefulWidget {
-  final String? tableName;
-
-  const HourlyMaxLoadTable({
-    super.key,
-    this.tableName,
-  });
-
-  @override
-  State<HourlyMaxLoadTable> createState() => _HourlyMaxLoadTableState();
-}
-
-class _HourlyMaxLoadTableState extends State<HourlyMaxLoadTable> {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
-
-  List<Map<String, dynamic>> _hourlyMaxLoadsToday = [];
-  List<Map<String, dynamic>> _hourlyMaxLoadsYesterday = [];
-
-  bool _isLoading = false;
-  String? _error;
-  double? _maxLoadValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    // 1. Load from Cache
-    final cached = await _cacheService.getHourlyMaxLoads();
-    if (cached != null && mounted) {
-      setState(() {
-        _hourlyMaxLoadsToday = cached['today']!;
-        _hourlyMaxLoadsYesterday = cached['yesterday']!;
-        _calculateMaxLoad();
-      });
-    }
-
-    // 2. Fetch Fresh
-    await _fetchFromApi();
-  }
-
-  Future<void> _fetchFromApi() async {
-    if (!mounted) return;
-    if (_hourlyMaxLoadsToday.isEmpty) setState(() => _isLoading = true);
-
-    try {
-      final now = DateTime.now();
-      final table = widget.tableName ?? 'hourly_max_loads';
-      final todayFormatted = DateTime(now.year, now.month, now.day)
-          .toIso8601String()
-          .split('T')[0];
-      final yesterdayFormatted = DateTime(now.year, now.month, now.day - 1)
-          .toIso8601String()
-          .split('T')[0];
-
-      final todayResponse = await _supabase
-          .from(table)
-          .select('hour, max_load')
-          .eq('date', todayFormatted)
-          .order('hour', ascending: true);
-
-      final yesterdayResponse = await _supabase
-          .from(table)
-          .select('hour, max_load')
-          .eq('date', yesterdayFormatted)
-          .order('hour', ascending: true);
-
-      if (mounted) {
-        List<Map<String, dynamic>> todayList =
-            List<Map<String, dynamic>>.from(todayResponse);
-        List<Map<String, dynamic>> yesterdayList =
-            List<Map<String, dynamic>>.from(yesterdayResponse);
-
-        setState(() {
-          _hourlyMaxLoadsToday = todayList;
-          _hourlyMaxLoadsYesterday = yesterdayList;
-          _calculateMaxLoad();
-          _isLoading = false;
-          _error = null;
-        });
-
-        _cacheService.saveHourlyMaxLoads(todayList, yesterdayList);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          if (_hourlyMaxLoadsToday.isEmpty) _error = 'Error fetching data: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _calculateMaxLoad() {
-    final all = [..._hourlyMaxLoadsToday, ..._hourlyMaxLoadsYesterday];
-    if (all.isNotEmpty) {
-      _maxLoadValue = all
-          .map((e) => (e['max_load'] as num?)?.toDouble() ?? 0.0)
-          .reduce(max);
-    } else {
-      _maxLoadValue = 0.0;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading)
-      return Center(
-          child: CircularProgressIndicator(color: Colors.orangeAccent));
-    if (_error != null)
-      return Text(_error!, style: TextStyle(color: Colors.red));
-
-    final primaryColor = Colors.orangeAccent;
-
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'أقصى حمل لكل ساعة (اليوم vs الأمس)',
-            style: TextStyle(
-                fontFamily: Appfontstring.ChangaLight,
-                color: Colors.white,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16.h),
-          _buildChart(primaryColor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChart(Color primary) {
-    return Container(
-      height: 200.h,
-      padding: EdgeInsets.only(right: 10.w),
-      child: LineChart(LineChartData(
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval:
-                _maxLoadValue != null ? _maxLoadValue! / 4 : 500,
-            getDrawingHorizontalLine: (value) =>
-                FlLine(color: Colors.white12, strokeWidth: 1),
-          ),
-          titlesData: FlTitlesData(
-              rightTitles:
-                  AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40.w,
-                      getTitlesWidget: (value, meta) => Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 10.sp),
-                          ))),
-              bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 4,
-                      getTitlesWidget: (value, meta) => Text(
-                            "${value.toInt()}:00",
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 10.sp),
-                          )))),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: 23,
-          minY: 0,
-          maxY: (_maxLoadValue ?? 100) * 1.1,
-          lineBarsData: [
-            _buildLineData(_hourlyMaxLoadsYesterday, Colors.white30),
-            _buildLineData(_hourlyMaxLoadsToday, primary),
-          ])),
-    );
-  }
-
-  LineChartBarData _buildLineData(
-      List<Map<String, dynamic>> data, Color color) {
-    List<FlSpot> spots = List.generate(24, (index) {
-      final item = data.firstWhere((e) => e['hour'] == index,
-          orElse: () => {'max_load': 0});
-      return FlSpot(
-          index.toDouble(), (item['max_load'] as num?)?.toDouble() ?? 0.0);
-    });
-
-    return LineChartBarData(
-      spots: spots,
-      isCurved: true,
-      color: color,
-      barWidth: 2,
-      dotData: FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
     );
   }
 }
