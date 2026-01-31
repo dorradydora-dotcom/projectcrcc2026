@@ -55,26 +55,17 @@ class StationLoadController extends GetxController {
     super.onClose();
   }
 
-  /// Initialize data from cache or fetch from server
+  /// Initialize data - Start with fresh fetch, fallback to cache on error
   Future<void> _initializeData() async {
-    // Load persisted timestamps first
+    // Load persisted timestamps
     final cachedTimestamps = await _cacheService.getUpdateTimestamps();
     if (cachedTimestamps != null) {
       lastUpdateTimes.assignAll(cachedTimestamps);
     }
 
-    // Try to load from cache first
-    final cachedLoads = await _cacheService.getStationLoads();
-    if (cachedLoads != null && cachedLoads.isNotEmpty) {
-      stationLoads.value = cachedLoads;
-      isLoading.value = false;
-      isFromCache.value = true;
-      // Immediately fetch fresh data in background
-      _fetchData(showLoading: false);
-    } else {
-      // No cache, fetch from server
-      await _fetchData();
-    }
+    // Fetch fresh data immediately
+    // usage of cache will happen inside _fetchData on failure
+    await _fetchData();
   }
 
   /// Check if user has CRCC permissions
@@ -146,6 +137,7 @@ class StationLoadController extends GetxController {
           errorStr.contains('connection') ||
           errorStr.contains('timeout');
 
+      // If stationLoads is empty, show error (cache fallback removed as per user request to avoid stale data jumping)
       if (stationLoads.isEmpty) {
         // Only show error if we have no data
         hasError.value = true;
@@ -165,7 +157,7 @@ class StationLoadController extends GetxController {
           _scheduleRetry();
         }
       } else {
-        // We have cached data, retry silently in background
+        // We have data (maybe from cache just now, or previous), retry silently in background
         isLoading.value = false;
         if (isNetworkError && _consecutiveFailures < 10) {
           // Silent retry for network errors

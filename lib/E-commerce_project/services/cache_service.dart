@@ -110,4 +110,48 @@ class CacheService {
       return null;
     }
   }
+
+  /// Save hourly max loads (Today & Yesterday)
+  Future<void> saveHourlyMaxLoads(List<Map<String, dynamic>> today,
+      List<Map<String, dynamic>> yesterday) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = {
+        'today': today,
+        'yesterday': yesterday,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      };
+      await prefs.setString('cached_hourly_max_loads', jsonEncode(data));
+    } catch (e) {
+      print('Cache hourly save error: $e');
+    }
+  }
+
+  /// Get cached hourly max loads
+  Future<Map<String, List<Map<String, dynamic>>>?> getHourlyMaxLoads() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString('cached_hourly_max_loads');
+
+      if (jsonString == null) return null;
+
+      final Map<String, dynamic> decoded = jsonDecode(jsonString);
+      final int? timestamp = decoded['timestamp'];
+
+      if (timestamp == null) return null;
+
+      // Validate cache age (e.g. 1 hour)
+      final cacheTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      if (DateTime.now().difference(cacheTime).inMinutes > 60) return null;
+
+      return {
+        'today': List<Map<String, dynamic>>.from(decoded['today'] ?? []),
+        'yesterday':
+            List<Map<String, dynamic>>.from(decoded['yesterday'] ?? []),
+      };
+    } catch (e) {
+      print('Cache hourly load error: $e');
+      return null;
+    }
+  }
 }
