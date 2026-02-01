@@ -1,11 +1,11 @@
 import 'dart:math';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/loadnav_controller.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:amiraly/E-commerce_project/features/mainprog/controllers/loadnav_controller.dart';
 import 'package:get/get.dart';
 
 class LoadnavScreen extends StatefulWidget {
@@ -30,6 +30,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         extendBodyBehindAppBar: true,
+        floatingActionButton: _buildFAB(),
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -176,6 +177,26 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFAB() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 20.h, left: 10.w),
+      child: FloatingActionButton(
+        onPressed: () {
+          controller.generateAndSharePDF(context);
+        },
+        backgroundColor: Colors.orangeAccent,
+        child: Obx(() => controller.isGeneratingPdf.value
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.black, strokeWidth: 2),
+              )
+            : const Icon(Icons.picture_as_pdf, color: Colors.black)),
       ),
     );
   }

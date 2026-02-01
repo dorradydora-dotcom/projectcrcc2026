@@ -1,5 +1,4 @@
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
-import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/announcmentScreen.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/main.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -759,6 +758,60 @@ class _IndicatorsScreenState extends State<IndicatorsScreen>
           );
         }),
       ),
+    );
+  }
+}
+
+class Indicator extends StatelessWidget {
+  final Color color;
+  final String text;
+  final bool isSquare;
+  final double size;
+  final Color textColor;
+
+  const Indicator({
+    super.key,
+    required this.color,
+    required this.text,
+    this.isSquare = false,
+    this.size = 16,
+    this.textColor = IndicatorAppColors.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: size.w,
+          height: size.h,
+          decoration: BoxDecoration(
+            shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
+            color: color,
+            border: Border.all(color: Colors.white, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontFamily: Appfontstring.Almarai_Bold,
+              color: textColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

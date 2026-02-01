@@ -404,8 +404,9 @@ class StationCard extends StatefulWidget {
 class _StationCardState extends State<StationCard> {
   @override
   Widget build(BuildContext context) {
-    final showUpdateButton =
-        widget.station.load >= 0 && widget.station.load <= _maxStationLoad;
+    final showUpdateButton = widget.canEdit &&
+        widget.station.load >= 0 &&
+        widget.station.load <= _maxStationLoad;
 
     return RepaintBoundary(
       child: Container(
@@ -776,7 +777,6 @@ class StationloadnavScreen extends StatelessWidget {
               }
 
               // Main Content
-              // Main Content
               return RefreshIndicator(
                 color: Colors.orangeAccent,
                 backgroundColor: Colors.white,
@@ -865,7 +865,6 @@ class StationloadnavScreen extends StatelessWidget {
                       );
                     }),
 
-                    // Bottom Padding
                     SliverToBoxAdapter(
                       child: SizedBox(height: 60.h),
                     ),

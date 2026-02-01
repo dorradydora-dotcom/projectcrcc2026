@@ -1,10 +1,12 @@
+import 'dart:ui';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
-import 'package:amiraly/E-commerce_project/common/widgets/headlinetext.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:animate_do/animate_do.dart';
 
 class AnnouncementScreenDark extends StatefulWidget {
   const AnnouncementScreenDark({super.key});
@@ -18,6 +20,7 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
   final TextEditingController _messageController = TextEditingController();
 
   String? _selectedDepartment;
+  bool _isLoading = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -46,101 +49,169 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
         splitScreenMode: true,
         builder: (context, child) {
           return Scaffold(
-              resizeToAvoidBottomInset: false,
-              appBar: const CustomAppBar(),
-              body: Container(
-                  height: double.infinity,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                        Appcolors.primaryColor,
-                        const Color.fromARGB(255, 36, 116, 178),
-                        const Color.fromARGB(255, 183, 182, 182)
-                      ])),
-                  child: SafeArea(
-                      child: SingleChildScrollView(
-                          padding: EdgeInsets.all(20.w),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _buildHeader(),
-                                SizedBox(height: 0.13.sh),
-                                _buildMessageSection(),
-                                SizedBox(height: 0.03.sh),
-                                _buildDepartmentSection(),
-                                SizedBox(height: 0.06.sh),
-                                _buildSendButton()
-                              ])))));
+            backgroundColor: const Color(0xFF0F172A),
+            appBar: const CustomAppBar(),
+            body: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Stack(
+                children: [
+                  _buildHeaderSection(),
+                  _buildContentSection(),
+                ],
+              ),
+            ),
+          );
         });
   }
 
-  Widget _buildHeader() {
-    return Card(
-        elevation: 16,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        color: Colors.black.withOpacity(0.3),
-        child: Container(
-            padding: EdgeInsets.all(18.w),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: Colors.red.withOpacity(0.5)),
-            ),
-            child: Column(children: [
-              ScaleTransition(
-                  scale: _pulseAnimation,
-                  child: Icon(Icons.warning, size: 64.sp, color: Colors.red)),
-              SizedBox(height: 12.h),
-              TextLine(
-                text: 'صفحة التعليمات الطارئة',
-                color: Colors.white,
-                fontSize: 26.sp,
-                fontFamily: Appfontstring.ChangaLight,
-                fontWeight: FF.B,
+  Widget _buildHeaderSection() {
+    return Container(
+      height: 280.h,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+        gradient: LinearGradient(
+          colors: [
+            Appcolors.primaryColor,
+            Color(0xFF163C5E),
+            Color(0xFF0F2B44),
+            Color(0xFF081A2A)
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: ScaleTransition(
+              scale: _pulseAnimation,
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.redAccent.withOpacity(0.1),
+                  border: Border.all(
+                    color: Colors.redAccent.withOpacity(0.2),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  Icons.warning_rounded,
+                  size: 40.sp,
+                  color: Colors.redAccent,
+                ),
               ),
-              SizedBox(height: 4.h),
-              TextLine(
-                text: 'خاصة بالادارة العليا و التحكم الاقليمى',
-                color: Colors.red,
-                fontSize: 13.sp,
-                fontFamily: Appfontstring.ChangaLight,
-                fontWeight: FF.B,
-              )
-            ])));
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            'التعليمات الطارئة',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.sp,
+              fontFamily: Appfontstring.ChangaLight,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'الإدارة العليا والتحكم الإقليمي',
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 10.sp,
+              fontFamily: Appfontstring.ChangaLight,
+            ),
+          ),
+          SizedBox(height: 40.h), // Space for the overlap
+        ],
+      ),
+    );
   }
 
-  Widget _buildMessageSection() {
+  Widget _buildContentSection() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(height: 220.h), // Push content down to overlap properly
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: FadeInUp(
+              duration: const Duration(milliseconds: 800),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24.r),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B).withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildMessageField(),
+                        SizedBox(height: 20.h),
+                        const Divider(color: Colors.white10),
+                        SizedBox(height: 20.h),
+                        _buildDepartmentDropdown(),
+                        SizedBox(height: 30.h),
+                        _buildSendButton(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 30.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Icon(
-            Icons.message,
-            color: Colors.black,
-            size: 24.sp,
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-              child: Text(
-            ' الرسالــــة ',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 18.sp,
-              fontWeight: FF.B,
-              fontFamily: Appfontstring.ChangaLight,
+        Row(
+          children: [
+            Icon(Iconsax.message_text5, color: Colors.blueAccent, size: 20.sp),
+            SizedBox(width: 8.w),
+            Text(
+              'نص الرسالة',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14.sp,
+                fontFamily: Appfontstring.ChangaLight,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            textAlign: TextAlign.right,
-          ))
-        ]),
+          ],
+        ),
         SizedBox(height: 12.h),
         Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            color: const Color(0xFF0F172A),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.black.withOpacity(0.3)),
+            border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
           ),
           child: TextField(
             controller: _messageController,
@@ -149,15 +220,15 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
             onChanged: (_) => setState(() {}),
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16.sp,
+              fontSize: 14.sp,
               fontFamily: Appfontstring.ChangaLight,
             ),
             decoration: InputDecoration(
-              hintText: 'اكتب رسالتك الطارئة...',
+              hintText: 'اكتب تفاصيل التعليمات الطارئة هنا...',
               hintStyle: TextStyle(
-                color: const Color.fromARGB(82, 255, 255, 255),
+                color: Colors.white30,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: 16.sp,
+                fontSize: 12.sp,
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(16.w),
@@ -168,77 +239,67 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
     );
   }
 
-  Widget _buildDepartmentSection() {
+  Widget _buildDepartmentDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.group, color: Colors.black, size: 24.sp),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                'الجـهـة المرسل اليها ',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: Appfontstring.ChangaLight,
-                ),
-                textAlign: TextAlign.right,
+            Icon(Iconsax.radar5, color: Colors.orangeAccent, size: 20.sp),
+            SizedBox(width: 8.w),
+            Text(
+              'الجهة المستهدفة',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14.sp,
+                fontFamily: Appfontstring.ChangaLight,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
         SizedBox(height: 12.h),
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.black.withOpacity(0.3)),
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedDepartment,
               isExpanded: true,
+              icon: Icon(
+                Iconsax.arrow_circle_down,
+                color: Colors.white54,
+                size: 20.sp,
+              ),
               hint: Text(
                 'اختر الجهة...',
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: Colors.white30,
                   fontFamily: Appfontstring.ChangaLight,
-                  fontSize: 16.sp,
+                  fontSize: 12.sp,
                 ),
-                textAlign: TextAlign.right,
               ),
-              dropdownColor: Colors.black.withOpacity(0.8),
+              dropdownColor: const Color(0xFF0F172A),
               style: TextStyle(
                 color: Colors.white,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: 16.sp,
+                fontSize: 14.sp,
               ),
               items: announcmentdepartments.map((String department) {
                 return DropdownMenuItem<String>(
                   value: department,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          department,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: Appfontstring.ChangaLight,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16.sp,
-                        color: Colors.red,
-                      ),
-                    ],
+                  child: Text(
+                    department,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: Appfontstring.ChangaLight,
+                      fontSize: 14.sp,
+                    ),
                   ),
                 );
               }).toList(),
@@ -254,58 +315,71 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
     );
   }
 
-  bool _isLoading = false;
-
   Widget _buildSendButton() {
     bool isEnabled = _selectedDepartment != null &&
         _messageController.text.isNotEmpty &&
         !_isLoading;
 
-    return Align(
-      alignment: Alignment.center,
-      child: SizedBox(
-        width: 180.w,
-        height: 44.h,
-        child: ElevatedButton(
-          onPressed: isEnabled ? _sendAnnouncement : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isEnabled
-                ? Colors.green
-                : const Color.fromARGB(255, 190, 177, 177),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              side: BorderSide(
-                color: isEnabled ? Colors.greenAccent : Colors.grey,
-                width: 1,
-              ),
-            ),
-            elevation: 0,
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
+    return Container(
+      width: double.infinity,
+      height: 50.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14.r),
+        gradient: isEnabled
+            ? const LinearGradient(
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
+              )
+            : null,
+        color: isEnabled ? null : Colors.white.withOpacity(0.1),
+        boxShadow: isEnabled
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton(
+        onPressed: isEnabled ? _sendAnnouncement : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14.r),
           ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
+        ),
+        child: _isLoading
+            ? SizedBox(
+                width: 22.w,
+                height: 22.h,
+                child: const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Iconsax.send_1,
+                    size: 20.sp,
+                    color: isEnabled ? Colors.white : Colors.white38,
                   ),
-                )
-              : FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
+                  SizedBox(width: 10.w),
+                  Text(
                     'إرسال التعليمات الطارئة',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: Appfontstring.ChangaLight,
-                      color: Colors.white,
+                      color: isEnabled ? Colors.white : Colors.white38,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                ),
-        ),
+                ],
+              ),
       ),
     );
   }
@@ -315,7 +389,6 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
       return;
     }
 
-    // Set loading state
     setState(() {
       _isLoading = true;
     });
@@ -333,83 +406,49 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إرسال التعليمات بنجاح'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10.w),
+                const Text('تم إرسال التعليمات بنجاح'),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
           ),
         );
         _messageController.clear();
         setState(() {
           _selectedDepartment = null;
-          _isLoading = false; // Reset loading on success
+          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في إرسال التعليمات: $e'),
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 10.w),
+                Expanded(child: Text('خطأ في إرسال التعليمات: $e')),
+              ],
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
           ),
         );
         setState(() {
-          _isLoading = false; // Reset loading on error
+          _isLoading = false;
         });
       }
     }
-  }
-}
-
-class Indicator extends StatelessWidget {
-  final Color color;
-  final String text;
-  final bool isSquare;
-  final double size;
-  final Color textColor;
-
-  const Indicator({
-    super.key,
-    required this.color,
-    required this.text,
-    this.isSquare = false,
-    this.size = 16,
-    this.textColor = IndicatorAppColors.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: size.w,
-          height: size.h,
-          decoration: BoxDecoration(
-            shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
-            color: color,
-            border: Border.all(color: Colors.white, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(width: 8.w),
-        Flexible(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontFamily: Appfontstring.Almarai_Bold,
-              color: textColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

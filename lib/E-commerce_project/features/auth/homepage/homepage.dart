@@ -66,26 +66,41 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildInitializationLoading() {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Appcolors.primaryColor),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'جاري تحميل الصفحة الرئيسية...',
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: Appfontstring.ChangaLight,
-                color: Colors.grey[700],
-              ),
-            ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Appcolors.primaryColor,
+            Color(0xFF163C5E),
+            Color(0xFF0F2B44),
+            Color(0xFF081A2A)
           ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(Appcolors.primaryColor2),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'جاري تحميل الصفحة الرئيسية...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -342,11 +357,6 @@ class __HomePageContentState extends State<_HomePageContent>
         return _buildErrorState();
       }
 
-      // عرض حالة التحميل
-      if (_controller.isLoading.value) {
-        return _buildLoadingState();
-      }
-
       // عرض المحتوى العادي
       return Directionality(
         textDirection: TextDirection.ltr,
@@ -404,29 +414,6 @@ class __HomePageContentState extends State<_HomePageContent>
                 horizontal: 24,
                 vertical: 12,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: Appcolors.primaryColor,
-            strokeWidth: 3,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'جاري التحميل...',
-            style: TextStyle(
-              fontSize: 16,
-              fontFamily: Appfontstring.ChangaLight,
-              color: Colors.grey.shade600,
             ),
           ),
         ],
