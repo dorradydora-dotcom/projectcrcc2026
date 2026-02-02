@@ -1,354 +1,250 @@
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/indicators_controller.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
-import 'package:amiraly/main.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:shimmer/shimmer.dart';
 
-class IndicatorsScreen extends StatefulWidget {
+class IndicatorsScreen extends GetView<IndicatorsController> {
   const IndicatorsScreen({super.key});
 
   @override
-  State<IndicatorsScreen> createState() => _IndicatorsScreenState();
-}
-
-class _IndicatorsScreenState extends State<IndicatorsScreen>
-    with TickerProviderStateMixin {
-  List<String> stations = [];
-  List<int> selectedStations = [];
-  late List<List<double>> stationLoads;
-  int touchedPieIndex = -1;
-  bool isLoading = true;
-  double sumStations = 0.0;
-  double sumGeneration = 0.0;
-  double sumExchanges = 0.0;
-  double totalDynamic = 0.0;
-  bool hasPieData = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  final SupabaseServiceHourly _supabaseService = SupabaseServiceHourly();
-
-  @override
-  void initState() {
-    super.initState();
-    stationLoads = [];
-    sumStations = 0.0;
-    sumGeneration = 0.0;
-    sumExchanges = 0.0;
-    totalDynamic = 0.0;
-    hasPieData = false;
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _loadData();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      setState(() {
-        isLoading = true;
-      });
-      _animationController.reset();
-      final hourlyLoads = await _supabaseService.fetchStationHourlyLoads();
-
-      final List<String> newStations =
-          hourlyLoads.map((e) => e.stationName).toList();
-      final List<List<double>> newStationLoads =
-          hourlyLoads.map((e) => e.loads).toList();
-
-      double newSumStations = 0.0;
-      double newSumGeneration = 0.0;
-      double newSumExchanges = 0.0;
-
-      final List<String> exchangeStations = [
-        'عبور3/عاشر',
-        'الكريمات/بنى سويف',
-        'قليوب/قناطر',
-        'برقاش/ابوغالب',
-        'ابو زعبل ق / بلبيس',
-      ];
-      final String generationStation = 'الكريمات الشمسية';
-
-      for (int i = 0; i < newStations.length; i++) {
-        final String stationName = newStations[i];
-        final List<double> loads = newStationLoads[i];
-        final double stationSum =
-            loads.fold(0.0, (double a, double b) => a + b);
-
-        if (stationName == generationStation) {
-          newSumGeneration += stationSum;
-        } else if (exchangeStations.contains(stationName)) {
-          newSumExchanges += stationSum;
-        } else {
-          newSumStations += stationSum;
-        }
-      }
-
-      final double newTotalDynamic =
-          newSumStations + newSumGeneration + newSumExchanges;
-      final bool newHasPieData = newTotalDynamic > 0.0;
-
-      setState(() {
-        stations = newStations;
-        stationLoads = newStationLoads;
-        selectedStations = newStations.isNotEmpty ? [0] : [];
-        sumStations = newSumStations;
-        sumGeneration = newSumGeneration;
-        sumExchanges = newSumExchanges;
-        totalDynamic = newTotalDynamic;
-        hasPieData = newHasPieData;
-        isLoading = false;
-      });
-      _animationController.forward();
-    } catch (e) {
-      setState(() {
-        stations = [];
-        stationLoads = [];
-        selectedStations = [];
-        sumStations = 0.0;
-        sumGeneration = 0.0;
-        sumExchanges = 0.0;
-        totalDynamic = 0.0;
-        hasPieData = false;
-        isLoading = false;
-      });
-      _animationController.forward();
-    }
-  }
-
-  void _showMaxStationsSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                'يمكنك اختيار ${AppConstants.maxStations} محطات كحد أقصى',
-                style: TextStyle(
-                  fontFamily: Appfontstring.Almarai_Bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: IndicatorAppColors.secondaryColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    Get.put(IndicatorsController()); // Ensure controller is initialized
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: const CustomAppBar(),
-      body: Container(
-        decoration: BoxDecoration(
-          color: IndicatorAppColors.backgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
+        appBar: const CustomAppBar(),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Appcolors.primaryColor,
+                Color(0xFF163C5E),
+                Color(0xFF0F2B44),
+                Color(0xFF081A2A)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-          ],
-        ),
-        child: isLoading
-            ? Center(
+          ),
+          child: Obx(() {
+            if (controller.isLoadingStations.value &&
+                controller.stations.isEmpty) {
+              return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          IndicatorAppColors.primaryColor),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
                     ),
                     SizedBox(height: 16.h),
                     Text(
                       'جاري تحميل البيانات...',
                       style: TextStyle(
                         fontFamily: Appfontstring.Almarai_Bold,
-                        color: IndicatorAppColors.subTextColor,
+                        color: Colors.white70,
                         fontSize: 14.sp,
                       ),
                     ),
                   ],
                 ),
-              )
-            : RefreshIndicator(
-                onRefresh: _loadData,
-                color: IndicatorAppColors.primaryColor,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.all(isSmallScreen ? 8.0.w : 16.0.w),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionTitle(
-                              'احمال المحطات على مدار اليوم ',
-                              isSmallScreen,
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildStationSelector(isSmallScreen),
-                            SizedBox(height: 16.h),
-                            _buildLineChartContainer(isSmallScreen),
-                            SizedBox(height: 16.h),
-                            _buildLineChartLegend(isSmallScreen),
-                            SizedBox(height: 8.h),
-                            Divider(
-                                color: IndicatorAppColors.borderColor,
-                                thickness: 1,
-                                height: 16.h),
-                            SizedBox(height: 16.h),
-                            _buildSectionTitle(
-                              'تحليل نسب احمال المحطات والتوليد والتبادلات',
-                              isSmallScreen,
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildPieChartContainer(isSmallScreen),
-                            SizedBox(height: 16.h),
-                            _buildPieChartLegend(isSmallScreen),
-                          ],
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                await controller.fetchStationIndicatorData();
+                controller.fetchAllIntlData();
+                await controller.fetchFreshHourlyData();
+              },
+              color: Colors.orangeAccent,
+              child: FadeTransition(
+                opacity: controller.fadeAnimation,
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(isSmallScreen ? 8.0.w : 16.0.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // --- International Loads Section ---
+                        _buildSectionTitle(
+                          'أحمال عالمية مسجلة',
+                          isSmallScreen,
+                          icon: Icons.public,
                         ),
-                      ),
+                        SizedBox(height: 16.h),
+                        const RealCapitalLoadCards(),
+                        SizedBox(height: 24.h),
+
+                        // --- Hourly Max Loads Section ---
+                        _buildSectionTitle(
+                          'أقصى حمل لكل ساعة',
+                          isSmallScreen,
+                          icon: Icons.access_time_filled,
+                        ),
+                        SizedBox(height: 16.h),
+                        const HourlyMaxLoadTable(),
+                        SizedBox(height: 24.h),
+
+                        Divider(
+                            color: Colors.white.withOpacity(0.1),
+                            thickness: 1,
+                            height: 30.h),
+
+                        // --- Station Charts Section ---
+                        _buildSectionTitle(
+                          'احمال المحطات على مدار اليوم ',
+                          isSmallScreen,
+                          icon: Icons.analytics,
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildStationSelector(isSmallScreen),
+                        SizedBox(height: 16.h),
+                        _buildLineChartContainer(isSmallScreen),
+                        SizedBox(height: 16.h),
+                        _buildLineChartLegend(isSmallScreen),
+                        SizedBox(height: 24.h),
+
+                        Divider(
+                            color: Colors.white.withOpacity(0.1),
+                            thickness: 1,
+                            height: 30.h),
+
+                        // --- Pie Chart Section ---
+                        _buildSectionTitle(
+                          'تحليل نسب احمال المحطات والتوليد والتبادلات',
+                          isSmallScreen,
+                          icon: Icons.pie_chart,
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildPieChartContainer(isSmallScreen),
+                        SizedBox(height: 16.h),
+                        _buildPieChartLegend(isSmallScreen),
+                        SizedBox(height: 80.h), // Bottom padding
+                      ],
                     ),
                   ),
                 ),
               ),
+            );
+          }),
+        ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, bool isSmallScreen) {
+  Widget _buildSectionTitle(String title, bool isSmallScreen,
+      {IconData? icon}) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: IndicatorAppColors.primaryColor.withOpacity(0.08),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12.r),
-        border:
-            Border.all(color: IndicatorAppColors.primaryColor.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
-      child: Text(
-        title,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: (isSmallScreen ? 12 : 14).sp,
-          color: IndicatorAppColors.primaryColor,
-          fontWeight: FontWeight.bold,
-          fontFamily: Appfontstring.Almarai_Bold,
-          height: 1.1,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon,
+                color: Colors.orangeAccent, size: (isSmallScreen ? 16 : 18).sp),
+            SizedBox(width: 8.w),
+          ],
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: (isSmallScreen ? 12 : 14).sp,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontFamily: Appfontstring.Almarai_Bold,
+              height: 1.1,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildStationSelector(bool isSmallScreen) {
-    if (stations.isEmpty) {
-      return _buildEmptyCard(
-        'لا توجد محطات متاحة',
-        isSmallScreen,
-      );
-    }
+    return Obx(() {
+      if (controller.stations.isEmpty) {
+        return _buildEmptyCard(
+          'لا توجد محطات متاحة',
+          isSmallScreen,
+        );
+      }
 
-    return Container(
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        color: IndicatorAppColors.cardColor,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: IndicatorAppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 4.w),
-        child: Row(
-          children: stations.asMap().entries.map((entry) {
-            final index = entry.key;
-            final isSelected = selectedStations.contains(index);
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 2.0.w),
-              child: FilterChip(
-                label: Text(
-                  stations[index],
-                  style: TextStyle(
-                    fontSize: (isSmallScreen ? 10 : 12).sp,
-                    fontFamily: Appfontstring.Almarai_Bold,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : IndicatorAppColors.textColor,
-                  ),
-                ),
-                selected: isSelected,
-                selectedColor: IndicatorAppColors.primaryColor,
-                checkmarkColor: Colors.white,
-                backgroundColor: Colors.grey.shade100,
-                elevation: isSelected ? 4 : 2,
-                shadowColor: IndicatorAppColors.shadowColor.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected &&
-                        selectedStations.length < AppConstants.maxStations) {
-                      selectedStations.add(index);
-                    } else if (selected) {
-                      _showMaxStationsSnackBar();
-                    } else {
-                      selectedStations.remove(index);
-                    }
-                  });
-                },
-              ),
-            );
-          }).toList(),
+      return Container(
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
-      ),
-    );
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Row(
+            children: controller.stations.asMap().entries.map((entry) {
+              final index = entry.key;
+              final isSelected = controller.selectedStations.contains(index);
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 2.0.w),
+                child: FilterChip(
+                  label: Text(
+                    controller.stations[index],
+                    style: TextStyle(
+                      fontSize: (isSmallScreen ? 10 : 12).sp,
+                      fontFamily: Appfontstring.Almarai_Bold,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected
+                          ? Colors.black // Selected text color
+                          : Colors.white70,
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: Colors.orangeAccent,
+                  checkmarkColor: Colors.black,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                    side: BorderSide(
+                      color: isSelected
+                          ? Colors.orangeAccent
+                          : Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  onSelected: (selected) =>
+                      controller.toggleStationSelection(index, selected),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildEmptyCard(String message, bool isSmallScreen) {
     return Container(
       height: (isSmallScreen ? 60 : 80).h,
       decoration: BoxDecoration(
-        color: IndicatorAppColors.cardColor,
+        color: Colors.white.withOpacity(0.03),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: IndicatorAppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Center(
         child: Padding(
@@ -359,7 +255,7 @@ class _IndicatorsScreenState extends State<IndicatorsScreen>
             style: TextStyle(
               fontSize: 12.sp,
               fontFamily: Appfontstring.Almarai_Bold,
-              color: IndicatorAppColors.subTextColor,
+              color: Colors.white54,
               height: 1.3,
             ),
           ),
@@ -369,278 +265,268 @@ class _IndicatorsScreenState extends State<IndicatorsScreen>
   }
 
   Widget _buildLineChartContainer(bool isSmallScreen) {
-    if (selectedStations.isEmpty) {
-      return _buildEmptyCard('اختر محطة لعرض البيانات', isSmallScreen);
-    }
+    return Obx(() {
+      if (controller.selectedStations.isEmpty) {
+        return _buildEmptyCard('اختر محطة لعرض البيانات', isSmallScreen);
+      }
 
-    final chartHeight = isSmallScreen ? 240.h : 320.h;
+      final chartHeight = isSmallScreen ? 240.h : 320.h;
 
-    return Container(
-        height: chartHeight,
-        decoration: BoxDecoration(
-          color: IndicatorAppColors.cardColor,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: IndicatorAppColors.borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-            padding: EdgeInsets.all(8.w),
-            child: AspectRatio(
-              aspectRatio: 1.5,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: 50,
-                    verticalInterval: 4,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: IndicatorAppColors.borderColor.withOpacity(0.3),
-                      strokeWidth: 1,
+      return Container(
+          height: chartHeight,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: Padding(
+              padding: EdgeInsets.all(8.w),
+              child: AspectRatio(
+                aspectRatio: 1.5,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      horizontalInterval: 50,
+                      verticalInterval: 4,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                      getDrawingVerticalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
                     ),
-                    getDrawingVerticalLine: (value) => FlLine(
-                      color: IndicatorAppColors.borderColor.withOpacity(0.3),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 32.w,
-                        interval: 50,
-                        getTitlesWidget: (value, meta) => Padding(
-                          padding: EdgeInsets.only(right: 4.w),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 32.w,
+                          interval: 50,
+                          getTitlesWidget: (value, meta) => Padding(
+                            padding: EdgeInsets.only(right: 4.w),
+                            child: Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: Colors.white54,
+                                fontFamily: Appfontstring.Almarai_Bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        axisNameWidget: Container(
+                          padding: EdgeInsets.only(bottom: 4.h),
                           child: Text(
-                            value.toInt().toString(),
+                            'Load (Units)',
                             style: TextStyle(
-                              fontSize: 10.sp,
-                              color: IndicatorAppColors.subTextColor,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white70,
                               fontFamily: Appfontstring.Almarai_Bold,
                             ),
                           ),
                         ),
+                        axisNameSize: 32.h,
                       ),
-                      axisNameWidget: Container(
-                        padding: EdgeInsets.only(bottom: 4.h),
-                        child: Text(
-                          'Load (Units)',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: IndicatorAppColors.textColor,
-                            fontFamily: Appfontstring.Almarai_Bold,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 24.h,
+                          interval: 4,
+                          getTitlesWidget: (value, meta) {
+                            if (value.toInt() % 4 == 0) {
+                              return Padding(
+                                padding: EdgeInsets.only(top: 4.h),
+                                child: Text(
+                                  '${value.toInt()}:00',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.white54,
+                                    fontFamily: Appfontstring.Almarai_Bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                        axisNameWidget: Container(
+                          padding: EdgeInsets.only(top: 4.h),
+                          child: Text(
+                            'Time (Hours)',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white70,
+                              fontFamily: Appfontstring.Almarai_Bold,
+                            ),
                           ),
                         ),
+                        axisNameSize: 32.h,
                       ),
-                      axisNameSize: 32.h,
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 24.h,
-                        interval: 4,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() % 4 == 0) {
-                            return Padding(
-                              padding: EdgeInsets.only(top: 4.h),
-                              child: Text(
-                                '${value.toInt()}:00',
-                                style: TextStyle(
-                                  fontSize: 10.sp,
-                                  color: IndicatorAppColors.subTextColor,
-                                  fontFamily: Appfontstring.Almarai_Bold,
-                                ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    minX: 0,
+                    maxX: 23,
+                    minY: 0,
+                    maxY: 700,
+                    lineBarsData:
+                        controller.selectedStations.map((stationIndex) {
+                      final color = AppConstants.indicatorstationColors[
+                          stationIndex % AppConstants.maxStations];
+                      return LineChartBarData(
+                          spots: controller.stationLoads[stationIndex]
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                          isCurved: true,
+                          color: color,
+                          barWidth: 3,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                    radius: 3,
+                                    color: color,
+                                    strokeWidth: 1,
+                                    strokeColor: Colors.white),
+                          ),
+                          belowBarData: BarAreaData(
+                              show: true,
+                              gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    color.withOpacity(0.3),
+                                    color.withOpacity(0)
+                                  ])));
+                    }).toList(),
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        tooltipRoundedRadius: 8.r,
+                        tooltipPadding: EdgeInsets.all(8.w),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              'محطة ${controller.stations[controller.selectedStations[spot.barIndex]]}\n${spot.y.toStringAsFixed(1)} م.و',
+                              TextStyle(
+                                color: Colors.white,
+                                fontSize: 11.sp,
+                                fontFamily: Appfontstring.Almarai_Bold,
+                                fontWeight: FontWeight.w500,
                               ),
                             );
-                          }
-                          return const SizedBox.shrink();
+                          }).toList();
                         },
                       ),
-                      axisNameWidget: Container(
-                        padding: EdgeInsets.only(top: 4.h),
-                        child: Text(
-                          'Time (Hours)',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: IndicatorAppColors.textColor,
-                            fontFamily: Appfontstring.Almarai_Bold,
-                          ),
-                        ),
-                      ),
-                      axisNameSize: 32.h,
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: IndicatorAppColors.borderColor),
-                  ),
-                  minX: 0,
-                  maxX: 23,
-                  minY: 0,
-                  maxY: 700,
-                  lineBarsData: selectedStations.map((stationIndex) {
-                    final color = AppConstants.indicatorstationColors[
-                        stationIndex % AppConstants.maxStations];
-                    return LineChartBarData(
-                        spots: stationLoads[stationIndex]
-                            .asMap()
-                            .entries
-                            .map((e) => FlSpot(e.key.toDouble(), e.value))
-                            .toList(),
-                        isCurved: true,
-                        color: color,
-                        barWidth: 3,
-                        dotData: FlDotData(
-                          show: true,
-                          getDotPainter: (spot, percent, barData, index) =>
-                              FlDotCirclePainter(
-                                  radius: 3,
-                                  color: color,
-                                  strokeWidth: 1,
-                                  strokeColor: Colors.white),
-                        ),
-                        belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  color.withOpacity(0.3),
-                                  color.withOpacity(0)
-                                ])));
-                  }).toList(),
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      tooltipRoundedRadius: 8.r,
-                      tooltipPadding: EdgeInsets.all(8.w),
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            'محطة ${stations[selectedStations[spot.barIndex]]}\n${spot.y.toStringAsFixed(1)} م.و',
-                            TextStyle(
-                              color: Colors.white,
-                              fontSize: 11.sp,
-                              fontFamily: Appfontstring.Almarai_Bold,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
                 ),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-              ),
-            )));
+              )));
+    });
   }
 
   Widget _buildLineChartLegend(bool isSmallScreen) {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-          color: IndicatorAppColors.cardColor,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: IndicatorAppColors.borderColor),
-          boxShadow: [
-            BoxShadow(
-                color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2))
-          ]),
-      constraints: BoxConstraints(maxHeight: 100.h),
-      child: Wrap(
-        spacing: 12.0.w,
-        runSpacing: 8.0.h,
-        alignment: WrapAlignment.start,
-        children: selectedStations.map((index) {
-          return Indicator(
-            color: AppConstants.indicatorstationColors[
-                index % AppConstants.indicatorstationColors.length],
-            text: 'محطة ${stations[index]}',
-            isSquare: false,
-            size: isSmallScreen ? 10 : 12,
-          );
-        }).toList(),
-      ),
-    );
+    return Obx(() => Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          constraints: BoxConstraints(maxHeight: 100.h),
+          child: Wrap(
+            spacing: 12.0.w,
+            runSpacing: 8.0.h,
+            alignment: WrapAlignment.start,
+            children: controller.selectedStations.map((index) {
+              return Indicator(
+                color: AppConstants.indicatorstationColors[
+                    index % AppConstants.indicatorstationColors.length],
+                text: 'محطة ${controller.stations[index]}',
+                isSquare: false,
+                size: isSmallScreen ? 10 : 12,
+              );
+            }).toList(),
+          ),
+        ));
   }
 
   Widget _buildPieChartContainer(bool isSmallScreen) {
-    if (!hasPieData) {
-      return _buildEmptyCard('لا توجد بيانات لعرض النسب', isSmallScreen);
-    }
+    return Obx(() {
+      if (!controller.hasPieData.value) {
+        return _buildEmptyCard('لا توجد بيانات لعرض النسب', isSmallScreen);
+      }
 
-    final chartHeight = isSmallScreen ? 220.h : 300.h;
+      final chartHeight = isSmallScreen ? 220.h : 300.h;
 
-    final double stationsPct = (sumStations / totalDynamic) * 100.0;
-    final double generationPct = (sumGeneration / totalDynamic) * 100.0;
-    final double exchangesPct = (sumExchanges / totalDynamic) * 100.0;
+      final double stationsPct =
+          (controller.sumStations.value / controller.totalDynamic.value) *
+              100.0;
+      final double generationPct =
+          (controller.sumGeneration.value / controller.totalDynamic.value) *
+              100.0;
+      final double exchangesPct =
+          (controller.sumExchanges.value / controller.totalDynamic.value) *
+              100.0;
 
-    return Container(
-      height: chartHeight,
-      decoration: BoxDecoration(
-        color: IndicatorAppColors.cardColor,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: IndicatorAppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: AspectRatio(
-          aspectRatio: 1.2,
-          child: PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                  setState(() {
+      return Container(
+        height: chartHeight,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: AspectRatio(
+            aspectRatio: 1.2,
+            child: PieChart(
+              PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
                     if (!event.isInterestedForInteractions ||
                         pieTouchResponse == null ||
                         pieTouchResponse.touchedSection == null) {
-                      touchedPieIndex = -1;
+                      controller.touchedPieIndex.value = -1;
                       return;
                     }
-                    touchedPieIndex =
+                    controller.touchedPieIndex.value =
                         pieTouchResponse.touchedSection!.touchedSectionIndex;
-                  });
-                },
+                  },
+                ),
+                borderData: FlBorderData(show: false),
+                sectionsSpace: 2,
+                centerSpaceRadius: (isSmallScreen ? 32 : 48).r,
+                sections: _buildPieChartSections(
+                  isSmallScreen,
+                  stationsPct,
+                  generationPct,
+                  exchangesPct,
+                ),
               ),
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 2,
-              centerSpaceRadius: (isSmallScreen ? 32 : 48).r,
-              sections: _buildPieChartSections(
-                isSmallScreen,
-                stationsPct,
-                generationPct,
-                exchangesPct,
-              ),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
             ),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   List<PieChartSectionData> _buildPieChartSections(
@@ -719,46 +605,50 @@ class _IndicatorsScreenState extends State<IndicatorsScreen>
   }
 
   Widget _buildPieChartLegend(bool isSmallScreen) {
-    final double stationsPct =
-        totalDynamic > 0 ? (sumStations / totalDynamic) * 100 : 0.0;
-    final double generationPct =
-        totalDynamic > 0 ? (sumGeneration / totalDynamic) * 100 : 0.0;
-    final double exchangesPct =
-        totalDynamic > 0 ? (sumExchanges / totalDynamic) * 100 : 0.0;
+    return Obx(() {
+      final double stationsPct = controller.totalDynamic.value > 0
+          ? (controller.sumStations.value / controller.totalDynamic.value) * 100
+          : 0.0;
+      final double generationPct = controller.totalDynamic.value > 0
+          ? (controller.sumGeneration.value / controller.totalDynamic.value) *
+              100
+          : 0.0;
+      final double exchangesPct = controller.totalDynamic.value > 0
+          ? (controller.sumExchanges.value / controller.totalDynamic.value) *
+              100
+          : 0.0;
 
-    final pieLabels = ['المحطات', 'التوليد', 'التبادلات'];
-    final pcts = [stationsPct, generationPct, exchangesPct];
-    final sums = [sumStations, sumGeneration, sumExchanges];
+      final pieLabels = ['المحطات', 'التوليد', 'التبادلات'];
+      final pcts = [stationsPct, generationPct, exchangesPct];
+      final sums = [
+        controller.sumStations.value,
+        controller.sumGeneration.value,
+        controller.sumExchanges.value
+      ];
 
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: IndicatorAppColors.cardColor,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: IndicatorAppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: IndicatorAppColors.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Wrap(
-        spacing: 16.0.w,
-        runSpacing: 8.0.h,
-        alignment: WrapAlignment.start,
-        children: List.generate(pieLabels.length, (index) {
-          return Indicator(
-            color: AppConstants.indicatorpieChartColors[index],
-            text:
-                '${pieLabels[index]}: ${pcts[index].toStringAsFixed(1)}% (${sums[index].toStringAsFixed(0)} م.و)',
-            isSquare: true,
-            size: isSmallScreen ? 10 : 12,
-          );
-        }),
-      ),
-    );
+      return Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Wrap(
+          spacing: 16.0.w,
+          runSpacing: 8.0.h,
+          alignment: WrapAlignment.start,
+          children: List.generate(pieLabels.length, (index) {
+            return Indicator(
+              color: AppConstants.indicatorpieChartColors[index],
+              text:
+                  '${pieLabels[index]}: ${pcts[index].toStringAsFixed(1)}% (${sums[index].toStringAsFixed(0)} م.و)',
+              isSquare: true,
+              size: isSmallScreen ? 10 : 12,
+            );
+          }),
+        ),
+      );
+    });
   }
 }
 
@@ -775,7 +665,7 @@ class Indicator extends StatelessWidget {
     required this.text,
     this.isSquare = false,
     this.size = 16,
-    this.textColor = IndicatorAppColors.textColor,
+    this.textColor = Colors.white70,
   });
 
   @override
@@ -789,10 +679,10 @@ class Indicator extends StatelessWidget {
           decoration: BoxDecoration(
             shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
             color: color,
-            border: Border.all(color: Colors.white, width: 1),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.2),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
@@ -812,6 +702,342 @@ class Indicator extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ==============================================================================
+// MIGRATED COMPONENTS (Adapted for Indicators Screen)
+// ==============================================================================
+
+// REAL CAPITAL LOAD CARDS
+class RealCapitalLoadCards extends GetView<IndicatorsController> {
+  const RealCapitalLoadCards({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final List<Map<String, dynamic>> cardItems = [
+        {
+          'city': 'الـقـاهـرة',
+          'country': 'مصر',
+          'load': controller.intlLoads['القاهرة'],
+          'color': Colors.redAccent,
+          'update': 'اليوم',
+          'flag': '🇪🇬',
+        },
+        {
+          'city': 'طوكيو',
+          'country': 'اليابان',
+          'load': controller.intlLoads['طوكيو'],
+          'color': Colors.orangeAccent,
+          'update': controller.intlLastUpdate['طوكيو'] ?? 'يومي',
+          'flag': '🇯🇵',
+        },
+        {
+          'city': 'المانيا',
+          'country': 'ألمانيا',
+          'load': controller.intlLoads['المانيا'],
+          'color': Colors.blueAccent,
+          'update': controller.intlLastUpdate['المانيا'] ?? 'يومي',
+          'flag': '🇩🇪',
+        },
+        {
+          'city': 'فرنسا',
+          'country': 'فرنسا',
+          'load': controller.intlLoads['فرنسا'],
+          'color': const Color.fromARGB(255, 145, 21, 234),
+          'update': controller.intlLastUpdate['فرنسا'] ?? 'يومي',
+          'flag': '🇫🇷',
+        },
+        {
+          'city': 'السعودية',
+          'country': 'السعودية',
+          'load': controller.intlLoads['السعودية'],
+          'color': Colors.greenAccent,
+          'update': controller.intlLastUpdate['السعودية'] ?? 'تقرير شهري',
+          'flag': '🇸🇦',
+        },
+      ];
+
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4.w),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.06),
+                Colors.white.withOpacity(0.01),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.08),
+              width: 0.8,
+            ),
+          ),
+          child: Column(
+            children: cardItems.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final isLast = index == cardItems.length - 1;
+              final cityKey =
+                  item['city'] == 'الـقـاهـرة' ? 'القاهرة' : item['city'];
+              final isFromCache = controller.intlFromCache.contains(cityKey);
+
+              return Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 2.h),
+                    child: Row(
+                      children: [
+                        Text(item['flag'], style: TextStyle(fontSize: 16.sp)),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item['city'],
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 12.sp,
+                                  fontFamily: Appfontstring.ChangaLight,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    item['country'],
+                                    style: TextStyle(
+                                      color: Colors.white38,
+                                      fontSize: 10.sp,
+                                      fontFamily: Appfontstring.ChangaLight,
+                                    ),
+                                  ),
+                                  if (isFromCache) ...[
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      '(من الذاكرة)',
+                                      style: TextStyle(
+                                        color: Colors.orangeAccent
+                                            .withOpacity(0.6),
+                                        fontSize: 8.sp,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            item['load'] == null
+                                ? SizedBox(
+                                    width: 15.w,
+                                    height: 10.h,
+                                    child: Shimmer.fromColors(
+                                      baseColor: Colors.white10,
+                                      highlightColor: Colors.white24,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(2.r),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Opacity(
+                                    opacity: isFromCache ? 0.35 : 1.0,
+                                    child: Row(
+                                      textDirection: TextDirection.ltr,
+                                      children: [
+                                        Text(
+                                          (item['load'] as double)
+                                              .toStringAsFixed(0),
+                                          style: TextStyle(
+                                            color: item['color'],
+                                            fontSize: 16.sp,
+                                            fontFamily: Appfontstring.digital,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4.w),
+                                        Text(
+                                          'م.و',
+                                          style: TextStyle(
+                                            color: item['color'],
+                                            fontSize: 10.sp,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                            Text(
+                              item['update'],
+                              style: TextStyle(
+                                color: Colors.white24,
+                                fontSize: 9.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isLast)
+                    Divider(
+                      color: Colors.white.withOpacity(0.05),
+                      height: 12.h,
+                      thickness: 0.5,
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// HOURLY MAX LOAD TABLE
+class HourlyMaxLoadTable extends GetView<IndicatorsController> {
+  const HourlyMaxLoadTable({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoadingHourly.value &&
+          controller.hourlyMaxLoadsToday.isEmpty) {
+        return Center(
+            child: CircularProgressIndicator(color: Colors.orangeAccent));
+      }
+      if (controller.hourlyError.value != null &&
+          controller.hourlyMaxLoadsToday.isEmpty) {
+        return Text(controller.hourlyError.value!,
+            style: TextStyle(color: Colors.red));
+      }
+
+      final primaryColor = Colors.orangeAccent;
+
+      return Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text(
+                'اليوم vs الأمس',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaLight,
+                    color: Colors.white38,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold),
+              ),
+              Row(children: [
+                Container(
+                    width: 10.w, height: 10.w, color: Colors.orangeAccent),
+                SizedBox(width: 4.w),
+                Text("اليوم",
+                    style: TextStyle(color: Colors.white54, fontSize: 10.sp)),
+                SizedBox(width: 12.w),
+                Container(width: 10.w, height: 10.w, color: Colors.white30),
+                SizedBox(width: 4.w),
+                Text("الأمس",
+                    style: TextStyle(color: Colors.white54, fontSize: 10.sp)),
+              ])
+            ]),
+            SizedBox(height: 12.h),
+            _buildChart(primaryColor, controller),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildChart(Color primary, IndicatorsController controller) {
+    return Container(
+      height: 144.h,
+      padding: EdgeInsets.only(right: 10.w),
+      child: LineChart(LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: (controller.maxHourlyLoad.value ?? 0) > 0
+                ? controller.maxHourlyLoad.value! / 4
+                : 500,
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: Colors.white12, strokeWidth: 1),
+          ),
+          titlesData: FlTitlesData(
+              rightTitles:
+                  AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40.w,
+                      getTitlesWidget: (value, meta) => Text(
+                            value.toInt().toString(),
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 11.sp),
+                          ))),
+              bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 4,
+                      getTitlesWidget: (value, meta) => Text(
+                            "${value.toInt()}:00",
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 11.sp),
+                          )))),
+          borderData: FlBorderData(show: false),
+          minX: 0,
+          maxX: 23,
+          minY: 0,
+          maxY: ((controller.maxHourlyLoad.value ?? 0) > 0
+                  ? controller.maxHourlyLoad.value!
+                  : 100) *
+              1.1,
+          lineBarsData: [
+            _buildLineData(controller.hourlyMaxLoadsYesterday, Colors.white30),
+            _buildLineData(controller.hourlyMaxLoadsToday, primary),
+          ])),
+    );
+  }
+
+  LineChartBarData _buildLineData(
+      List<Map<String, dynamic>> data, Color color) {
+    List<FlSpot> spots = List.generate(24, (index) {
+      final item = data.firstWhere((e) => e['hour'] == index,
+          orElse: () => {'max_load': 0});
+      return FlSpot(
+          index.toDouble(), (item['max_load'] as num?)?.toDouble() ?? 0.0);
+    });
+
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      color: color,
+      barWidth: 2,
+      dotData: FlDotData(show: false),
+      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
     );
   }
 }

@@ -35,64 +35,59 @@ class _HomeNavState extends State<HomeNav> {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Scaffold(
-            backgroundColor: const Color(0xFF0F172A),
-            floatingActionButton: SizedBox(
-                height: 38.h,
-                width: 38.w,
-                child: FloatingActionButton(
-                    onPressed: () => _controller.refreshAllData(),
-                    backgroundColor: const Color.fromARGB(109, 3, 218, 197),
-                    child: const Icon(Icons.refresh,
-                        color: Colors.white, size: 19))),
-            body: Obx(() {
-              if (_controller.isLoading.value) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.blueAccent,
-                    strokeWidth: 2,
-                  ),
-                );
-              }
-              return CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeaderSection()),
-                  if (_controller.isOffline.value)
-                    SliverToBoxAdapter(
-                      child: Container(
-                        color: Colors.redAccent.withOpacity(0.1),
-                        padding: EdgeInsets.symmetric(vertical: 4.h),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.signal_wifi_off,
-                                size: 14.sp, color: Colors.red),
-                            SizedBox(width: 8.w),
-                            Text(
-                              "تعذر الاتصال",
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: Colors.red,
-                                fontFamily: Appfontstring.ChangaLight,
-                              ),
-                            ),
-                          ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0F172A),
+        floatingActionButton: SizedBox(
+            height: 38.h,
+            width: 38.w,
+            child: FloatingActionButton(
+                heroTag: 'home_refresh_fab',
+                onPressed: () => _controller.refreshAllData(),
+                backgroundColor: const Color.fromARGB(109, 3, 218, 197),
+                child:
+                    const Icon(Icons.refresh, color: Colors.white, size: 19))),
+        body: Obx(() {
+          if (_controller.isLoading.value) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.blueAccent,
+                strokeWidth: 2,
+              ),
+            );
+          }
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeaderSection()),
+              if (_controller.isOffline.value)
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: Colors.redAccent.withOpacity(0.1),
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.signal_wifi_off,
+                            size: 14.sp, color: Colors.red),
+                        SizedBox(width: 8.w),
+                        Text(
+                          "تعذر الاتصال",
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: Colors.red,
+                            fontFamily: Appfontstring.ChangaLight,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  SliverToBoxAdapter(child: _buildContentSection()),
-                ],
-              );
-            }),
-          ),
-        );
-      },
+                  ),
+                ),
+              SliverToBoxAdapter(child: _buildContentSection()),
+            ],
+          );
+        }),
+      ),
     );
   }
 
@@ -486,30 +481,6 @@ class _HomeNavState extends State<HomeNav> {
       );
     }
 
-    final Map<String, bool> direction = {
-      for (final s in stationData) s.stationName: true
-    };
-
-    double getStationLoad(String stationName) {
-      try {
-        final station =
-            stationData.firstWhere((s) => s.stationName == stationName);
-        final absLoad = station.load.abs();
-        final isPositive = direction[stationName] ?? true;
-        return isPositive ? absLoad : -absLoad;
-      } catch (e) {
-        return 0.0;
-      }
-    }
-
-    double getTotalLoad() {
-      return stationData.fold(0.0, (sum, station) {
-        final absLoad = station.load.abs();
-        final isPositive = direction[station.stationName] ?? true;
-        return sum + (isPositive ? absLoad : -absLoad);
-      });
-    }
-
     return Column(
       children: [
         FadeInLeft(
@@ -527,7 +498,8 @@ class _HomeNavState extends State<HomeNav> {
           ),
         ),
         SizedBox(height: 4.h),
-        buildGaugeSection(context, 'حمل الشبكة', 0, 18000, getTotalLoad()),
+        buildGaugeSection(
+            context, 'حمل الشبكة', 0, 18000, _controller.totalLoad),
         SizedBox(height: 4.h),
         FadeInRight(
           child: HeadlineText(
@@ -544,11 +516,11 @@ class _HomeNavState extends State<HomeNav> {
           ),
         ),
         SizedBox(height: 4.h),
-        buildGaugeSection(
-            context, 'عبور3/عاشر', 0, 130, getStationLoad('عبور3/عاشر')),
+        buildGaugeSection(context, 'عبور3/عاشر', 0, 130,
+            _controller.getStationLoad('عبور3/عاشر')),
         SizedBox(height: 2.h),
-        buildGaugeSection(
-            context, 'القناطر', 0, 70, getStationLoad('قليوب/قناطر')),
+        buildGaugeSection(context, 'القناطر', 0, 70,
+            _controller.getStationLoad('قليوب/قناطر')),
         SizedBox(height: 4.h),
         HeadlineText(
           fontfamily: Appfontstring.ChangaLight,
@@ -563,7 +535,7 @@ class _HomeNavState extends State<HomeNav> {
           onSeeAllPressed: _controller.gotocairoscreen,
         ),
         buildGaugeSection(context, 'الكريمات الشمسية', 0, 110,
-            getStationLoad('الكريمات الشمسية')),
+            _controller.getStationLoad('الكريمات الشمسية')),
         SizedBox(height: 25.h),
       ],
     );

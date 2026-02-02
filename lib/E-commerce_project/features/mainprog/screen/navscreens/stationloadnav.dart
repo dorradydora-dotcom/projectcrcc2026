@@ -237,14 +237,20 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                             alignment: Alignment
                                 .centerLeft, // Push number towards 'MW'
                             child: Text(
-                              value.toStringAsFixed(0),
+                              (value >= 0 ? '+' : '') +
+                                  value.toStringAsFixed(0),
                               style: TextStyle(
-                                color: Colors.redAccent, // Red Color
+                                color: value < 0
+                                    ? Colors.red
+                                    : Colors.redAccent, // Red for negative
                                 fontSize: 50.sp,
                                 fontFamily: Appfontstring.digital,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.redAccent.withOpacity(0.5),
+                                    color: (value < 0
+                                            ? Colors.red
+                                            : Colors.redAccent)
+                                        .withOpacity(0.5),
                                     blurRadius: 15,
                                   ),
                                 ],
@@ -325,51 +331,53 @@ class ShimmerLoadingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 8,
+    return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.white.withOpacity(0.05),
-          highlightColor: Colors.white.withOpacity(0.15),
-          child: Container(
-            margin: EdgeInsets.only(bottom: 6.h),
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.0,
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Shimmer.fromColors(
+              baseColor: Colors.white.withOpacity(0.05),
+              highlightColor: Colors.white.withOpacity(0.15),
+              child: Container(
+                margin: EdgeInsets.only(bottom: 6.h),
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1.0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 100.w,
+                      height: 14.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    Container(
+                      width: 65.w,
+                      height: 20.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 100.w,
-                  height: 14.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                ),
-                SizedBox(height: 5.h),
-                Container(
-                  width: 65.w,
-                  height: 20.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+            );
+          },
+          childCount: 8,
+        ),
+      ),
     );
   }
 }
@@ -510,7 +518,11 @@ class _StationCardState extends State<StationCard> {
                   TweenAnimationBuilder<double>(
                     tween: Tween<double>(
                       begin: 0,
-                      end: widget.station.load,
+                      end: (Get.find<StationLoadController>()
+                                  .directions[widget.station.stationName] ??
+                              true)
+                          ? widget.station.load
+                          : -widget.station.load,
                     ),
                     duration: const Duration(seconds: 1),
                     curve: Curves.easeOutCubic,
@@ -520,14 +532,17 @@ class _StationCardState extends State<StationCard> {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: value.toStringAsFixed(0),
+                              text:
+                                  '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 17.sp,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.digital,
                                 color: widget.isUserAssigned
                                     ? Colors.orangeAccent
-                                    : Colors.greenAccent,
+                                    : (value >= 0
+                                        ? Colors.greenAccent
+                                        : Colors.redAccent),
                               ),
                             ),
                             TextSpan(
@@ -740,8 +755,8 @@ class StationloadnavScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize controller
-    final controller = Get.put(StationLoadController());
+    // Use centralized controller
+    final controller = Get.find<StationLoadController>();
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -828,9 +843,7 @@ class StationloadnavScreen extends StatelessWidget {
                     Obx(() {
                       if (controller.isLoading.value &&
                           controller.stationLoads.isEmpty) {
-                        return const SliverToBoxAdapter(
-                          child: ShimmerLoadingGrid(),
-                        );
+                        return const ShimmerLoadingGrid();
                       }
 
                       return SliverGrid(

@@ -136,9 +136,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppBarText.cairo,
+              AppBarText.regionalControl,
               style: TextStyle(
-                color: C.yellow,
+                color: C.white,
                 fontFamily: Appfontstring.ChangaLight,
                 fontSize: responsiveFontSize(screenWidth, 0.033),
                 fontWeight: FontWeight.bold,
@@ -146,9 +146,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
             SizedBox(width: screenWidth * 0.01),
             Text(
-              AppBarText.regionalControl,
+              AppBarText.cairo,
               style: TextStyle(
-                color: C.white,
+                color: C.yellow,
                 fontFamily: Appfontstring.ChangaLight,
                 fontSize: responsiveFontSize(screenWidth, 0.033),
                 fontWeight: FontWeight.bold,

@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/loadnav_controller.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
@@ -49,8 +48,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
             backgroundColor: Colors.white,
             onRefresh: () async {
               await controller.fetchStationLoads();
-              controller.fetchAllIntlData();
-              await controller.fetchFreshHourlyData();
+// Removed migrated data fetches
             },
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -70,22 +68,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
 
                 SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
-                // Real Capital Load Cards
-                const SliverToBoxAdapter(
-                  child: RealCapitalLoadCards(),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
-
-                // Hourly Chart
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    child: const HourlyMaxLoadTable(),
-                  ),
-                ),
-
-                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
+// Removed migrated UI components
 
                 // Station Cards Header
                 SliverToBoxAdapter(
@@ -124,15 +107,14 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                   ),
                 ),
 
-                // Station Cards Grid
+                // Station Cards Grid Area
                 Obx(() {
                   if (controller.stnError.value &&
                       controller.stationLoads.isEmpty) {
                     return SliverToBoxAdapter(child: _buildErrorWidget());
                   } else if (controller.isLoadingStations.value &&
                       controller.stationLoads.isEmpty) {
-                    return const SliverToBoxAdapter(
-                        child: ShimmerLoadingGrid());
+                    return const ShimmerLoadingGrid();
                   } else {
                     return SliverToBoxAdapter(
                       child: Container(
@@ -185,6 +167,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
     return Padding(
       padding: EdgeInsets.only(bottom: 20.h, left: 10.w),
       child: FloatingActionButton(
+        heroTag: 'load_pdf_fab',
         onPressed: () {
           controller.generateAndSharePDF(context);
         },
@@ -209,7 +192,9 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
           const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
           SizedBox(height: 16.h),
           Obx(() => Text(
-                controller.errorMessage.value ?? 'حدث خطأ غير متوقع',
+                controller.errorMessage.value.isEmpty
+                    ? 'حدث خطأ غير متوقع'
+                    : controller.errorMessage.value,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70),
               )),
@@ -331,14 +316,19 @@ class LoadDisplayWidget extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              value.toStringAsFixed(0),
+                              (value >= 0 ? '+' : '') +
+                                  value.toStringAsFixed(0),
                               style: TextStyle(
-                                color: Colors.redAccent,
+                                color:
+                                    value < 0 ? Colors.red : Colors.redAccent,
                                 fontSize: 38.sp,
                                 fontFamily: Appfontstring.digital,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.redAccent.withOpacity(0.5),
+                                    color: (value < 0
+                                            ? Colors.red
+                                            : Colors.redAccent)
+                                        .withOpacity(0.5),
                                     blurRadius: 15,
                                   ),
                                 ],
@@ -409,366 +399,7 @@ class LoadDisplayWidget extends StatelessWidget {
   }
 }
 
-// REAL CAPITAL LOAD CARDS
-class RealCapitalLoadCards extends StatelessWidget {
-  const RealCapitalLoadCards({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final LoadnavController controller = Get.find<LoadnavController>();
-
-    return Obx(() {
-      final List<Map<String, dynamic>> cardItems = [
-        {
-          'city': 'الـقـاهـرة',
-          'country': 'مصر',
-          'load': controller.intlLoads['القاهرة'],
-          'color': Colors.redAccent,
-          'update': 'اليوم',
-          'flag': '🇪🇬',
-        },
-        {
-          'city': 'طوكيو',
-          'country': 'اليابان',
-          'load': controller.intlLoads['طوكيو'],
-          'color': Colors.orangeAccent,
-          'update': controller.intlLastUpdate['طوكيو'] ?? 'يومي',
-          'flag': '🇯🇵',
-        },
-        {
-          'city': 'المانيا',
-          'country': 'ألمانيا',
-          'load': controller.intlLoads['المانيا'],
-          'color': Colors.blueAccent,
-          'update': controller.intlLastUpdate['المانيا'] ?? 'يومي',
-          'flag': '🇩🇪',
-        },
-        {
-          'city': 'فرنسا',
-          'country': 'فرنسا',
-          'load': controller.intlLoads['فرنسا'],
-          'color': const Color.fromARGB(255, 145, 21, 234),
-          'update': controller.intlLastUpdate['فرنسا'] ?? 'يومي',
-          'flag': '🇫🇷',
-        },
-        {
-          'city': 'السعودية',
-          'country': 'السعودية',
-          'load': controller.intlLoads['السعودية'],
-          'color': Colors.greenAccent,
-          'update': controller.intlLastUpdate['السعودية'] ?? 'تقرير شهري',
-          'flag': '🇸🇦',
-        },
-      ];
-
-      return Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 3.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'أحمال عالمية مسجلة',
-                      style: TextStyle(
-                        color: Colors.white60,
-                        fontSize: 10.sp,
-                        fontFamily: Appfontstring.ChangaLight,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (controller.intlError.value) ...[
-                      SizedBox(width: 8.w),
-                      GestureDetector(
-                        onTap: controller.fetchAllIntlData,
-                        child: Icon(Icons.refresh,
-                            color: Colors.orangeAccent, size: 14.sp),
-                      ),
-                    ],
-                  ],
-                ),
-                Icon(Icons.public,
-                    color: Colors.blueAccent.withOpacity(0.4), size: 10.sp),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.06),
-                    Colors.white.withOpacity(0.01),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.08),
-                  width: 0.8,
-                ),
-              ),
-              child: Column(
-                children: cardItems.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final isLast = index == cardItems.length - 1;
-                  final cityKey =
-                      item['city'] == 'الـقـاهـرة' ? 'القاهرة' : item['city'];
-                  final isFromCache =
-                      controller.intlFromCache.contains(cityKey);
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 1.h),
-                        child: Row(
-                          children: [
-                            Text(item['flag'],
-                                style: TextStyle(fontSize: 10.sp)),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['city'],
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 10.sp,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        item['country'],
-                                        style: TextStyle(
-                                          color: Colors.white38,
-                                          fontSize: 7.sp,
-                                          fontFamily: Appfontstring.ChangaLight,
-                                        ),
-                                      ),
-                                      if (isFromCache) ...[
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          '(من الذاكرة)',
-                                          style: TextStyle(
-                                            color: Colors.orangeAccent
-                                                .withOpacity(0.6),
-                                            fontSize: 6.sp,
-                                            fontFamily:
-                                                Appfontstring.ChangaLight,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                item['load'] == null
-                                    ? SizedBox(
-                                        width: 15.w,
-                                        height: 10.h,
-                                        child: Shimmer.fromColors(
-                                          baseColor: Colors.white10,
-                                          highlightColor: Colors.white24,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(2.r),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : Opacity(
-                                        opacity: isFromCache ? 0.35 : 1.0,
-                                        child: Row(
-                                          textDirection: TextDirection.ltr,
-                                          children: [
-                                            Text(
-                                              (item['load'] as double)
-                                                  .toStringAsFixed(0),
-                                              style: TextStyle(
-                                                color: item['color'],
-                                                fontSize: 16.sp,
-                                                fontFamily:
-                                                    Appfontstring.digital,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            SizedBox(width: 2.w),
-                                            Text(
-                                              'م.و',
-                                              style: TextStyle(
-                                                color: item['color'],
-                                                fontSize: 8.sp,
-                                                fontFamily:
-                                                    Appfontstring.ChangaLight,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                Text(
-                                  item['update'],
-                                  style: TextStyle(
-                                    color: Colors.white24,
-                                    fontSize: 8.sp,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!isLast)
-                        Divider(
-                          color: Colors.white.withOpacity(0.03),
-                          height: 1,
-                          thickness: 0.5,
-                        ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      );
-    });
-  }
-}
-
-// HOURLY MAX LOAD TABLE
-class HourlyMaxLoadTable extends StatelessWidget {
-  const HourlyMaxLoadTable({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<LoadnavController>();
-
-    return Obx(() {
-      if (controller.isLoadingHourly.value &&
-          controller.hourlyMaxLoadsToday.isEmpty) {
-        return Center(
-            child: CircularProgressIndicator(color: Colors.orangeAccent));
-      }
-      if (controller.hourlyError.value != null &&
-          controller.hourlyMaxLoadsToday.isEmpty) {
-        return Text(controller.hourlyError.value!,
-            style: TextStyle(color: Colors.red));
-      }
-
-      final primaryColor = Colors.orangeAccent;
-
-      return Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              'أقصى حمل لكل ساعة (اليوم vs الأمس)',
-              style: TextStyle(
-                  fontFamily: Appfontstring.ChangaLight,
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12.h),
-            _buildChart(primaryColor, controller),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildChart(Color primary, LoadnavController controller) {
-    return Container(
-      height: 144.h,
-      padding: EdgeInsets.only(right: 10.w),
-      child: LineChart(LineChartData(
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: (controller.maxHourlyLoad.value ?? 0) > 0
-                ? controller.maxHourlyLoad.value! / 4
-                : 500,
-            getDrawingHorizontalLine: (value) =>
-                FlLine(color: Colors.white12, strokeWidth: 1),
-          ),
-          titlesData: FlTitlesData(
-              rightTitles:
-                  AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40.w,
-                      getTitlesWidget: (value, meta) => Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11.sp),
-                          ))),
-              bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 4,
-                      getTitlesWidget: (value, meta) => Text(
-                            "${value.toInt()}:00",
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11.sp),
-                          )))),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: 23,
-          minY: 0,
-          maxY: ((controller.maxHourlyLoad.value ?? 0) > 0
-                  ? controller.maxHourlyLoad.value!
-                  : 100) *
-              1.1,
-          lineBarsData: [
-            _buildLineData(controller.hourlyMaxLoadsYesterday, Colors.white30),
-            _buildLineData(controller.hourlyMaxLoadsToday, primary),
-          ])),
-    );
-  }
-
-  LineChartBarData _buildLineData(
-      List<Map<String, dynamic>> data, Color color) {
-    List<FlSpot> spots = List.generate(24, (index) {
-      final item = data.firstWhere((e) => e['hour'] == index,
-          orElse: () => {'max_load': 0});
-      return FlSpot(
-          index.toDouble(), (item['max_load'] as num?)?.toDouble() ?? 0.0);
-    });
-
-    return LineChartBarData(
-      spots: spots,
-      isCurved: true,
-      color: color,
-      barWidth: 2,
-      dotData: FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
-    );
-  }
-}
+// Removed RealCapitalLoadCards and HourlyMaxLoadTable definitions (migrated to indicators.dart)
 
 // STATION CARD
 class StationCard extends StatefulWidget {
@@ -862,22 +493,30 @@ class _StationCardState extends State<StationCard> {
                   TweenAnimationBuilder<double>(
                     tween: Tween<double>(
                       begin: 0,
-                      end: widget.station.load,
+                      end: (Get.find<LoadnavController>()
+                                  .directions[widget.station.stationName] ??
+                              true)
+                          ? widget.station.load
+                          : -widget.station.load,
                     ),
                     duration: const Duration(seconds: 1),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, child) {
+                      final isPositive = value >= 0;
                       return RichText(
                         textDirection: TextDirection.rtl,
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: value.toStringAsFixed(0),
+                              text:
+                                  '${isPositive ? '+' : ''}${value.toStringAsFixed(0)}',
                               style: TextStyle(
-                                fontSize: 14.sp,
+                                fontSize: 13.sp, // Reduced from 14.sp
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.digital,
-                                color: Colors.greenAccent,
+                                color: isPositive
+                                    ? Colors.greenAccent
+                                    : Colors.redAccent,
                               ),
                             ),
                             TextSpan(
@@ -909,55 +548,57 @@ class ShimmerLoadingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.15),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           childAspectRatio: 2.2,
           crossAxisSpacing: 4.w,
           mainAxisSpacing: 4.h,
         ),
-        itemCount: 8,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: EdgeInsets.only(bottom: 6.h),
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.0,
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Shimmer.fromColors(
+              baseColor: Colors.white.withOpacity(0.05),
+              highlightColor: Colors.white.withOpacity(0.15),
+              child: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1.0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 80.w,
+                      height: 10.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    Container(
+                      width: 50.w,
+                      height: 14.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 80.w,
-                  height: 10.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                ),
-                SizedBox(height: 5.h),
-                Container(
-                  width: 50.w,
-                  height: 14.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+            );
+          },
+          childCount: 8,
+        ),
       ),
     );
   }

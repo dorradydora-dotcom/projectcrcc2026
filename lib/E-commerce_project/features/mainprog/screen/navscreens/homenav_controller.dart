@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
@@ -11,6 +10,7 @@ import 'package:amiraly/main.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,6 +25,8 @@ abstract class Homenavcontroller extends GetxController {
   List<AnnouncImagesModel> get announcImages;
   List<WeatherData> get weatherData;
   RxList<StationLoad> get stationLoads;
+  double get totalLoad;
+  double getStationLoad(String name);
   String get userGroup;
 
   Future<void> fetchCategories();
@@ -40,7 +42,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
   final RxList<MainCatogoryModel> _categories = <MainCatogoryModel>[].obs;
   final RxList<AnnouncImagesModel> _announcImages = <AnnouncImagesModel>[].obs;
   final RxList<WeatherData> _weatherData = <WeatherData>[].obs;
-  final RxList<StationLoad> _stationLoads = <StationLoad>[].obs;
+  final StationLoadController _stationController =
+      Get.find<StationLoadController>();
+  RxList<StationLoad> get _stationLoads => _stationController.stationLoads;
   final RxString _userGroup = 'none'.obs;
   final RxBool isLoading = false.obs;
   final RxBool isOffline = false.obs;
@@ -62,6 +66,10 @@ class HomenavcontrollerImp extends Homenavcontroller {
   List<WeatherData> get weatherData => _weatherData;
   @override
   RxList<StationLoad> get stationLoads => _stationLoads;
+  @override
+  double get totalLoad => _stationController.totalLoad;
+  @override
+  double getStationLoad(String name) => _stationController.getStationLoad(name);
   @override
   String get userGroup => _userGroup.value;
 
@@ -259,13 +267,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   @override
   Future<void> fetchStationLoads() async {
     if (isOffline.value) return;
-    try {
-      final loads = await SupabaseService().fetchStationLoads();
-      _stationLoads.assignAll(loads);
-    } catch (e) {
-      AppLogger.logError('Error fetching station loads', e);
-      _stationLoads.clear();
-    }
+    await _stationController.fetchData();
   }
 
   @override
@@ -371,13 +373,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   void updateStationVariations() {
-    final random = Random();
-    for (var station in _stationLoads) {
-      final delta = station.maxVariation - station.minVariation;
-      final variation = random.nextDouble() * delta + station.minVariation;
-      station.load = station.baseLoad + variation;
-    }
-    _stationLoads.refresh();
+    // Rely on StationLoadController's updateLoads logic
   }
 
   String _getDayName(DateTime date) {

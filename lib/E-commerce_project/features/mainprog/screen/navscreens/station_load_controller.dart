@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/E-commerce_project/common/services/cache_service.dart';
 import 'package:amiraly/main.dart';
 import 'package:get/get.dart';
@@ -19,6 +20,7 @@ class StationLoadController extends GetxController {
   final RxBool isCrccUser = false.obs;
   final RxInt retryCountdown = 0.obs;
   final RxBool isFromCache = false.obs;
+  final RxMap<String, bool> directions = <String, bool>{}.obs;
 
   // Services
   final SupabaseService _supabaseService = SupabaseService();
@@ -36,16 +38,59 @@ class StationLoadController extends GetxController {
 
   String? get userEmail => Supabase.instance.client.auth.currentUser?.email;
 
-  // Total load computed property
-  double get totalLoad =>
-      stationLoads.fold(0.0, (sum, station) => sum + station.load);
+  // Total load computed property (signed)
+  double get totalLoad {
+    return stationLoads.fold(0.0, (sum, station) {
+      bool isPositive = directions[station.stationName] ?? true;
+      return sum + (isPositive ? station.load : -station.load);
+    });
+  }
+
+  double getStationLoad(String stationName) {
+    try {
+      final station =
+          stationLoads.firstWhere((s) => s.stationName == stationName);
+      bool isPositive = directions[stationName] ?? true;
+      return isPositive ? station.load : -station.load;
+    } catch (_) {
+      return 0.0;
+    }
+  }
 
   @override
   void onInit() {
     super.onInit();
     _checkPermissions();
+    _loadDirections();
     _initializeData();
     _startAutoUpdate();
+  }
+
+  Future<void> _loadDirections() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys();
+      for (var key in keys) {
+        if (key.startsWith('dir_')) {
+          final stationName = key.replaceFirst('dir_', '');
+          directions[stationName] = prefs.getBool(key) ?? true;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading directions: $e');
+    }
+  }
+
+  Future<void> toggleDirection(String stationName) async {
+    final current = directions[stationName] ?? true;
+    directions[stationName] = !current;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('dir_$stationName', !current);
+    } catch (e) {
+      debugPrint('Error saving direction: $e');
+    }
+    stationLoads.refresh(); // Trigger totalLoad recalculation
   }
 
   @override

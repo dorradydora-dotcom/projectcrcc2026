@@ -43,25 +43,19 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-        designSize: const Size(375, 812),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        builder: (context, child) {
-          return Scaffold(
-            backgroundColor: const Color(0xFF0F172A),
-            appBar: const CustomAppBar(),
-            body: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Stack(
-                children: [
-                  _buildHeaderSection(),
-                  _buildContentSection(),
-                ],
-              ),
-            ),
-          );
-        });
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      appBar: const CustomAppBar(),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Stack(
+          children: [
+            _buildHeaderSection(),
+            _buildContentSection(),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildHeaderSection() {

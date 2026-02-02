@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 import 'package:amiraly/E-commerce_project/features/auth/login/loginscreen.dart';
@@ -21,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/E-commerce_project/features/auth/homepage/homepage.dart';
 import 'package:amiraly/E-commerce_project/features/auth/onboarding/onboardingscreen.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
 
 // 🔧 إضافة متغيرات تتبع حالة التهيئة
 bool _isServicesInitialized = false;
@@ -144,6 +146,7 @@ class AppBindings implements Bindings {
     Get.put(AuthService(), permanent: true);
 
     // تهيئة الـ controllers الأخرى عند الحاجة فقط
+    Get.lazyPut(() => StationLoadController());
     Get.lazyPut(() => FavoritesController());
     Get.lazyPut(() => CarouselSliderController());
   }
@@ -154,17 +157,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialBinding: AppBindings(),
-      title: 'E-Commerce App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-        fontFamily: Appfontstring.ChangaLight,
-      ),
-      home: const AuthWrapper(),
-      routes: pageRoutes,
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          initialBinding: AppBindings(),
+          title: 'CRCC App',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            useMaterial3: true,
+            fontFamily: Appfontstring.ChangaLight,
+          ),
+          home: const AuthWrapper(),
+          routes: pageRoutes,
+        );
+      },
     );
   }
 }

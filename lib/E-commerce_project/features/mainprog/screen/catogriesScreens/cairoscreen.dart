@@ -1,96 +1,14 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:ui';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
-
-class LoadDisplayWidgetCairo extends StatefulWidget {
-  final double totalLoad;
-  final bool isLoading;
-
-  const LoadDisplayWidgetCairo({
-    super.key,
-    required this.totalLoad,
-    required this.isLoading,
-  });
-
-  @override
-  State<LoadDisplayWidgetCairo> createState() => _LoadDisplayWidgetCairoState();
-}
-
-class _LoadDisplayWidgetCairoState extends State<LoadDisplayWidgetCairo> {
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 600;
-        return Container(
-            width: isWide
-                ? constraints.maxWidth * 0.66
-                : ScreenUtil().screenWidth * 0.8,
-            height: ScreenUtil().screenHeight * 0.18,
-            margin: EdgeInsets.symmetric(horizontal: 44.w, vertical: 6.h),
-            padding: EdgeInsets.all(12.h),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(25.r),
-            ),
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'الحمل الكــلى  (M.W) ',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isWide ? 16.sp : 14.sp,
-                        fontFamily: Appfontstring.ChangaBold,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 2.h),
-                  Align(
-                    child: Text(
-                      widget.isLoading
-                          ? '...'
-                          : widget.totalLoad.toStringAsFixed(0),
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 53.sp,
-                          fontFamily: Appfontstring.BebasNeue_Regular,
-                          fontWeight: FontWeight.w700,
-                          shadows: [
-                            Shadow(
-                                color: Colors.red.withOpacity(0.5),
-                                blurRadius: 15,
-                                offset: const Offset(0, 3))
-                          ]),
-                    ),
-                  ),
-                  Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.trending_up,
-                            color: Colors.white, size: isWide ? 16.sp : 14.sp),
-                        SizedBox(width: 5.w),
-                        Text('تحديث تلقائي كل 5 ثوان',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isWide ? 10.sp : 8.sp))
-                      ]))
-                ]));
-      },
-    );
-  }
-}
 
 class Cairoscreen extends StatefulWidget {
   const Cairoscreen({super.key});
@@ -108,59 +26,28 @@ class _CairoscreenState extends State<Cairoscreen> {
   String? errorMessage;
   final GlobalKey<LiquidPullToRefreshState> refreshIndicatorKey =
       GlobalKey<LiquidPullToRefreshState>();
-  Timer? timer;
-  static const _updateInterval = Duration(seconds: 5);
-  final Map<String, bool> _direction = {
-    'عبور3/عاشر': true,
-    'قليوب/قناطر': true,
-    'ابو زعبل ق / بلبيس': true,
-    'برقاش/ابوغالب': true,
-    'الكريمات/بنى سويف': true,
-  };
+  final StationLoadController _controller = Get.find<StationLoadController>();
 
   @override
   void initState() {
     super.initState();
-    fetchData();
-    timer = Timer.periodic(_updateInterval, (_) => updateLoads());
+    // Use the central controller's data
   }
 
   Future<void> fetchData() async {
-    if (!mounted) return;
-    setState(() => isLoading = true);
-    try {
-      final loads = await supabaseService.fetchStationLoads();
-      if (mounted) {
-        setState(() {
-          stationLoads = loads;
-          isLoading = false;
-          errorMessage = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          errorMessage = 'خطأ في جلب البيانات: $e';
-          isLoading = false;
-        });
-      }
-    }
+    await _controller.fetchData();
   }
 
   double _getTotalLoad() {
-    return stationLoads.fold(0.0, (sum, station) {
-      double absLoad = station.load.abs();
-      bool isPositive = _direction[station.stationName] ?? true;
-      return sum + (isPositive ? absLoad : -absLoad);
-    });
+    return _controller.totalLoad;
   }
 
   String _getStationLoad(String stationName) {
     try {
-      final station =
-          stationLoads.firstWhere((s) => s.stationName == stationName);
+      final station = _controller.stationLoads
+          .firstWhere((s) => s.stationName == stationName);
       double absLoad = station.load.abs();
-      bool isPositive = _direction[stationName] ?? true;
+      bool isPositive = _controller.directions[stationName] ?? true;
       double signedLoad = isPositive ? absLoad : -absLoad;
       return '${signedLoad >= 0 ? '+' : ''}${signedLoad.toStringAsFixed(0)}';
     } catch (_) {
@@ -168,329 +55,216 @@ class _CairoscreenState extends State<Cairoscreen> {
     }
   }
 
-  void _flipDirection(String stationName) {
-    setState(() {
-      _direction[stationName] = !(_direction[stationName] ?? true);
-    });
+  void _flipDirection(String stationName) async {
+    await _controller.toggleDirection(stationName);
+    setState(() {});
   }
 
   void updateLoads() async {
-    if (!mounted) return;
-    final random = Random();
-    setState(() {
-      for (var station in stationLoads) {
-        final variationRange = station.maxVariation - station.minVariation;
-        final randomVariation =
-            station.minVariation + random.nextDouble() * variationRange;
-        double absLoad =
-            (station.baseLoad + randomVariation).clamp(0.0, double.infinity);
-        bool isPositive = _direction[station.stationName] ?? true;
-        station.load = isPositive ? absLoad : -absLoad;
-      }
-    });
+    // Controller handles this via its timer
   }
 
   @override
   void dispose() {
-    timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalLoad = _getTotalLoad();
-    final isWide = screenWidth > 600;
-    return LiquidPullToRefresh(
-      key: refreshIndicatorKey,
-      onRefresh: fetchData,
-      height: 60.h,
-      showChildOpacityTransition: false,
-      color: Appcolors.primaryColor,
-      animSpeedFactor: 2,
-      child: PopScope(
-        canPop: true,
-        child: Scaffold(
-          appBar: CustomAppBar(),
-          body: Container(
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                  Appcolors.primaryColor,
-                  Color.fromARGB(255, 182, 199, 216),
-                  Color(0xFFFFFFFF),
-                  Color(0xFFFFFFFF)
-                ])),
-            child: errorMessage != null
-                ? Center(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWideError = constraints.maxWidth > 600;
-                        return SingleChildScrollView(
-                          child: Padding(
-                            padding: EdgeInsets.all(isWideError ? 26.w : 14.w),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error_outline,
-                                    size: isWideError ? 80.sp : 64.sp,
-                                    color: Colors.red),
-                                SizedBox(height: 16.h),
-                                Text(errorMessage!,
-                                    style: TextStyle(
-                                      fontSize: isWideError ? 18.sp : 16.sp,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                      color: Colors.red,
-                                    ),
-                                    textAlign: TextAlign.center),
-                                SizedBox(height: 16.h),
-                                ElevatedButton.icon(
-                                  onPressed: fetchData,
-                                  icon: const Icon(Icons.refresh),
-                                  label: Text(
-                                    'إعادة المحاولة',
-                                    style: TextStyle(
-                                      fontSize: isWideError ? 16.sp : 14.sp,
-                                      fontFamily: Appfontstring.ChangaLight,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1E88E5),
-                                    foregroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: isWideError ? 32.w : 24.w,
-                                      vertical: 12.h,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.r),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                : CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Appcolors.primaryColor,
+                Appcolors.primaryColor,
+                Color(0xFF081A2A)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: LiquidPullToRefresh(
+            key: refreshIndicatorKey,
+            onRefresh: fetchData,
+            height: 50.h,
+            showChildOpacityTransition: false,
+            borderWidth: 2,
+            color: Colors.white,
+            backgroundColor: Appcolors.primaryColor,
+            animSpeedFactor: 2,
+            child: SafeArea(
+              child: Obx(() {
+                final isWide = screenWidth > 600;
+                final totalLoad = _getTotalLoad();
+
+                if (_controller.hasError.value) {
+                  return _buildErrorView(isWide);
+                }
+
+                return CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
                         child: Column(
                           children: [
-                            LoadDisplayWidgetCairo(
+                            SizedBox(height: 2.h),
+                            TotalLoadCard(
                               totalLoad: totalLoad,
-                              isLoading: isLoading,
-                            ),
-                            _buildSectionHeader(
-                                'التبادلات خارج القاهرة', Icons.swap_horiz),
-                            ..._buildGaugeRows([
-                              {
-                                'title': 'عبور 3 / العاشر',
-                                'subtitle': 'تحكم القناة',
-                                'key': 'عبور3/عاشر',
-                                'min': 0,
-                                'max': 130,
-                              },
-                              {
-                                'title': 'القناطر',
-                                'subtitle': 'تحكم طلخا',
-                                'key': 'قليوب/قناطر',
-                                'min': 0,
-                                'max': 110,
-                              },
-                              {
-                                'title': 'ابوزعبل ق /بلبيس',
-                                'subtitle': 'تحكم القناة',
-                                'key': 'ابو زعبل ق / بلبيس',
-                                'min': 0,
-                                'max': 100,
-                              },
-                              {
-                                'title': 'برقاش / ابوغالب',
-                                'subtitle': 'تحكم غرب الدلتا',
-                                'key': 'برقاش/ابوغالب',
-                                'min': 0,
-                                'max': 120,
-                              },
-                              {
-                                'title': 'الكريمات /بنى سويف شرق',
-                                'subtitle': 'تحكم سمالوط',
-                                'key': 'الكريمات/بنى سويف',
-                                'min': 0,
-                                'max': 160,
-                              },
-                            ], isWide),
-                            SizedBox(height: 16.h),
-                            _buildSectionHeader('التوليد', Icons.bolt),
-                            _buildGaugeRow(
-                              title: 'الكريمات الشمسية',
-                              subtitle: '',
-                              value: _getStationLoad('الكريمات الشمسية'),
-                              min: 0,
-                              max: 120,
-                              isToggleable: false,
+                              isLoading: _controller.isLoading.value,
                               isWide: isWide,
                             ),
-                            SizedBox(height: 16.h),
-                            _buildSectionHeader(
-                                'احمال محطات جهد 220 (فقط)', Icons.factory),
-                            _buildGaugeRow(
-                              title: 'مجموع احمال محطات 220',
-                              subtitle: "",
-                              value: totalLoad.toStringAsFixed(0),
-                              min: 0,
-                              max: 17000,
-                              isToggleable: false,
-                              isWide: isWide,
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildNotesExpansion(isWide),
-                            SizedBox(height: 16.h),
+                            SizedBox(height: 8.h),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 0.h, bottom: 0.h),
+                        child: Text(
+                          'تحديث تلقائي كل 60 ثانية',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white24,
+                            fontSize: 7.sp,
+                            fontFamily: Appfontstring.ChangaLight,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      sliver: _buildSliverSectionHeader(
+                          'التبادلات خارج القاهرة', Icons.swap_horiz),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      sliver: _buildStationsGrid(isWide),
+                    ),
+                    SliverToBoxAdapter(child: SizedBox(height: 4.h)),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      sliver: _buildSliverSectionHeader('التوليد', Icons.bolt),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      sliver: SliverToBoxAdapter(
+                        child: StationGaugeCard(
+                          title: 'الكريمات الشمسية',
+                          subtitle: '',
+                          value: _getStationLoad('الكريمات الشمسية'),
+                          min: 0,
+                          max: 120,
+                          isWide: isWide,
+                          isToggleable: false,
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(child: SizedBox(height: 4.h)),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      sliver: SliverToBoxAdapter(
+                          child: _buildNotesExpansion(isWide)),
+                    ),
+                    SliverToBoxAdapter(child: SizedBox(height: 10.h)),
+                  ],
+                );
+              }),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.red, size: 20.sp),
-          SizedBox(width: 11.w),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: Appfontstring.ChangaBold,
-              fontSize: 18.sp,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildGaugeRows(
-      List<Map<String, dynamic>> stations, bool isWide) {
-    List<Widget> rows = [];
-    if (isWide) {
-      for (int i = 0; i < stations.length; i += 2) {
-        Widget leftWidget = _buildGaugeRowFromMap(stations[i], isWide);
-        Widget rightWidget = (i + 1 < stations.length)
-            ? _buildGaugeRowFromMap(stations[i + 1], isWide)
-            : const SizedBox.shrink();
-
-        rows.add(Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15.w),
-          child: Row(
-            children: [
-              Expanded(
-                child: leftWidget,
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: rightWidget,
-              ),
-            ],
-          ),
-        ));
-        rows.add(SizedBox(height: 12.h));
-      }
-    } else {
-      for (int i = 0; i < stations.length; i++) {
-        Widget widget = _buildGaugeRowFromMap(stations[i], isWide);
-
-        rows.add(Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
-          child: Row(
-            children: [
-              Expanded(child: widget),
-            ],
-          ),
-        ));
-
-        if (i < stations.length - 1) {
-          rows.add(SizedBox(height: 5.h));
-        }
-      }
-    }
-    return rows;
-  }
-
-  Widget _buildGaugeRowFromMap(Map<String, dynamic> station, bool isWide) {
-    return buildGaugeSection(
-      context,
-      station['title'],
-      station['subtitle'],
-      _getStationLoad(station['key']),
-      station['min'],
-      station['max'],
-      onFlip: () => _flipDirection(station['key']),
-      isWide: isWide,
-    );
-  }
-
-  Widget _buildGaugeRow({
-    required String title,
-    required String subtitle,
-    required String value,
-    required int min,
-    required int max,
-    bool isToggleable = true,
-    required bool isWide,
-  }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10.w),
-      child: buildGaugeSection(
-        context,
-        title,
-        subtitle,
-        value,
-        min,
-        max,
-        onFlip: null,
-        isWide: isWide,
-      ),
-    );
-  }
-
-  Widget _buildNotesExpansion(bool isWide) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Card(
-        color: const Color.fromARGB(255, 239, 231, 160),
-        elevation: 4,
-        child: ExpansionTile(
-          leading: Icon(Icons.info_outline, color: Colors.blue[600]),
-          title: Text(
-            'ملاحظات هامة',
-            style: TextStyle(
-              fontFamily: Appfontstring.ChangaBold,
-              fontSize: isWide ? 16.sp : 14.sp,
-              color: Colors.black87,
-            ),
-          ),
-          children: [
-            Padding(
-              padding: EdgeInsets.all(isWide ? 12.w : 8.w),
+  Widget _buildErrorView(bool isWide) {
+    return Center(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWideError = constraints.maxWidth > 600;
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(isWideError ? 26.w : 14.w),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildNoteItem(
-                      'جميع البيانات محدثة بشكل تلقائى من محطات المنطقه كل ساعة'),
-                  _buildNoteItem(
-                      'الحمل الكلى يمثل مجموع احمال المحطات والتبادلات (صادر و وارد) و حمل التوليد'),
-                  _buildNoteItem(
-                      'عند وجود مشكلة لتحديث البيانات من المحطات يتم تحديثها من التحكم'),
+                  Icon(Icons.error_outline,
+                      size: isWideError ? 80.sp : 64.sp, color: Colors.red),
+                  SizedBox(height: 16.h),
+                  Text(errorMessage!,
+                      style: TextStyle(
+                        fontSize: isWideError ? 18.sp : 16.sp,
+                        fontFamily: Appfontstring.ChangaLight,
+                        color: Colors.red,
+                      ),
+                      textAlign: TextAlign.center),
+                  SizedBox(height: 16.h),
+                  ElevatedButton.icon(
+                    onPressed: fetchData,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(
+                      'إعادة المحاولة',
+                      style: TextStyle(
+                        fontSize: isWideError ? 16.sp : 14.sp,
+                        fontFamily: Appfontstring.ChangaLight,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E88E5),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isWideError ? 32.w : 24.w,
+                        vertical: 12.h,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                  ),
                 ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSliverSectionHeader(String title, IconData icon) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding:
+            EdgeInsetsDirectional.only(bottom: 12.h, start: 8.w, top: 16.h),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 14.h,
+              color: const Color(0xFF00E5FF),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontFamily: Appfontstring.ChangaBold,
+                fontSize: 11.sp,
+                color: Colors.white70,
+                letterSpacing: 2,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'SEC_ID: 0x${title.hashCode.toRadixString(16).toUpperCase().substring(0, 4)}',
+              style: TextStyle(
+                fontFamily: Appfontstring.ChangaLight,
+                fontSize: 7.sp,
+                color: const Color(0xFF00E5FF).withOpacity(0.3),
               ),
             ),
           ],
@@ -499,13 +273,129 @@ class _CairoscreenState extends State<Cairoscreen> {
     );
   }
 
+  Widget _buildStationsGrid(bool isWide) {
+    final stations = [
+      {
+        'title': 'عبور 3 / العاشر',
+        'subtitle': 'تحكم القناة',
+        'key': 'عبور3/عاشر',
+        'min': 0,
+        'max': 130,
+      },
+      {
+        'title': 'القناطر',
+        'subtitle': 'تحكم طلخا',
+        'key': 'قليوب/قناطر',
+        'min': 0,
+        'max': 110,
+      },
+      {
+        'title': 'ابوزعبل ق /بلبيس',
+        'subtitle': 'تحكم القناة',
+        'key': 'ابو زعبل ق / بلبيس',
+        'min': 0,
+        'max': 120,
+      },
+      {
+        'title': 'برقاش / ابوغالب',
+        'subtitle': 'تحكم غرب الدلتا',
+        'key': 'برقاش/ابوغالب',
+        'min': 0,
+        'max': 120,
+      },
+      {
+        'title': 'الكريمات /بنى سويف شرق',
+        'subtitle': 'تحكم سمالوط',
+        'key': 'الكريمات/بنى سويف',
+        'min': 0,
+        'max': 180,
+      },
+    ];
+
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isWide ? 2 : 1,
+        mainAxisSpacing: 2.h, // Reduced from 4.h
+        crossAxisSpacing: 8.w,
+        childAspectRatio:
+            isWide ? 3.0 : 3.8, // Adjusted from 4.2 : 5.8 to fix overflow
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final station = stations[index];
+          return StationGaugeCard(
+            title: station['title'] as String,
+            subtitle: station['subtitle'] as String,
+            value: _getStationLoad(station['key'] as String),
+            min: station['min'] as int,
+            max: station['max'] as int,
+            isWide: isWide,
+            onFlip: () => _flipDirection(station['key'] as String),
+          );
+        },
+        childCount: stations.length,
+      ),
+    );
+  }
+
+  Widget _buildNotesExpansion(bool isWide) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12.r),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.amber.withOpacity(0.2)),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              collapsedIconColor: Colors.amber,
+              iconColor: Colors.amber,
+              leading:
+                  Icon(Icons.info_outline, color: Colors.amber, size: 20.sp),
+              title: Text(
+                'ملاحظات هامة',
+                style: TextStyle(
+                  fontFamily: Appfontstring.ChangaBold,
+                  fontSize: isWide ? 13.sp : 11.sp,
+                  color: Colors.white,
+                ),
+              ),
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(isWide ? 10.w : 6.w),
+                  child: Column(
+                    children: [
+                      _buildNoteItem(
+                          'جميع البيانات محدثة بشكل تلقائى من محطات المنطقه كل ساعة'),
+                      _buildNoteItem(
+                          'الحمل الكلى يمثل مجموع احمال المحطات والتبادلات (صادر و وارد) و حمل التوليد'),
+                      _buildNoteItem(
+                          'عند وجود مشكلة لتحديث البيانات من المحطات يتم تحديثها من التحكم'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNoteItem(String text) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 5.h),
+      padding: EdgeInsets.only(bottom: 6.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.circle, size: 4.sp, color: Colors.grey[600]),
+          Padding(
+            padding: EdgeInsets.only(top: 5.h),
+            child: Icon(Icons.circle, size: 5.sp, color: Colors.amber),
+          ),
           SizedBox(width: 6.w),
           Expanded(
             child: Text(
@@ -513,7 +403,7 @@ class _CairoscreenState extends State<Cairoscreen> {
               style: TextStyle(
                 fontFamily: Appfontstring.ChangaLight,
                 fontSize: 10.sp,
-                color: Colors.black87,
+                color: Colors.white70,
                 height: 1.3,
               ),
             ),
@@ -524,133 +414,298 @@ class _CairoscreenState extends State<Cairoscreen> {
   }
 }
 
-Widget buildGaugeSection(
-  BuildContext context,
-  String capital,
-  String alterlabel,
-  String data,
-  int minValuescale,
-  int maxValuescale, {
-  VoidCallback? onFlip,
-  required bool isWide,
-}) {
-  final double value = double.tryParse(data.replaceAll('+', ''))?.abs() ?? 0.0;
-  final double progress = (value / maxValuescale).clamp(0.0, 1.0);
-  Color progressColor = Colors.green;
-  if (progress > 0.7) {
-    progressColor = Colors.red;
-  } else if (progress > 0.6) {
-    progressColor = Colors.orange;
-  } else if (progress > 0.5) {
-    progressColor = Colors.blue;
-  } else {
-    progressColor = Colors.green;
+// -----------------------------------------------------------------------------
+// Refactored Widgets
+// -----------------------------------------------------------------------------
+
+class TotalLoadCard extends StatelessWidget {
+  final double totalLoad;
+  final bool isLoading;
+  final bool isWide;
+
+  const TotalLoadCard({
+    super.key,
+    required this.totalLoad,
+    required this.isLoading,
+    required this.isWide,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color tacticalCyan = const Color(0xFF00E5FF);
+    final Color alertRed = const Color(0xFFFF1744);
+
+    return Center(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        margin: EdgeInsets.symmetric(horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: tacticalCyan.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Corner Accents (Always Cyan)
+            Positioned(
+                top: 4,
+                left: 4,
+                child: _HUDCorner(tacticalCyan, isTop: true, isLeft: true)),
+            Positioned(
+                top: 4,
+                right: 4,
+                child: _HUDCorner(tacticalCyan, isTop: true, isLeft: false)),
+            Positioned(
+                bottom: 4,
+                left: 4,
+                child: _HUDCorner(tacticalCyan, isTop: false, isLeft: true)),
+            Positioned(
+                bottom: 4,
+                right: 4,
+                child: _HUDCorner(tacticalCyan, isTop: false, isLeft: false)),
+
+            Padding(
+              padding: EdgeInsets.all(8.w),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _HUDLabel('SYSTEM_Load_MONITOR', tacticalCyan),
+                      _HUDLabel('CORE_TEMP: OPTIMAL', Colors.greenAccent),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        isLoading ? 'SCANNING' : totalLoad.toStringAsFixed(0),
+                        style: TextStyle(
+                          color: (totalLoad < 0) ? alertRed : Colors.white,
+                          fontSize: 48.sp,
+                          fontFamily: Appfontstring.BebasNeue_Regular,
+                          letterSpacing: 2,
+                          shadows: [
+                            Shadow(
+                                color: (totalLoad < 0 ? alertRed : tacticalCyan)
+                                    .withOpacity(0.8),
+                                blurRadius: 10),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'MW',
+                        style: TextStyle(
+                          color: tacticalCyan.withOpacity(0.5),
+                          fontSize: 16.sp,
+                          fontFamily: Appfontstring.BebasNeue_Regular,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Divider(color: tacticalCyan.withOpacity(0.1), thickness: 0.5),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'CAIRO GRID REAL-TIME DATA',
+                    style: TextStyle(
+                      color: const Color.fromARGB(119, 255, 255, 255),
+                      fontSize: 8.sp,
+                      letterSpacing: 2,
+                      fontFamily: Appfontstring.ChangaLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  return Container(
-      height: isWide ? 100.h : 80.h,
-      padding: EdgeInsets.all(isWide ? 12.w : 8.w),
+  Widget _HUDLabel(String text, Color color) {
+    return Row(
+      children: [
+        Container(width: 3, height: 3, color: color),
+        SizedBox(width: 4.w),
+        Text(
+          text,
+          style: TextStyle(
+            color: color.withOpacity(0.6),
+            fontSize: 7.sp,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _HUDCorner(Color color, {required bool isTop, required bool isLeft}) {
+    return Container(
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(width: 1, color: Colors.black),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 5.r,
-            offset: Offset(0, 4.h),
-          ),
-        ],
+        border: Border(
+          top: isTop ? BorderSide(color: color, width: 2) : BorderSide.none,
+          bottom: !isTop ? BorderSide(color: color, width: 2) : BorderSide.none,
+          left: isLeft ? BorderSide(color: color, width: 2) : BorderSide.none,
+          right: !isLeft ? BorderSide(color: color, width: 2) : BorderSide.none,
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: isWide ? 3 : 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(capital,
-                    style: TextStyle(
-                        fontSize: isWide ? 14.sp : 12.sp,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: Appfontstring.ChangaLight,
-                        color: Colors.blue),
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis),
-                SizedBox(height: 2.h),
-                Text(alterlabel,
-                    style: TextStyle(
-                      fontSize: isWide ? 11.sp : 9.sp,
-                      fontFamily: Appfontstring.ChangaLight,
-                      color: Colors.grey[500],
-                    ),
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: isWide ? 4 : 4,
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-              minHeight: isWide ? 10.h : 8.h,
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-          ),
-          Expanded(
-            flex: isWide ? 2 : 2,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+    );
+  }
+}
+
+class StationGaugeCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String value;
+  final int min;
+  final int max;
+  final bool isWide;
+  final VoidCallback? onFlip;
+  final bool isToggleable;
+
+  const StationGaugeCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.isWide,
+    this.onFlip,
+    this.isToggleable = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double numValue =
+        double.tryParse(value.replaceAll('+', ''))?.abs() ?? 0.0;
+    final double progress = (numValue / max).clamp(0.0, 1.0);
+    final bool isNegative = value.startsWith('-');
+    final Color tacticalCyan = const Color(0xFF00E5FF);
+    final Color alertRed = const Color(0xFFFF1744);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12.r),
+        child: IntrinsicHeight(
+          child: Column(
+            children: [
+              // Top Bar (Always Cyan)
+              Container(
+                height: 3,
+                width: double.infinity,
+                color: tacticalCyan.withOpacity(0.3),
+              ),
+              Expanded(
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            'M.W',
-                            style: TextStyle(
-                                color: const Color.fromARGB(255, 227, 168, 167),
-                                fontFamily: Appfontstring.ChangaLight,
-                                fontSize: isWide ? 11.sp : 9.sp,
-                                fontWeight: FontWeight.bold),
+                          Expanded(
+                            child: Text(
+                              title.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: Appfontstring.ChangaBold,
+                                color: Colors.white70,
+                                letterSpacing: 1,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            data,
-                            style: TextStyle(
-                                color: Colors.red[600],
-                                fontFamily: Appfontstring.BebasNeue_Regular,
-                                fontSize: isWide ? 25.sp : 20.sp,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 4.w),
+                          if (onFlip != null && isToggleable)
+                            GestureDetector(
+                              onTap: onFlip,
+                              child: Icon(Icons.swap_horiz,
+                                  size: 18.sp, color: Colors.yellowAccent),
+                            ),
                         ],
                       ),
-                    ),
+                      const Spacer(),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            value,
+                            style: TextStyle(
+                              color: isNegative ? alertRed : Colors.white,
+                              fontFamily: Appfontstring.BebasNeue_Regular,
+                              fontSize: 24.sp,
+                              letterSpacing: 1,
+                              shadows: isNegative
+                                  ? [
+                                      Shadow(
+                                          color: alertRed.withOpacity(0.5),
+                                          blurRadius: 5)
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'MW',
+                            style: TextStyle(
+                              color: tacticalCyan.withOpacity(0.4),
+                              fontSize: 10.sp,
+                              fontFamily: Appfontstring.BebasNeue_Regular,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 6.h),
+                      // HUD Style Multi-Bar Progress
+                      _buildHUDProgressBar(progress, tacticalCyan),
+                    ],
                   ),
                 ),
-                if (onFlip != null)
-                  GestureDetector(
-                    onTap: onFlip,
-                    child: Padding(
-                      padding: EdgeInsets.all(4.w),
-                      child: Icon(
-                        Icons.switch_right_rounded,
-                        size: isWide ? 20.sp : 16.sp,
-                        color: Colors.blue[600],
-                      ),
-                    ),
-                  ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHUDProgressBar(double progress, Color color) {
+    return Row(
+      children: List.generate(15, (index) {
+        final isActive = (index / 15) < progress;
+        return Expanded(
+          child: Container(
+            height: 4,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: isActive ? color : Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(1),
             ),
           ),
-        ],
-      ));
+        );
+      }),
+    );
+  }
 }

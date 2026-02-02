@@ -69,6 +69,16 @@ class _EventsScreenState extends State<EventsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _amountController.dispose();
+    _deleteReasonController.dispose();
+    super.dispose();
+  }
+
   Future<void> _addEvent() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context)
@@ -187,38 +197,35 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
     final String? deleteReason = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
         title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.orange, size: 20.sp),
-            SizedBox(width: 8.w),
-            Text('تأكيد الحذف',
+            Icon(Icons.report_problem_outlined,
+                color: Colors.redAccent, size: 22.sp),
+            SizedBox(width: 12.w),
+            Text('تأكيد حذف الحدث',
                 style: TextStyle(
                     fontFamily: Appfontstring.ChangaBold,
-                    fontSize: 14.sp,
-                    color: Colors.orange)),
+                    fontSize: 13.sp,
+                    color: Colors.redAccent)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('هل أنت متأكد من حذف "${event.title}"؟',
+            Text(
+                'هل أنت متأكد من رغبتك في حذف: "${event.title}"؟ لا يمكن التراجع عن هذه الخطوة.',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp),
-                textAlign: TextAlign.center),
-            SizedBox(height: 8.h),
-            TextField(
-              controller: _deleteReasonController,
-              decoration: InputDecoration(
-                labelText: 'سبب الحذف (اختياري)',
-                labelStyle: TextStyle(
-                    fontFamily: Appfontstring.ChangaLight, fontSize: 11.sp),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5.r)),
-              ),
-              maxLines: 2,
-            ),
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontSize: 11.sp,
+                    color: const Color(0xFF475569)),
+                textAlign: TextAlign.right),
+            SizedBox(height: 20.h),
+            _buildFormField(_deleteReasonController, 'سبب الحذف (اختياري)'),
           ],
         ),
         actions: [
@@ -226,7 +233,9 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
               onPressed: () => Navigator.pop(context),
               child: Text('إلغاء',
                   style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp))),
+                      fontFamily: Appfontstring.ChangaBold,
+                      fontSize: 12.sp,
+                      color: const Color(0xFF64748B)))),
           ElevatedButton(
             onPressed: () {
               final reason = _deleteReasonController.text.trim();
@@ -234,14 +243,14 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
               Navigator.pop(context, reason);
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.r))),
-            child: Text('حذف',
+                    borderRadius: BorderRadius.circular(10.r))),
+            child: Text('حذف الآن',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaLight,
-                    color: Colors.white,
-                    fontSize: 12.sp)),
+                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
           ),
         ],
       ),
@@ -299,24 +308,40 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
   }
 
   Widget _buildEventFormDialog({Event? event}) {
+    const Color primaryBlue = Color(0xFF0D47A1);
     return StatefulBuilder(
       builder: (context, setDialogState) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        titlePadding: EdgeInsets.zero,
         title: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 4.h),
+          padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.red, Colors.orange]),
-            borderRadius: BorderRadius.circular(8.r),
+            color: primaryBlue.withOpacity(0.03),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20.r),
+              topRight: Radius.circular(20.r),
+            ),
           ),
-          child: Text(
-            event == null ? 'إضافة حدث' : 'تعديل حدث',
-            style: TextStyle(
-                fontFamily: Appfontstring.ChangaBold,
-                fontSize: 14.sp,
-                color: Colors.white),
-            textAlign: TextAlign.center,
+          child: Row(
+            children: [
+              Icon(
+                  event == null
+                      ? Icons.add_circle_outline
+                      : Icons.edit_calendar,
+                  color: primaryBlue,
+                  size: 22.sp),
+              SizedBox(width: 10.w),
+              Text(
+                event == null ? 'إضافة حدث جديد' : 'تعديل بيانات الحدث',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaBold,
+                    fontSize: 14.sp,
+                    color: const Color(0xFF0F172A)),
+              ),
+            ],
           ),
         ),
         content: SingleChildScrollView(
@@ -324,33 +349,39 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildFormField(_titleController, 'عنوان الحدث'),
-              SizedBox(height: 6.h),
-              _buildFormField(_descriptionController, 'الوصف', maxLines: 2),
-              SizedBox(height: 6.h),
-              _buildFormField(_locationController, 'الموقع'),
-              SizedBox(height: 6.h),
-              _buildSwitchTile('انقطاع التغذية', _isPowerCut, (value) {
+              SizedBox(height: 16.h),
+              _buildFormField(_descriptionController, 'وصف تفصيلي (اختياري)',
+                  maxLines: 3),
+              SizedBox(height: 16.h),
+              _buildFormField(_locationController, 'مكان وقوع الحدث'),
+              SizedBox(height: 16.h),
+              _buildSwitchTile('نوع الحدث: انقطاع تغذية كهربائية', _isPowerCut,
+                  (value) {
                 setDialogState(() {
                   _isPowerCut = value;
                   if (!value) _amountController.clear();
                 });
               }),
               if (_isPowerCut) ...[
-                SizedBox(height: 6.h),
-                _buildFormField(_amountController, 'المقدار',
+                SizedBox(height: 16.h),
+                _buildFormField(
+                    _amountController, 'كمية الحمل المنقطع (ميغاواط)',
                     keyboardType: TextInputType.number),
               ],
-              SizedBox(height: 6.h),
+              SizedBox(height: 16.h),
               _buildTimePickerTile(setDialogState),
             ],
           ),
         ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('إلغاء',
+              child: Text('تجاهل',
                   style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp))),
+                      fontFamily: Appfontstring.ChangaBold,
+                      fontSize: 12.sp,
+                      color: const Color(0xFF64748B)))),
           ElevatedButton(
             onPressed: () async {
               if (event == null) {
@@ -358,18 +389,18 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
               } else {
                 await _updateEvent(event);
               }
-              // ignore: use_build_context_synchronously
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.r))),
-            child: Text(event == null ? 'إضافة' : 'تحديث',
+                    borderRadius: BorderRadius.circular(12.r))),
+            child: Text(event == null ? 'إضافة الآن' : 'تحديث البيانات',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaLight,
-                    color: Colors.white,
-                    fontSize: 12.sp)),
+                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
           ),
         ],
       ),
@@ -377,28 +408,37 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
   }
 
   Widget _buildFormField(TextEditingController controller, String label,
-      {int maxLines = 2, TextInputType? keyboardType}) {
+      {int maxLines = 1, TextInputType? keyboardType}) {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: TextField(
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        style: TextStyle(
+            color: const Color(0xFF0F172A),
+            fontSize: 12.sp,
+            fontFamily: Appfontstring.ChangaLight),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
               fontFamily: Appfontstring.ChangaLight,
-              fontSize: 11.sp,
-              color: Colors.grey[700]),
+              fontSize: 10.sp,
+              color: const Color(0xFF64748B)),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5.r),
-              borderSide: BorderSide(color: Colors.grey[400]!)),
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5.r),
-              borderSide: BorderSide(color: Colors.red, width: 1)),
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide:
+                  const BorderSide(color: Color(0xFF0D47A1), width: 1.5)),
           filled: true,
-          fillColor: Colors.grey[100],
-          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          fillColor: const Color(0xFFF8FAFC),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         ),
       ),
     );
@@ -471,49 +511,93 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
       canPop: Navigator.canPop(context),
       child: Scaffold(
         backgroundColor: Appcolors.primaryColor,
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _clearForm();
-            showDialog(
-                context: context, builder: (_) => _buildEventFormDialog());
-          },
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          elevation: 3,
-          child: Icon(Icons.add, size: 20.sp),
+        floatingActionButton: Padding(
+          padding: EdgeInsets.only(bottom: 20.h),
+          child: FloatingActionButton(
+            heroTag: 'events_add_fab',
+            onPressed: () {
+              _clearForm();
+              showDialog(
+                  context: context, builder: (_) => _buildEventFormDialog());
+            },
+            backgroundColor: const Color(0xFF03DAC6),
+            foregroundColor: const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r)),
+            elevation: 4,
+            child: Icon(Icons.add, size: 24.sp),
+          ),
         ),
         appBar: const CustomAppBar(),
         body: Directionality(
           textDirection: ui.TextDirection.rtl,
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
                 gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Appcolors.primaryColor, Colors.white70])),
+                    colors: [
+                  Appcolors.primaryColor,
+                  Color(0xFF163C5E),
+                  Color(0xFF0F2B44),
+                  Color(0xFF081A2A)
+                ])),
             child: SafeArea(
               child: Column(
                 children: [
                   Padding(
-                      padding: EdgeInsets.all(12.w),
-                      child: Text('الاحـداث الهــامـة',
-                          style: TextStyle(
-                              fontFamily: Appfontstring.ChangaBold,
-                              fontSize: (isLargeScreen
-                                      ? 25
-                                      : isTablet
-                                          ? 20
-                                          : 18)
-                                  .sp,
-                              color: Colors.redAccent))),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 20.h, horizontal: 16.w),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 5,
+                            height: 20.h,
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                  0xFF03DAC6), // Teal accent like HomeNav
+                              borderRadius: BorderRadius.circular(2.r),
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('الأحداث الهامة والتقرير اليومي',
+                                  style: TextStyle(
+                                      fontFamily: Appfontstring.ChangaBold,
+                                      fontSize: (isLargeScreen
+                                              ? 18
+                                              : isTablet
+                                                  ? 16
+                                                  : 14)
+                                          .sp,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5)),
+                              Text(
+                                'إدارة ومتابعة كافة الأحداث المسجلة',
+                                style: TextStyle(
+                                  fontFamily: Appfontstring.ChangaLight,
+                                  fontSize: 8.sp,
+                                  color: Colors.white60,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Icon(Icons.event_note,
+                              color: Colors.white.withOpacity(0.3),
+                              size: 24.sp),
+                        ],
+                      )),
                   Expanded(
                     child: _isLoading
                         ? Center(
                             child: CircularProgressIndicator(
-                                color: Colors.green, strokeWidth: 2.w))
+                                color: const Color(0xFF03DAC6),
+                                strokeWidth: 2.w))
                         : RefreshIndicator(
-                            color: Colors.green,
+                            color: const Color(0xFF03DAC6),
                             backgroundColor: Colors.white,
                             onRefresh: loadEvents,
                             child: _events.isEmpty
@@ -524,15 +608,17 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                                       children: [
                                         Icon(Icons.event_available,
                                             size: (isTablet ? 40 : 32).sp,
-                                            color: Colors.grey[400]),
+                                            color:
+                                                Colors.white.withOpacity(0.2)),
                                         SizedBox(height: 8.h),
-                                        Text('لا يوجد أحداث',
+                                        Text('لا يوجد أحداث حالياً',
                                             style: TextStyle(
                                                 fontFamily:
                                                     Appfontstring.ChangaLight,
                                                 fontSize:
                                                     (isTablet ? 14 : 12).sp,
-                                                color: Colors.grey[600])),
+                                                color: Colors.white
+                                                    .withOpacity(0.5))),
                                       ],
                                     ),
                                   )
@@ -546,19 +632,47 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                           ),
                   ),
                   Container(
-                    padding: EdgeInsets.all(8.w),
                     decoration: BoxDecoration(
-                      color: Colors.yellow.shade100,
-                      borderRadius: BorderRadius.all(Radius.circular(10.r)),
-                      border: Border.all(color: Colors.black),
-                    ),
+                        color: const Color.fromARGB(191, 250, 211, 114),
+                        borderRadius: BorderRadius.circular(4.r),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.1))),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 4.h, horizontal: 16.w),
                     child: Text(
-                      'جميع الاحداث مسجلة بالتفصيل بالتحكم الاقليمى للقاهرة الكبرى',
+                      'اسحب الشاشة لأسفل لتحديث البيانات',
                       style: TextStyle(
-                          fontFamily: Appfontstring.ChangaLight,
-                          fontSize: (isLargeScreen ? 9 : 8).sp,
-                          color: Colors.blue),
+                          fontFamily: Appfontstring.ChangaBold,
+                          fontSize: 10.sp,
+                          color: Colors.black),
                       textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      border: Border(
+                          top:
+                              BorderSide(color: Colors.white.withOpacity(0.1))),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.info_outline,
+                            size: 12.sp, color: const Color(0xFF03DAC6)),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'جميع الأحداث مسجلة بالتفصيل بالتحكم الإقليمي للقاهرة الكبرى',
+                          style: TextStyle(
+                              fontFamily: Appfontstring.ChangaLight,
+                              fontSize: 9.sp,
+                              color: Colors.white70),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -571,162 +685,191 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
   }
 
   Widget _buildEventCard(Event event, bool isTablet, bool isLargeScreen) {
-    final iconColor = event.powerCut ? Colors.orange : Colors.blue;
-    final bgColor = event.powerCut
-        ? Colors.orange.withOpacity(0.08)
-        : Colors.blue.withOpacity(0.08);
-    final iconData = event.powerCut ? Icons.bolt : Icons.bolt_outlined;
+    const Color primaryBlue = Color(0xFF0D47A1);
+    const Color alertOrange = Color(0xFFEF6C00);
+    final Color accentColor = event.powerCut ? alertOrange : primaryBlue;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 3.h),
-      padding: EdgeInsets.all(8.w),
+      margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5.r,
-              offset: Offset(0, 1))
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
-        border: Border.all(color: Colors.black, width: 2),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(6.w),
-                decoration: BoxDecoration(
-                    color: bgColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black)),
-                child: Icon(iconData,
-                    color: iconColor, size: (isTablet ? 20 : 18).sp),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(
+              width: 5,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(16.r),
+                  bottomRight: Radius.circular(16.r),
+                ),
               ),
-              SizedBox(width: 8.w),
-              Expanded(
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(12.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(event.title,
-                        style: TextStyle(
-                            fontFamily: Appfontstring.ChangaBold,
-                            fontSize: (isTablet ? 14 : 12).sp,
-                            color: Colors.red)),
-                    SizedBox(height: 2.h),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(Icons.calendar_today,
-                            size: 12.sp, color: Colors.black),
-                        SizedBox(width: 2.w),
-                        Text(DateFormat('MMM d, yyyy').format(event.date),
-                            style: TextStyle(
-                                fontFamily: Appfontstring.ChangaLight,
-                                fontSize: (isTablet ? 11 : 10).sp,
-                                color: Colors.black)),
-                        SizedBox(width: 8.w),
-                        Icon(Icons.location_on,
-                            size: 12.sp, color: Colors.green),
-                        SizedBox(width: 2.w),
-                        Flexible(
+                        Expanded(
                           child: Text(
-                              event.location.isNotEmpty
-                                  ? event.location
-                                  : 'غير محدد',
-                              style: TextStyle(
-                                  fontFamily: Appfontstring.ChangaLight,
-                                  fontSize: (isTablet ? 11 : 10).sp,
-                                  color: Colors.green),
-                              overflow: TextOverflow.ellipsis),
+                            event.title,
+                            style: TextStyle(
+                              fontFamily: Appfontstring.ChangaBold,
+                              fontSize: 14.sp,
+                              color: const Color(0xFF1E293B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (event.powerCut)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: alertOrange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.bolt,
+                                    color: alertOrange, size: 10.sp),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'تنبيه انقطاع',
+                                  style: TextStyle(
+                                    fontFamily: Appfontstring.ChangaBold,
+                                    fontSize: 8.sp,
+                                    color: alertOrange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        PopupMenuButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(Icons.more_vert,
+                              color: Colors.black26, size: 18.sp),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r)),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              onTap: () =>
+                                  Future.microtask(() => _editEvent(event)),
+                              child: Row(children: [
+                                const Icon(Icons.edit_outlined,
+                                    color: primaryBlue, size: 16),
+                                SizedBox(width: 10.w),
+                                Text('تعديل البيانات',
+                                    style: TextStyle(
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        fontSize: 11.sp))
+                              ]),
+                            ),
+                            PopupMenuItem(
+                              onTap: () =>
+                                  Future.microtask(() => _deleteEvent(event)),
+                              child: Row(children: [
+                                const Icon(Icons.delete_outline,
+                                    color: Colors.redAccent, size: 16),
+                                SizedBox(width: 10.w),
+                                Text('حذف الحدث',
+                                    style: TextStyle(
+                                        fontFamily: Appfontstring.ChangaLight,
+                                        fontSize: 11.sp))
+                              ]),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+                    if (event.description.isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        event.description,
+                        style: TextStyle(
+                          fontFamily: Appfontstring.ChangaLight,
+                          fontSize: 10.sp,
+                          color: const Color(0xFF64748B),
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const Spacer(),
+                    SizedBox(height: 12.h),
                     Row(
                       children: [
-                        Icon(Icons.access_time,
-                            size: 12.sp, color: Colors.blue),
-                        SizedBox(width: 2.w),
-                        Text(DateFormat('HH:mm').format(event.date),
-                            style: TextStyle(
-                                fontFamily: Appfontstring.ChangaLight,
-                                fontSize: (isTablet ? 11 : 10).sp,
-                                color: Colors.blue)),
-                        SizedBox(height: 2.h),
+                        _buildCleanChip(
+                            Icons.calendar_month_outlined,
+                            DateFormat('yyyy/MM/dd').format(event.date),
+                            const Color(0xFF64748B)),
+                        SizedBox(width: 12.w),
+                        _buildCleanChip(
+                            Icons.schedule,
+                            DateFormat('HH:mm').format(event.date),
+                            const Color(0xFF64748B)),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCleanChip(
+                              Icons.location_on_outlined,
+                              event.location.isNotEmpty
+                                  ? event.location
+                                  : 'موقع غير محدد',
+                              const Color(0xFF0F172A)),
+                        ),
+                        if (event.powerCut && event.amount > 0) ...[
+                          SizedBox(width: 10.w),
+                          _buildCleanChip(Icons.electric_bolt,
+                              '${event.amount} ميغاواط', alertOrange),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
-              PopupMenuButton(
-                icon:
-                    Icon(Icons.more_vert, color: Colors.grey[600], size: 16.sp),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.r)),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _editEvent(event);
-                    },
-                    child: Row(children: [
-                      Icon(Icons.edit, color: Colors.blue, size: 16.sp),
-                      SizedBox(width: 6.w),
-                      Text('تعديل',
-                          style: TextStyle(
-                              fontFamily: Appfontstring.ChangaLight,
-                              fontSize: 12.sp))
-                    ]),
-                  ),
-                  PopupMenuItem(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _deleteEvent(event);
-                    },
-                    child: Row(children: [
-                      Icon(Icons.delete, color: Colors.red, size: 16.sp),
-                      SizedBox(width: 6.w),
-                      Text('حذف',
-                          style: TextStyle(
-                              fontFamily: Appfontstring.ChangaLight,
-                              fontSize: 12.sp))
-                    ]),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (event.description.isNotEmpty) ...[
-            SizedBox(height: 6.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(4.r)),
-              child: Text('الوصف: ${event.description}',
-                  style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight,
-                      fontSize: (isTablet ? 11 : 10).sp,
-                      color: Colors.black87)),
             ),
           ],
-          if (event.powerCut && event.amount > 0) ...[
-            SizedBox(height: 4.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r)),
-              child: Text('المقدار: ${event.amount}',
-                  style: TextStyle(
-                      fontFamily: Appfontstring.ChangaBold,
-                      fontSize: (isTablet ? 11 : 10).sp,
-                      color: Colors.orange[800])),
-            ),
-          ],
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildCleanChip(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12.sp, color: color.withOpacity(0.6)),
+        SizedBox(width: 5.w),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: Appfontstring.ChangaLight,
+            fontSize: 9.sp,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
