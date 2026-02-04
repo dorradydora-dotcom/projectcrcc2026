@@ -102,6 +102,7 @@ class C {
   static const Color orange = Colors.orange;
   static const Color purple = Colors.purple;
   static const Color pink = Colors.pink;
+  static const Color gold = Color(0xFFFFD700);
   static const Color brown = Colors.brown;
 }
 

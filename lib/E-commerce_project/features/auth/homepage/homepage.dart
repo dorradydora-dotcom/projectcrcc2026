@@ -363,7 +363,7 @@ class __HomePageContentState extends State<_HomePageContent>
         child: PageView(
           controller: _controller.pageController,
           onPageChanged: _controller.onPageChanged,
-          physics: const BouncingScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           children: _pages,
         ),
       );

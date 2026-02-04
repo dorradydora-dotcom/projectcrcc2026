@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onRefresh;
-  const CustomAppBar({super.key, this.onRefresh});
+  final List<Widget>? extraActions;
+  const CustomAppBar({super.key, this.onRefresh, this.extraActions});
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -113,6 +114,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
             onPressed: widget.onRefresh,
           ),
+        if (widget.extraActions != null) ...widget.extraActions!,
         _buildSignOutButton(context, screenWidth),
         SizedBox(width: screenWidth * 0.01),
       ],
@@ -136,9 +138,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppBarText.regionalControl,
+              AppBarText.cairo,
               style: TextStyle(
-                color: C.white,
+                color: C.yellow,
                 fontFamily: Appfontstring.ChangaLight,
                 fontSize: responsiveFontSize(screenWidth, 0.033),
                 fontWeight: FontWeight.bold,
@@ -146,9 +148,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
             SizedBox(width: screenWidth * 0.01),
             Text(
-              AppBarText.cairo,
+              AppBarText.regionalControl,
               style: TextStyle(
-                color: C.yellow,
+                color: C.white,
                 fontFamily: Appfontstring.ChangaLight,
                 fontSize: responsiveFontSize(screenWidth, 0.033),
                 fontWeight: FontWeight.bold,

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'dart:math';
 
 class IndicatorsController extends GetxController
@@ -195,11 +196,23 @@ class IndicatorsController extends GetxController
     _fetchGermanyData();
     _fetchFranceData();
     _fetchSaudiData();
-    // Cairo load is typically passed from local calculated load, but here
-    // we can either fetch it or key it off the station data if available.
-    // For now we will simulate/calculate it from our data.
-    if (totalDynamic.value > 0) {
-      intlLoads['القاهرة'] = totalDynamic.value; // Simplified approximation
+
+    // Sync Cairo load with StationLoadController
+    if (Get.isRegistered<StationLoadController>()) {
+      final stationController = Get.find<StationLoadController>();
+      intlLoads['القاهرة'] = stationController.totalLoad;
+
+      // Update whenever station loads change
+      ever(stationController.stationLoads, (_) {
+        intlLoads['القاهرة'] = stationController.totalLoad;
+      });
+    } else {
+      // Fallback if controller not found (though it should be)
+      final stationController = Get.put(StationLoadController());
+      intlLoads['القاهرة'] = stationController.totalLoad;
+      ever(stationController.stationLoads, (_) {
+        intlLoads['القاهرة'] = stationController.totalLoad;
+      });
     }
   }
 

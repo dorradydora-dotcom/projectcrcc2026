@@ -1,14 +1,18 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/reportscreens/capacitors_report.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/reportscreens/spare_cells_report.dart';
+import 'package:amiraly/E-commerce_project/features/mainprog/screen/reportscreens/transformer_ratio_report.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 
 class OfferData {
   static const Map<String, String> offers = {
     'المكثفات': 'Description for Report 1',
     'الخلايا الاحطياتية بالمحطات': 'Description for Report 2',
-    'نسب التحميل للمحولات': 'Description for Report 3',
+    'نسب تحميل المحطات': 'Description for Report 3',
     // Add more as needed
   };
 
@@ -49,64 +53,75 @@ class OfferCard extends StatelessWidget {
         horizontal: AppConstants.padding,
         vertical: AppConstants.spacing,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          border: Border.all(color: Colors.blue, width: 1),
-        ),
-        padding: const EdgeInsets.all(AppConstants.padding),
-        child: Row(
-          children: [
-            const SizedBox(width: AppConstants.spacing),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    report.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: Appfontstring.ChangaLight,
-                        ),
-                  ),
-                  const SizedBox(height: AppConstants.spacing),
-                  Text(
-                    report.description,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.brown),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppConstants.spacing),
-                  Text(
-                    report.date,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.white54),
-                  ),
-                ],
-              ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadius,
-                  ),
+            borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+            border: Border.all(color: Colors.blue, width: 1),
+          ),
+          padding: const EdgeInsets.all(AppConstants.padding),
+          child: Row(
+            children: [
+              const SizedBox(width: AppConstants.spacing),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      report.name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: Appfontstring.ChangaLight,
+                          ),
+                    ),
+                    const SizedBox(height: AppConstants.spacing),
+                    Text(
+                      report.description,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.brown),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppConstants.spacing),
+                    Text(
+                      report.date,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+                    ),
+                  ],
                 ),
               ),
-              child: const Icon(Icons.read_more, color: Colors.black),
-            ),
-          ],
+              ElevatedButton(
+                onPressed: () {
+                  if (report.name == 'المكثفات') {
+                    Get.to(() => const CapacitorsReportScreen());
+                  } else if (report.name == 'الخلايا الاحطياتية بالمحطات') {
+                    Get.to(() => const SpareCellsReportScreen());
+                  } else if (report.name == 'نسب تحميل المحطات') {
+                    Get.to(() => const TransformerReportScreen());
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
+                  ),
+                ),
+                child: const Icon(Icons.read_more, color: Colors.black),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -142,7 +157,7 @@ class ReportsScreen extends StatelessWidget {
                   fontSize: 20,
                   color: Color.fromARGB(255, 212, 237, 24),
                   fontWeight: FontWeight.bold,
-                  fontFamily: Appfontstring.Almarai_Bold,
+                  fontFamily: Appfontstring.ChangaLight,
                 ),
               ),
             ),

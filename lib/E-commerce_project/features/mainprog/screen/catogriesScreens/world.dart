@@ -1,10 +1,8 @@
-import 'dart:ui';
-
+import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WorldScreen extends StatelessWidget {
@@ -119,75 +117,44 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
     );
   }
 
-  Future<bool> _handleBackNavigation() async {
-    if (_webViewController != null) {
-      final canGoBack = await _webViewController!.canGoBack();
-      if (canGoBack) {
-        await _webViewController!.goBack();
-        return false;
-      }
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        final shouldPop = await _handleBackNavigation();
-        if (shouldPop && mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Appcolors.backgroundColor,
-        appBar: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Appcolors.primaryColor, Appcolors.backgroundColor],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      appBar: CustomAppBar(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Appcolors.primaryColor,
+              Color(0xFF163C5E),
+              Color(0xFF0F2B44),
+              Color(0xFF081A2A)
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Appcolors.textPrimary),
-            onPressed: () => Get.back(),
-          ),
-          title: const Text(
-            'متوسط استهلاك بلـدان العالم و انبعاث الكربون',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontFamily: Appfontstring.ChangaLight,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Appcolors.textPrimary),
-              onPressed: _fetchUrl,
-            ),
-          ],
         ),
-        body: Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Description container
             Container(
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Appcolors.backgroundColor.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF1E293B).withOpacity(0.6),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Appcolors.primaryColor.withOpacity(0.3),
+                  color: Colors.white.withOpacity(0.1),
                   width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: const Text(
                 ':  تعرض الخريطة البيانات التالية\n'
@@ -197,7 +164,7 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
                 '  نسبة الطاقة المتجددة من إجمالي الطاقة المنتجة *',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Appcolors.textPrimary,
+                  color: Colors.white70,
                   fontFamily: Appfontstring.ChangaLight,
                   height: 1.5,
                 ),
@@ -281,7 +248,7 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
               'فشل تحميل الخريطة',
               style: TextStyle(
                 fontSize: 16,
-                color: Appcolors.textPrimary,
+                color: Colors.white70,
                 fontFamily: Appfontstring.ChangaLight,
               ),
               textAlign: TextAlign.center,
@@ -293,7 +260,7 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
               label: const Text('إعادة المحاولة'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Appcolors.primaryColor,
-                foregroundColor: Appcolors.textPrimary,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -309,7 +276,7 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
 
   Widget _buildLoadingWidget() {
     return Container(
-      color: Appcolors.backgroundColor.withOpacity(0.95),
+      color: const Color(0xFF0F172A).withOpacity(0.8),
       child: Column(
         children: [
           LinearProgressIndicator(
@@ -331,7 +298,7 @@ class _ExternalLinkHomePageState2 extends State<ExternalLinkHomePage2> {
                     'جاري تحميل الخريطة...',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Appcolors.textPrimary,
+                      color: Colors.white70,
                       fontFamily: Appfontstring.ChangaLight,
                     ),
                     textAlign: TextAlign.center,

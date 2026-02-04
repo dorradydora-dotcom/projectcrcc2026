@@ -15,16 +15,17 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
     Get.put(IndicatorsController()); // Ensure controller is initialized
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        backgroundColor: Colors.transparent,
-        appBar: const CustomAppBar(),
-        body: Container(
+    return Scaffold(
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
+      appBar: const CustomAppBar(),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
+                Appcolors.primaryColor,
                 Appcolors.primaryColor,
                 Color(0xFF163C5E),
                 Color(0xFF0F2B44),
@@ -723,7 +724,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'country': 'مصر',
           'load': controller.intlLoads['القاهرة'],
           'color': Colors.redAccent,
-          'update': 'اليوم',
+          'update': 'الان',
           'flag': '🇪🇬',
         },
         {
@@ -865,8 +866,9 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
                                               .toStringAsFixed(0),
                                           style: TextStyle(
                                             color: item['color'],
-                                            fontSize: 16.sp,
-                                            fontFamily: Appfontstring.digital,
+                                            fontSize: 19.sp,
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),

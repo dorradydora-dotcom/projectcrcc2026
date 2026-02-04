@@ -22,7 +22,7 @@ class ZoneScreen extends StatefulWidget {
 }
 
 class _ZoneScreenState extends State<ZoneScreen>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   late final ZoneController _controller;
   final TransformationController _transformationController =
       TransformationController();
@@ -40,11 +40,58 @@ class _ZoneScreenState extends State<ZoneScreen>
   @override
   void dispose() {
     _transformationController.dispose();
+    _zoomController?.dispose();
     super.dispose();
   }
 
+  AnimationController? _zoomController;
+  TapDownDetails? _doubleTapDetails;
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    _doubleTapDetails = details;
+  }
+
+  void _handleDoubleTap() {
+    final position = _doubleTapDetails!.localPosition;
+    // Current scale
+    final double scale = _transformationController.value.getMaxScaleOnAxis();
+
+    // Target scale
+    double targetScale = 3.0;
+    if (scale >= 3.0) {
+      targetScale = 1.0;
+    }
+
+    final Matrix4 endMatrix = Matrix4.identity()
+      ..translate(
+          -position.dx * (targetScale - 1), -position.dy * (targetScale - 1))
+      ..scale(targetScale);
+
+    _animateToMatrix(endMatrix);
+  }
+
   void _resetZoom() {
-    _transformationController.value = Matrix4.identity();
+    _animateToMatrix(Matrix4.identity());
+  }
+
+  void _animateToMatrix(Matrix4 endMatrix) {
+    _zoomController?.dispose();
+    _zoomController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+
+    final animation = Matrix4Tween(
+      begin: _transformationController.value,
+      end: endMatrix,
+    ).animate(CurvedAnimation(
+      parent: _zoomController!,
+      curve: Curves.easeInOut,
+    ));
+
+    animation.addListener(() {
+      _transformationController.value = animation.value;
+    });
+
+    _zoomController!.forward();
   }
 
   @override
@@ -70,42 +117,47 @@ class _ZoneScreenState extends State<ZoneScreen>
               ),
             ),
           ),
-          // Background Image with InteractiveViewer
-          InteractiveViewer(
-            transformationController: _transformationController,
-            panEnabled: true,
-            scaleEnabled: true,
-            boundaryMargin: const EdgeInsets.all(100),
-            minScale: 0.6,
-            maxScale: 4.5,
-            child: Center(
-              child: Obx(() {
-                final isLoading = _controller.isLoading[widget.zoneName] ??
-                    (_controller.zonePhotos[widget.zoneName] == null);
-                final error = _controller.zoneErrors[widget.zoneName];
-                final photoUrl = _controller.zonePhotos[widget.zoneName];
+          // Background Image with InteractiveViewer wrapped in GestureDetector for double tap
+          GestureDetector(
+            onDoubleTapDown: (details) => _handleDoubleTapDown(details),
+            onDoubleTap: _handleDoubleTap,
+            child: InteractiveViewer(
+              transformationController: _transformationController,
+              panEnabled: true,
+              scaleEnabled: true,
+              boundaryMargin: const EdgeInsets.all(
+                  500), // Increased margin for better panning
+              minScale: 0.5,
+              maxScale: 10.0, // Increased max scale
+              child: Center(
+                child: Obx(() {
+                  final isLoading = _controller.isLoading[widget.zoneName] ??
+                      (_controller.zonePhotos[widget.zoneName] == null);
+                  final error = _controller.zoneErrors[widget.zoneName];
+                  final photoUrl = _controller.zonePhotos[widget.zoneName];
 
-                if (isLoading && (photoUrl == null || photoUrl.isEmpty)) {
-                  return _buildShimmer();
-                }
+                  if (isLoading && (photoUrl == null || photoUrl.isEmpty)) {
+                    return _buildShimmer();
+                  }
 
-                if (error != null && (photoUrl == null || photoUrl.isEmpty)) {
-                  return _buildErrorState(error);
-                }
+                  if (error != null && (photoUrl == null || photoUrl.isEmpty)) {
+                    return _buildErrorState(error);
+                  }
 
-                if (photoUrl == null || photoUrl.isEmpty) {
-                  return _buildEmptyState();
-                }
+                  if (photoUrl == null || photoUrl.isEmpty) {
+                    return _buildEmptyState();
+                  }
 
-                return CachedNetworkImage(
-                  imageUrl: photoUrl,
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) => _buildShimmer(),
-                  errorWidget: (context, url, error) =>
-                      _buildErrorState(error.toString()),
-                  fadeInDuration: const Duration(milliseconds: 400),
-                );
-              }),
+                  return CachedNetworkImage(
+                    imageUrl: photoUrl,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) => _buildShimmer(),
+                    errorWidget: (context, url, error) =>
+                        _buildErrorState(error.toString()),
+                    fadeInDuration: const Duration(milliseconds: 400),
+                  );
+                }),
+              ),
             ),
           ),
 
