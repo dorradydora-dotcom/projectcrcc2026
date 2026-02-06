@@ -283,3 +283,76 @@ class Report {
     required this.date,
   });
 }
+
+class ProjectModel {
+  final String id;
+  final String name;
+  final String description;
+  final String notes;
+  final double progress;
+  final double totalCost;
+  final double spentCost;
+  final String startDate;
+  final String endDate;
+  final String manager;
+  final String contractor;
+  final String voltageLevel;
+  final String stationName;
+  final String status;
+
+  ProjectModel({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.notes,
+    required this.progress,
+    required this.totalCost,
+    required this.spentCost,
+    required this.startDate,
+    required this.endDate,
+    required this.manager,
+    required this.contractor,
+    required this.voltageLevel,
+    required this.stationName,
+    required this.status,
+  });
+
+  double get remainingCost => totalCost - spentCost;
+
+  factory ProjectModel.fromJson(Map<String, dynamic> json) {
+    return ProjectModel(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      notes: json['notes'] ?? '',
+      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
+      totalCost: (json['total_cost'] as num?)?.toDouble() ?? 0.0,
+      spentCost: (json['spent_cost'] as num?)?.toDouble() ?? 0.0,
+      startDate: json['start_date'] ?? '',
+      endDate: json['end_date'] ?? '',
+      manager: json['manager'] ?? '',
+      contractor: json['contractor'] ?? '',
+      voltageLevel: json['voltage_level'] ?? '',
+      stationName: json['station_name'] ?? '',
+      status: json['status'] ?? 'planned',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'description': description,
+      'notes': notes,
+      'progress': progress,
+      'total_cost': totalCost,
+      'spent_cost': spentCost,
+      'start_date': startDate,
+      'end_date': endDate,
+      'manager': manager,
+      'contractor': contractor,
+      'voltage_level': voltageLevel,
+      'station_name': stationName,
+      'status': status,
+    };
+  }
+}
