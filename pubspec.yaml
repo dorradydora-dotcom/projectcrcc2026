@@ -65,6 +65,7 @@ dependencies:
   flutter_local_notifications: ^19.4.2
   googleapis_auth: ^2.0.0
   firebase_analytics: ^11.6.0
+  cloud_functions: ^5.6.2
   image: ^4.5.4
   dotenv: ^4.2.0
   icons_launcher: ^3.0.3
@@ -79,6 +80,8 @@ dependencies:
   infinite_scroll_pagination: ^5.1.1
   connectivity_plus: ^7.0.0
   flutter_riverpod: ^2.6.1
+  agora_rtc_engine: ^6.3.2
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
