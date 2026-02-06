@@ -55,3 +55,11 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.android.gms:play-services-auth:21.3.0")
 }
+
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.browser:browser:1.8.0'
+        force 'androidx.core:core-ktx:1.13.1'
+        force 'androidx.core:core:1.13.1'
+    }
+}
