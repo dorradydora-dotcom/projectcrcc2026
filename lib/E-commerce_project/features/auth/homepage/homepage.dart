@@ -267,39 +267,27 @@ class __HomePageContentState extends State<_HomePageContent>
     ).then((value) {
       if (value == true) {
         // Exit the app
-        Get.back(); // Or use SystemNavigator.pop()
+        Get.back();
       }
     });
   }
 
   Widget _buildBottomNavigationBar(double height) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Appcolors.primaryColor.withOpacity(0.2),
-            blurRadius: 12,
-            spreadRadius: 2,
-            offset: const Offset(0, -1),
+    return Obx(() => Directionality(
+          textDirection: TextDirection.rtl,
+          child: CurvedNavigationBar(
+            backgroundColor: const Color(0xFF081A2A),
+            color: Appcolors.primaryColor,
+            buttonBackgroundColor: const Color(0xFF081A2A),
+            height: height,
+            animationCurve: Curves.easeInOutCubic,
+            index: _controller.selectedPage.value,
+            items: _buildNavigationItems(),
+            onTap: _controller.updateSelectedPage,
+            letIndexChange: (_) => true,
+            animationDuration: const Duration(milliseconds: 600),
           ),
-        ],
-      ),
-      child: Obx(() => Directionality(
-            textDirection: TextDirection.rtl,
-            child: CurvedNavigationBar(
-              backgroundColor: Colors.transparent,
-              color: Appcolors.primaryColor,
-              buttonBackgroundColor: Colors.transparent,
-              height: height,
-              animationCurve: Curves.easeInOutCubic,
-              index: _controller.selectedPage.value,
-              items: _buildNavigationItems(),
-              onTap: _controller.updateSelectedPage,
-              letIndexChange: (_) => true,
-              animationDuration: const Duration(milliseconds: 600),
-            ),
-          )),
-    );
+        ));
   }
 
   List<CurvedNavigationBarItem> _buildNavigationItems() {

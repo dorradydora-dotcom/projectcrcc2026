@@ -71,38 +71,30 @@
 
 ## 💻 الخطوة 3: تكوين الكود
 
-### 3.1 تحديث `golive_controller.dart`
+### 3.1 تحديث `golive.dart`
 
 افتح الملف:
 ```
-lib/E-commerce_project/features/mainprog/screen/catogriesScreens/golive_controller.dart
+lib/E-commerce_project/features/mainprog/screen/catogriesScreens/golive.dart
 ```
 
-**استبدل السطر 15:**
+**تأكد من إعداد `NotificationService`:**
+نستخدم الآن **HTTP v1 API** للإشعارات، وهو أكثر أماناً وموثوقية.
+تأكد من وجود ملف `service_account.json` (بيانات الاعتماد) في ملف `.env`، حيث يقوم `NotificationService` بقراءته لتوليد Access Token تلقائيًا.
+
+**استبدل السطر 364 (Agora App ID):**
 ```dart
 // BEFORE:
-static const String agoraAppId = 'YOUR_AGORA_APP_ID';
+static const String agoraAppId = '2d65dc58bba24b468ea290a7e59c663e';
 
-// AFTER (ضع App ID الفعلي من Agora):
-static const String agoraAppId = 'a1b2c3d4e5f6g7h8i9j0';
+// AFTER (ضع App ID الفعلي من Agora إذا تغير):
+static const String agoraAppId = 'your_actual_app_id_here';
 ```
 
-**استبدل السطر 19 (اختياري للاختبار):**
+**استبدل السطر 500 (Firebase Project ID):**
 ```dart
-// للاختبار فقط - ضع Token المؤقت من Agora
-static const String agoraToken = 'YOUR_TEMP_TOKEN_HERE';
-
-// للإنتاج - اتركه فارغ واستخدم Token Server
-static const String agoraToken = '';
-```
-
-**استبدل السطر 175 (FCM Server Key):**
-```dart
-// BEFORE:
-'Authorization': 'key=YOUR_FCM_SERVER_KEY',
-
-// AFTER (ضع مفتاحك الفعلي):
-'Authorization': 'key=AAAAabcd1234:APA91b...your_key_here',
+// تأكد من وضع Project ID الصحيح لمشروعك في Firebase
+static const String firebaseProjectId = 'crccproject-98fb0';
 ```
 
 ---

@@ -199,7 +199,7 @@ final Map<String, Widget Function(BuildContext)> pageRoutes = {
   'تعليمات': (context) => AnnouncementScreenDark(),
   'خريطة': (context) => Mapscreen(),
   'مشروعات': (context) => ProjectsScreen(),
-  'Go live': (context) => GoliveScreen(),
+  'Go live': (context) => UsersPage(),
 };
 
 // ============================================================================
@@ -353,6 +353,32 @@ class ProjectModel {
       'voltage_level': voltageLevel,
       'station_name': stationName,
       'status': status,
+    };
+  }
+}
+
+class StationModelCall {
+  final String id;
+  final String? stationName;
+
+  StationModelCall({
+    required this.id,
+    required this.stationName,
+  });
+
+  // Status is now always online (since they have a token and are in the table)
+  String get status => 'online';
+
+  factory StationModelCall.fromJson(Map<String, dynamic> json) {
+    return StationModelCall(
+      id: json['id']?.toString() ?? '',
+      stationName: json['station_name'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'station_name': stationName,
     };
   }
 }

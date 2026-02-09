@@ -38,7 +38,6 @@ class _HomeNavState extends State<HomeNav> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
         floatingActionButton: SizedBox(
             height: 38.h,
             width: 38.w,
@@ -48,45 +47,59 @@ class _HomeNavState extends State<HomeNav> {
                 backgroundColor: const Color.fromARGB(109, 3, 218, 197),
                 child:
                     const Icon(Icons.refresh, color: Colors.white, size: 19))),
-        body: Obx(() {
-          if (_controller.isLoading.value) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: Colors.blueAccent,
-                strokeWidth: 2,
-              ),
-            );
-          }
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeaderSection()),
-              if (_controller.isOffline.value)
-                SliverToBoxAdapter(
-                  child: Container(
-                    color: Colors.redAccent.withOpacity(0.1),
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.signal_wifi_off,
-                            size: 14.sp, color: Colors.red),
-                        SizedBox(width: 8.w),
-                        Text(
-                          "تعذر الاتصال",
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.red,
-                            fontFamily: Appfontstring.ChangaLight,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Appcolors.primaryColor,
+                Color(0xFF163C5E),
+                Color(0xFF0F2B44),
+                Color(0xFF081A2A)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Obx(() {
+            if (_controller.isLoading.value) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.blueAccent,
+                  strokeWidth: 2,
+                ),
+              );
+            }
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeaderSection()),
+                if (_controller.isOffline.value)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: Colors.redAccent.withOpacity(0.1),
+                      padding: EdgeInsets.symmetric(vertical: 4.h),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.signal_wifi_off,
+                              size: 14.sp, color: Colors.red),
+                          SizedBox(width: 8.w),
+                          Text(
+                            "تعذر الاتصال",
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.red,
+                              fontFamily: Appfontstring.ChangaLight,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              SliverToBoxAdapter(child: _buildContentSection()),
-            ],
-          );
-        }),
+                SliverToBoxAdapter(child: _buildContentSection()),
+              ],
+            );
+          }),
+        ),
       ),
     );
   }
@@ -99,9 +112,10 @@ class _HomeNavState extends State<HomeNav> {
         gradient: LinearGradient(
           colors: [
             Appcolors.primaryColor,
+            Appcolors.primaryColor,
             Color(0xFF163C5E),
-            Color(0xFF0F2B44),
-            Color(0xFF081A2A)
+            Appcolors.primaryColor,
+            Color.fromARGB(255, 19, 33, 46),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
