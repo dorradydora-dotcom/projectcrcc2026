@@ -285,7 +285,7 @@ class __HomePageContentState extends State<_HomePageContent>
             items: _buildNavigationItems(),
             onTap: _controller.updateSelectedPage,
             letIndexChange: (_) => true,
-            animationDuration: const Duration(milliseconds: 600),
+            animationDuration: const Duration(milliseconds: 350),
           ),
         ));
   }
@@ -345,15 +345,10 @@ class __HomePageContentState extends State<_HomePageContent>
         return _buildErrorState();
       }
 
-      // عرض المحتوى العادي
-      return Directionality(
-        textDirection: TextDirection.ltr,
-        child: PageView(
-          controller: _controller.pageController,
-          onPageChanged: _controller.onPageChanged,
-          physics: const NeverScrollableScrollPhysics(),
-          children: _pages,
-        ),
+      // عرض المحتوى العادي - IndexedStack يحافظ على حالة كل تاب
+      return IndexedStack(
+        index: _controller.selectedPage.value,
+        children: _pages,
       );
     });
   }
@@ -419,7 +414,6 @@ class HomePageController extends GetxController {
   final Rx<String?> error = Rx<String?>(null);
   final RxString userEmail = ''.obs;
 
-  late final PageController pageController;
   late final AuthService _authService;
 
   @override
@@ -428,7 +422,6 @@ class HomePageController extends GetxController {
 
     try {
       _authService = Get.find<AuthService>();
-      pageController = PageController(initialPage: 0);
 
       // بدء تحميل البيانات
       _initializeData();
@@ -473,7 +466,6 @@ class HomePageController extends GetxController {
 
   @override
   void onClose() {
-    pageController.dispose();
     AppLogger.logInfo('HomePageController disposed');
     super.onClose();
   }
@@ -481,11 +473,6 @@ class HomePageController extends GetxController {
   /// تحديث الصفحة المختارة
   void updateSelectedPage(int index) {
     selectedPage.value = index;
-    pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   /// معالج تغيير الصفحة
@@ -525,6 +512,5 @@ class HomePageController extends GetxController {
   /// الانتقال إلى صفحة معينة مباشرة
   void jumpToPage(int index) {
     selectedPage.value = index;
-    pageController.jumpToPage(index);
   }
 }

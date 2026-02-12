@@ -161,18 +161,25 @@ class HomenavcontrollerImp extends Homenavcontroller {
         client.from('user_stations').select().eq('user_email', email).limit(1),
         client.from('user_top').select().eq('user_email', email).limit(1),
         client.from('user_crcc').select().eq('user_email', email).limit(1),
+        client.from('user_project').select().eq('user_email', email).limit(1),
+        client.from('user_others').select().eq('user_email', email).limit(1),
       ]);
 
-      if (results[0].isNotEmpty)
+      if (results[0].isNotEmpty) {
         _userGroup.value = 'cm';
-      else if (results[1].isNotEmpty)
+      } else if (results[1].isNotEmpty) {
         _userGroup.value = 'stations';
-      else if (results[2].isNotEmpty)
+      } else if (results[2].isNotEmpty) {
         _userGroup.value = 'top';
-      else if (results[3].isNotEmpty)
+      } else if (results[3].isNotEmpty) {
         _userGroup.value = 'crcc';
-      else
+      } else if (results[4].isNotEmpty) {
+        _userGroup.value = 'project';
+      } else if (results[5].isNotEmpty) {
+        _userGroup.value = 'others';
+      } else {
         _userGroup.value = 'none';
+      }
     } catch (e) {
       _userGroup.value = 'none';
       AppLogger.logError('Error checking user group', e);
@@ -191,15 +198,26 @@ class HomenavcontrollerImp extends Homenavcontroller {
     List<String> allowedCategories = [];
 
     switch (userGroup) {
+      case 'crcc':
+      case 'top':
+      case 'others':
+        isAllowed = true;
+        break;
       case 'cm':
-        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'الازمات', 'خريطة'];
+        allowedCategories = ['القاهرة', 'مؤشرات', 'الازمات', 'خريطة', 'العالم'];
         break;
       case 'stations':
-        allowedCategories = ['العالم', 'القاهرة', 'مؤشرات', 'خريطة'];
+        allowedCategories = ['القاهرة', 'مؤشرات', 'خريطة', 'العالم'];
         break;
-      case 'top':
-      case 'crcc':
-        isAllowed = true;
+      case 'project':
+        allowedCategories = [
+          'القاهرة',
+          'مؤشرات',
+          'الازمات',
+          'خريطة',
+          'العالم',
+          'المشروعات'
+        ];
         break;
       case 'none':
         allowedCategories = [];

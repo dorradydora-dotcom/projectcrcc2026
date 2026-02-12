@@ -2,10 +2,8 @@ import 'dart:math';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/loadnav_controller.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
-import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/stationloadnav.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:get/get.dart';
@@ -149,21 +147,10 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                           itemCount: controller.stationLoads.length,
                           itemBuilder: (context, index) {
                             final station = controller.stationLoads[index];
-                            final stationController =
-                                Get.find<StationLoadController>();
 
                             return StationCard(
                               index: index,
                               station: station,
-                              onEditTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) =>
-                                      StationDialog(station: station),
-                                );
-                              },
-                              onFlipTap: () => stationController
-                                  .toggleDirection(station.stationName),
                             );
                           },
                         ),
@@ -423,15 +410,11 @@ class LoadDisplayWidget extends StatelessWidget {
 class StationCard extends StatefulWidget {
   final int index;
   final StationLoad station;
-  final VoidCallback onEditTap;
-  final VoidCallback onFlipTap;
 
   const StationCard({
     super.key,
     required this.index,
     required this.station,
-    required this.onEditTap,
-    required this.onFlipTap,
   });
 
   @override
@@ -555,33 +538,6 @@ class _StationCardState extends State<StationCard> {
                 ],
               ),
             ),
-            // Actions Area
-            Obx(() {
-              final stationController = Get.find<StationLoadController>();
-              final canEdit =
-                  stationController.canEditStation(widget.station.stationName);
-              if (!canEdit) {
-                return const SizedBox.shrink();
-              }
-              return Row(
-                children: [
-                  IconButton(
-                    onPressed: widget.onFlipTap,
-                    icon: Icon(Icons.swap_horiz,
-                        size: 18.sp, color: Colors.yellowAccent),
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  ),
-                  IconButton(
-                    onPressed: widget.onEditTap,
-                    icon: Icon(Icons.edit_outlined,
-                        size: 16.sp, color: Colors.white70),
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  ),
-                ],
-              );
-            }),
           ],
         ),
       ),
