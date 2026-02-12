@@ -17,7 +17,7 @@ class GoLiveController extends ChangeNotifier {
   final AudioPlayer _effectPlayer = AudioPlayer();
 
   // Constants
-  static const String _appId = '7b78219d5722456bb4c997f28dc6f672';
+  static const String _appId = 'f9f1ce77ba3a4596a78eef4805699aec';
   static const List<String> _excludedStations = [
     'عبور3/عاشر',
     'برقاش/ابوغالب',
@@ -59,6 +59,11 @@ class GoLiveController extends ChangeNotifier {
       // Sort alphabetically by station name
       users
           .sort((a, b) => (a.stationName ?? '').compareTo(b.stationName ?? ''));
+
+      // DEBUG: Print fetched users to verify IDs
+      for (var u in users) {
+        debugPrint('Fetched User: ${u.stationName}, ID: ${u.id}');
+      }
     } catch (e) {
       errorMessage = 'Failed to load users: $e';
       users = [];
@@ -244,6 +249,8 @@ class GoLiveController extends ChangeNotifier {
   Future<void> makeCall(String receiverId) async {
     final userId = currentUserId;
     if (userId == null) throw 'يجب تسجيل الدخول أولاً';
+
+    debugPrint('Initiating call: Caller=$userId, Receiver=$receiverId');
 
     try {
       final response = await Supabase.instance.client

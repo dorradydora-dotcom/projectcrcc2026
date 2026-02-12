@@ -381,7 +381,12 @@ class StationModelCall {
 
   factory StationModelCall.fromJson(Map<String, dynamic> json) {
     return StationModelCall(
-      id: json['id']?.toString() ?? '',
+      // Prioritize user_id or uid (common names for Auth UUID) over just 'id'
+      // which might be a row ID in a view
+      id: json['user_id']?.toString() ??
+          json['uid']?.toString() ??
+          json['id']?.toString() ??
+          '',
       stationName: json['station_name'] ?? '',
     );
   }
