@@ -132,16 +132,29 @@ class StationLoadController extends GetxController {
       if (index != -1) {
         // Only update if data is different to avoid unnecessary UI rebuilds
         if (stationLoads[index].load != updatedStation.load ||
-            stationLoads[index].isPositive != updatedStation.isPositive) {
+            stationLoads[index].isPositive != updatedStation.isPositive ||
+            stationLoads[index].lastUpdated != updatedStation.lastUpdated) {
           stationLoads[index] = updatedStation;
           // Sync directions map
           directions[stationName] = updatedStation.isPositive;
+
+          // Sync last update time from server if available
+          if (updatedStation.lastUpdated != null) {
+            lastUpdateTimes[stationName] = updatedStation.lastUpdated!;
+          } else {
+            // Fallback to current time if we just received a live update
+            lastUpdateTimes[stationName] = DateTime.now();
+          }
+
           stationLoads.refresh();
         }
       } else {
         // New station added?
         stationLoads.add(updatedStation);
         directions[stationName] = updatedStation.isPositive;
+        if (updatedStation.lastUpdated != null) {
+          lastUpdateTimes[stationName] = updatedStation.lastUpdated!;
+        }
       }
     } catch (e) {
       debugPrint('Error parsing realtime payload: $e');
@@ -248,6 +261,10 @@ class StationLoadController extends GetxController {
       // Sync directions map with fetched station signals
       for (var station in loads) {
         directions[station.stationName] = station.isPositive;
+        // Sync last update time if available from server
+        if (station.lastUpdated != null) {
+          lastUpdateTimes[station.stationName] = station.lastUpdated!;
+        }
       }
 
       isLoading.value = false;

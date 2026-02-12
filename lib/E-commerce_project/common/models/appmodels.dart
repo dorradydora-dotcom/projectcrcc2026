@@ -37,6 +37,7 @@ class StationLoad {
   final double minVariation;
   final double maxVariation;
   bool isPositive; // New field for signal/direction
+  final DateTime? lastUpdated;
 
   StationLoad({
     required this.stationName,
@@ -45,6 +46,7 @@ class StationLoad {
     required this.minVariation,
     required this.maxVariation,
     this.isPositive = true,
+    this.lastUpdated,
   });
 
   factory StationLoad.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,9 @@ class StationLoad {
       minVariation: parseDouble(json['min_variation'], defaultValue: -10.0),
       maxVariation: parseDouble(json['max_variation'], defaultValue: 10.0),
       isPositive: json['station_sign'] as bool? ?? true,
+      lastUpdated: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 
@@ -71,6 +76,7 @@ class StationLoad {
       'min_variation': minVariation,
       'max_variation': maxVariation,
       'station_sign': isPositive,
+      'updated_at': lastUpdated?.toIso8601String(),
     };
   }
 }
