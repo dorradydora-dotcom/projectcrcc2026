@@ -24,13 +24,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Appcolors.primaryColor,
-                Appcolors.primaryColor,
-                Color(0xFF163C5E),
-                Color(0xFF0F2B44),
-                Color(0xFF081A2A)
-              ],
+              colors: Appcolors.indicatorBackground,
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),

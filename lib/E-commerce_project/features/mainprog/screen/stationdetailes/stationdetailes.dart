@@ -7,12 +7,15 @@ import 'package:iconsax/iconsax.dart';
 import 'package:photo_view/photo_view.dart';
 
 const kPrimaryColor = Appcolors.primaryColor;
-const kSecondaryColor = Color.fromARGB(255, 230, 156, 19);
-const kTextColor = Colors.black;
-const kSubtitleColor = Color.fromARGB(255, 99, 110, 209);
-const kBackgroundColor = Color.fromARGB(255, 219, 216, 216);
-const kPadding = EdgeInsets.symmetric(horizontal: 13.0, vertical: 10.0);
-const kCardBorderRadius = BorderRadius.all(Radius.circular(15));
+const kSecondaryColor = StationDetailsConstants.secondaryColor;
+const kTextColor = StationDetailsConstants.textColor;
+const kSubtitleColor = StationDetailsConstants.subtitleColor;
+const kBackgroundColor = StationDetailsConstants.backgroundColor;
+const kPadding = EdgeInsets.symmetric(
+    horizontal: StationDetailsConstants.horizontalPadding,
+    vertical: StationDetailsConstants.verticalPadding);
+const kCardBorderRadius =
+    BorderRadius.all(Radius.circular(StationDetailsConstants.borderRadius));
 
 class StationDetailsPage extends StatelessWidget {
   final StationDetialesModel station;

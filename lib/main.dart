@@ -147,7 +147,7 @@ class AppBindings implements Bindings {
     Get.put(AuthService(), permanent: true);
 
     // تهيئة الـ controllers الأخرى عند الحاجة فقط
-    Get.lazyPut(() => StationLoadController());
+    Get.put(StationLoadController());
     Get.lazyPut(() => FavoritesController());
     Get.lazyPut(() => CarouselSliderController());
   }
@@ -1263,6 +1263,43 @@ class SupabaseService {
     } catch (e, stackTrace) {
       AppLogger.logError('Failed to update station load', e, stackTrace);
       throw Exception('فشل في تحديث حمل المحطة');
+    }
+  }
+
+  Future<void> updateStationSign(String stationName, bool isPositive) async {
+    try {
+      await _client
+          .from(AppConstants.tableStation)
+          .update({
+            'station_sign': isPositive,
+          })
+          .eq('station_name', stationName)
+          .timeout(AppConstants.timeoutDuration);
+      _cache.remove('station_loads');
+
+      AppLogger.logSuccess(
+          '✅ Station sign updated: $stationName = $isPositive');
+    } on PostgrestException catch (e) {
+      AppLogger.logError('Database error while updating station sign', e);
+      throw Exception('خطأ في قاعدة البيانات: ${e.message}');
+    } catch (e, stackTrace) {
+      AppLogger.logError('Failed to update station sign', e, stackTrace);
+      throw Exception('فشل في تحديث إشارة المحطة');
+    }
+  }
+
+  Future<bool> checkCrccPermission(String email) async {
+    try {
+      final response = await _client
+          .from('user_crcc')
+          .select()
+          .ilike('user_email', email.trim())
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      AppLogger.logError('Error checking CRCC permissions', e);
+      return false;
     }
   }
 

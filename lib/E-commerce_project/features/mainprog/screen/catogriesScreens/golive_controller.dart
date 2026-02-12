@@ -9,6 +9,7 @@ import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 class GoLiveController extends ChangeNotifier {
   List<StationModelCall> users = [];
   bool isLoading = true;
+  bool isAccessDenied = false;
   String? errorMessage;
 
   // Audio players
@@ -67,6 +68,31 @@ class GoLiveController extends ChangeNotifier {
     }
   }
 
+  Future<void> checkAccess() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || user.email == null) {
+      isAccessDenied = true;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final email = user.email!;
+      final client = Supabase.instance.client;
+
+      final results = await Future.wait([
+        client.from('user_top').select().eq('user_email', email).limit(1),
+        client.from('user_crcc').select().eq('user_email', email).limit(1),
+      ]);
+
+      isAccessDenied = results[0].isEmpty && results[1].isEmpty;
+    } catch (e) {
+      isAccessDenied = true;
+      debugPrint('Error checking GoLive access: $e');
+    }
+    notifyListeners();
+  }
+
   int? remoteUid;
   bool localUserJoined = false;
 
@@ -121,8 +147,6 @@ class GoLiveController extends ChangeNotifier {
   }
 
   Future<String> _fetchSecureToken(String channelName) async {
-    // TODO: Implement secure token fetching from Supabase Edge Functions
-    // Example: return await Supabase.instance.client.functions.invoke('get-agora-token', body: {'channel': channelName});
     return '';
   }
 

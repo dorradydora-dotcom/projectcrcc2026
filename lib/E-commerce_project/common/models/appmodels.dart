@@ -36,6 +36,7 @@ class StationLoad {
   final double baseLoad;
   final double minVariation;
   final double maxVariation;
+  bool isPositive; // New field for signal/direction
 
   StationLoad({
     required this.stationName,
@@ -43,6 +44,7 @@ class StationLoad {
     required this.baseLoad,
     required this.minVariation,
     required this.maxVariation,
+    this.isPositive = true,
   });
 
   factory StationLoad.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,7 @@ class StationLoad {
       baseLoad: parseDouble(json['base_load'] ?? json['station_load']),
       minVariation: parseDouble(json['min_variation'], defaultValue: -10.0),
       maxVariation: parseDouble(json['max_variation'], defaultValue: 10.0),
+      isPositive: json['station_sign'] as bool? ?? true,
     );
   }
 
@@ -67,6 +70,7 @@ class StationLoad {
       'base_load': baseLoad,
       'min_variation': minVariation,
       'max_variation': maxVariation,
+      'station_sign': isPositive,
     };
   }
 }

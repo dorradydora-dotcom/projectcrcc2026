@@ -114,15 +114,16 @@ flutter:
     - lib/assets/images/g/ff.jpg
     - lib/assets/images/g/image55.jpg
     - lib/assets/images/g/ministry.jpg
-    - lib/assets/images/g/sainai.jpg
-    - lib/assets/images/g/electric.png
-    - lib/assets/images/g/together.png
-    - lib/assets/images/g/network.png
     - lib/assets/images/g/rtop.jpg
     - lib/assets/images/g/qq3.png
     - lib/assets/images/g/qq4.png
     - lib/assets/images/g/qq.png
     - lib/assets/images/g/aaa.jpg
+    - lib/assets/images/g/on1.jpg
+    - lib/assets/images/g/on2.jpg
+    - lib/assets/images/g/on3.jpg
+    - lib/assets/images/g/on41.jpg
+    - lib/assets/images/g/on42.png
     - lib/assets/sounds/ring.mp3
     - lib/assets/sounds/connect.mp3
     - lib/assets/sounds/hangup.mp3

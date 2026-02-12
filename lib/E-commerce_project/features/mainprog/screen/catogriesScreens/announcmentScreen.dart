@@ -2,11 +2,12 @@ import 'dart:ui';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
-import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:get/get.dart';
+import 'announcement_controller.dart';
 
 class AnnouncementScreenDark extends StatefulWidget {
   const AnnouncementScreenDark({super.key});
@@ -17,10 +18,7 @@ class AnnouncementScreenDark extends StatefulWidget {
 
 class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
     with TickerProviderStateMixin {
-  final TextEditingController _messageController = TextEditingController();
-
-  String? _selectedDepartment;
-  bool _isLoading = false;
+  final AnnouncementController controller = Get.put(AnnouncementController());
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -36,7 +34,6 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
 
   @override
   void dispose() {
-    _messageController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -208,10 +205,10 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
             border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
           ),
           child: TextField(
-            controller: _messageController,
+            controller: controller.messageController,
             textAlign: TextAlign.right,
             maxLines: 5,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => controller.update(),
             style: TextStyle(
               color: Colors.white,
               fontSize: 14.sp,
@@ -261,48 +258,46 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
             border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedDepartment,
-              isExpanded: true,
-              icon: Icon(
-                Iconsax.arrow_circle_down,
-                color: Colors.white54,
-                size: 20.sp,
-              ),
-              hint: Text(
-                'اختر الجهة...',
-                style: TextStyle(
-                  color: Colors.white30,
-                  fontFamily: Appfontstring.ChangaLight,
-                  fontSize: 12.sp,
-                ),
-              ),
-              dropdownColor: const Color(0xFF0F172A),
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: Appfontstring.ChangaLight,
-                fontSize: 14.sp,
-              ),
-              items: announcmentdepartments.map((String department) {
-                return DropdownMenuItem<String>(
-                  value: department,
-                  child: Text(
-                    department,
-                    textAlign: TextAlign.right,
+            child: Obx(() => DropdownButton<String>(
+                  value: controller.selectedDepartment.value.isEmpty
+                      ? null
+                      : controller.selectedDepartment.value,
+                  isExpanded: true,
+                  icon: Icon(
+                    Iconsax.arrow_circle_down,
+                    color: Colors.white54,
+                    size: 20.sp,
+                  ),
+                  hint: Text(
+                    'اختر الجهة...',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.white30,
                       fontFamily: Appfontstring.ChangaLight,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedDepartment = newValue;
-                });
-              },
-            ),
+                  dropdownColor: const Color(0xFF0F172A),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontSize: 14.sp,
+                  ),
+                  items: announcmentdepartments.map((String department) {
+                    return DropdownMenuItem<String>(
+                      value: department,
+                      child: Text(
+                        department,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: Appfontstring.ChangaLight,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: controller.setSelectedDepartment,
+                )),
           ),
         ),
       ],
@@ -310,139 +305,71 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
   }
 
   Widget _buildSendButton() {
-    bool isEnabled = _selectedDepartment != null &&
-        _messageController.text.isNotEmpty &&
-        !_isLoading;
-
-    return Container(
-      width: double.infinity,
-      height: 50.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14.r),
-        gradient: isEnabled
-            ? const LinearGradient(
-                colors: [Color(0xFF10B981), Color(0xFF059669)],
-              )
-            : null,
-        color: isEnabled ? null : Colors.white.withOpacity(0.1),
-        boxShadow: isEnabled
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF10B981).withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: ElevatedButton(
-        onPressed: isEnabled ? _sendAnnouncement : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14.r),
-          ),
-        ),
-        child: _isLoading
-            ? SizedBox(
-                width: 22.w,
-                height: 22.h,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Iconsax.send_1,
-                    size: 20.sp,
-                    color: isEnabled ? Colors.white : Colors.white38,
+    return Obx(() {
+      bool isEnabled = controller.isEnabled;
+      return Container(
+        width: double.infinity,
+        height: 50.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14.r),
+          gradient: isEnabled
+              ? const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                )
+              : null,
+          color: isEnabled ? null : Colors.white.withOpacity(0.1),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  SizedBox(width: 10.w),
-                  Text(
-                    'إرسال التعليمات الطارئة',
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: Appfontstring.ChangaLight,
+                ]
+              : null,
+        ),
+        child: ElevatedButton(
+          onPressed:
+              isEnabled ? () => controller.sendAnnouncement(context) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14.r),
+            ),
+          ),
+          child: controller.isLoading.value
+              ? SizedBox(
+                  width: 22.w,
+                  height: 22.h,
+                  child: const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Iconsax.send_1,
+                      size: 20.sp,
                       color: isEnabled ? Colors.white : Colors.white38,
                     ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  void _sendAnnouncement() async {
-    if (_selectedDepartment == null || _messageController.text.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    String topic = announcmentdepartmentToTopic[_selectedDepartment!]!;
-    String tableName = 'user_$topic';
-
-    try {
-      await NotificationService.sendNotification(
-        tableName,
-        'تعليمات طارئة',
-        _messageController.text,
-        route: 'announcement',
+                    SizedBox(width: 10.w),
+                    Text(
+                      'إرسال التعليمات الطارئة',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: Appfontstring.ChangaLight,
+                        color: isEnabled ? Colors.white : Colors.white38,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 10.w),
-                const Text('تم إرسال التعليمات بنجاح'),
-              ],
-            ),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        );
-        _messageController.clear();
-        setState(() {
-          _selectedDepartment = null;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                SizedBox(width: 10.w),
-                Expanded(child: Text('خطأ في إرسال التعليمات: $e')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    });
   }
 }

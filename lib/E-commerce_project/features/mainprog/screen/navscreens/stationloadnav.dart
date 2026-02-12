@@ -143,7 +143,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
           left: 45.w,
           right: 45.w,
           top: 1.h,
-          bottom: 20.h), // Added bottom margin for spacing
+          bottom: 10.h), // Added bottom margin for spacing
       padding: EdgeInsets.symmetric(
           horizontal: 10.w, vertical: 8.h), // Reduced vertical padding
       decoration: BoxDecoration(
@@ -412,9 +412,7 @@ class StationCard extends StatefulWidget {
 class _StationCardState extends State<StationCard> {
   @override
   Widget build(BuildContext context) {
-    final showUpdateButton = widget.canEdit &&
-        widget.station.load >= 0 &&
-        widget.station.load <= _maxStationLoad;
+    final showUpdateButton = widget.canEdit;
 
     return RepaintBoundary(
       child: Container(
@@ -792,97 +790,106 @@ class StationloadnavScreen extends StatelessWidget {
               }
 
               // Main Content
-              return RefreshIndicator(
-                color: Colors.orangeAccent,
-                backgroundColor: Colors.white,
-                onRefresh: () async {
-                  await controller.fetchData();
-                },
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics()),
-                  slivers: [
-                    // Total Load Display
-                    SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          Obx(
-                            () => LoadDisplayWidget(
-                              totalLoad: controller.totalLoad,
-                              isLoading: controller.isLoading.value,
-                              isFromCache: controller.isFromCache.value,
-                            ),
+              return CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                slivers: [
+                  // Total Load Display
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        Obx(
+                          () => LoadDisplayWidget(
+                            totalLoad: controller.totalLoad,
+                            isLoading: controller.isLoading.value,
+                            isFromCache: controller.isFromCache.value,
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 10.h),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.keyboard_arrow_down,
-                                    color: Colors.white54, size: 14.sp),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  "اسحب الشاشة لاسفل للتحديث",
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 10.sp,
-                                    fontFamily: Appfontstring.ChangaLight,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: Center(
+                            child: InkWell(
+                              onTap: () => controller.fetchData(),
+                              borderRadius: BorderRadius.circular(20.r),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w, vertical: 6.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                    width: 1,
                                   ),
                                 ),
-                                SizedBox(width: 4.w),
-                                Icon(Icons.keyboard_arrow_down,
-                                    color: Colors.white54, size: 14.sp),
-                              ],
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.refresh,
+                                        color: Colors.orangeAccent,
+                                        size: 16.sp),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      "تحديث البيانات",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12.sp,
+                                        fontFamily: Appfontstring.ChangaLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Loading State or Station Cards
+                  Obx(() {
+                    if (controller.isLoading.value &&
+                        controller.stationLoads.isEmpty) {
+                      return const ShimmerLoadingGrid();
+                    }
+
+                    return SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio:
+                            3.5, // Increased ratio to reduce height further
+                        crossAxisSpacing: 2.w, // Minimized horizontal spacing
+                        mainAxisSpacing: 2.h, // Minimized vertical spacing
                       ),
-                    ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final station = controller.stationLoads[index];
+                          final isUserAssigned = controller
+                              .isUserAssignedToStation(station.stationName);
+                          final canEdit =
+                              controller.canEditStation(station.stationName);
 
-                    // Loading State or Station Cards
-                    Obx(() {
-                      if (controller.isLoading.value &&
-                          controller.stationLoads.isEmpty) {
-                        return const ShimmerLoadingGrid();
-                      }
+                          return StationCard(
+                            index: index,
+                            station: station,
+                            isUserAssigned: isUserAssigned,
+                            canEdit: canEdit,
+                            isUpdatedRecently: controller
+                                .wasUpdatedThisHour(station.stationName),
+                            onEditTap: () =>
+                                _handleStationEdit(context, station, canEdit),
+                          );
+                        },
+                        childCount: controller.stationLoads.length,
+                      ),
+                    );
+                  }),
 
-                      return SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio:
-                              3.5, // Increased ratio to reduce height further
-                          crossAxisSpacing: 2.w, // Minimized horizontal spacing
-                          mainAxisSpacing: 2.h, // Minimized vertical spacing
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final station = controller.stationLoads[index];
-                            final isUserAssigned = controller
-                                .isUserAssignedToStation(station.stationName);
-                            final canEdit =
-                                controller.canEditStation(station.stationName);
-
-                            return StationCard(
-                              index: index,
-                              station: station,
-                              isUserAssigned: isUserAssigned,
-                              canEdit: canEdit,
-                              isUpdatedRecently: controller
-                                  .wasUpdatedThisHour(station.stationName),
-                              onEditTap: () =>
-                                  _handleStationEdit(context, station, canEdit),
-                            );
-                          },
-                          childCount: controller.stationLoads.length,
-                        ),
-                      );
-                    }),
-
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: 60.h),
-                    ),
-                  ],
-                ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: 60.h),
+                  ),
+                ],
               );
             }),
           ),
@@ -1098,11 +1105,8 @@ class StationDialogState extends State<StationDialog> {
                     _errorText = 'يرجى إدخال قيمة الحمل';
                   } else {
                     final parsed = double.tryParse(input);
-                    if (parsed == null ||
-                        parsed < 0 ||
-                        parsed > _maxStationLoad) {
-                      _errorText =
-                          'يرجى إدخال رقم صحيح بين 0 و $_maxStationLoad';
+                    if (parsed == null) {
+                      _errorText = 'يرجى إدخال رقم صحيح';
                     } else {
                       _errorText = null;
                     }

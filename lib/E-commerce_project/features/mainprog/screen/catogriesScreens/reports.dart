@@ -5,32 +5,153 @@ import 'package:amiraly/E-commerce_project/features/mainprog/screen/reportscreen
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/reportscreens/transformer_ratio_report.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
+import 'reports_controller.dart';
 
-class OfferData {
-  static const Map<String, String> offers = {
-    'المكثفات': 'Description for Report 1',
-    'الخلايا الاحطياتية بالمحطات': 'Description for Report 2',
-    'نسب تحميل المحطات': 'Description for Report 3',
-    // Add more as needed
-  };
+class ReportsScreen extends StatefulWidget {
+  const ReportsScreen({super.key});
 
-  Future<List<Report>> fetchReports() async {
-    await Future.delayed(const Duration(seconds: 1));
-    return offers.entries
-        .map(
-          (e) => Report(
-            name: e.key,
-            description: e.value,
-            date: DateTime.now().toString().substring(0, 10),
+  @override
+  State<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends State<ReportsScreen> {
+  final ReportsController controller = Get.put(ReportsController());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Appcolors.primaryColor,
+      appBar: const CustomAppBar(),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Appcolors.primaryColor,
+                Color(0xFF163C5E),
+                Color(0xFF0F2B44),
+                Color(0xFF081A2A)
+              ],
+            ),
           ),
-        )
-        .toList();
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 24.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBBC05),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'التقارير الفنية',
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaBold,
+                            fontSize: 18.sp,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Text(
+                          'نظام استعراض وإدارة التقارير الدورية',
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontSize: 10.sp,
+                            color: Colors.white60,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.description_outlined,
+                      color: Colors.white.withOpacity(0.3),
+                      size: 28.sp,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (controller.reports.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'لا يوجد تقارير حالياً',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: Appfontstring.ChangaLight,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: controller.reports.length,
+                    itemBuilder: (context, index) {
+                      return OfferCard(
+                        report: controller.reports[index],
+                        index: index,
+                      );
+                    },
+                  );
+                }),
+              ),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  border: Border(
+                    top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.security_outlined,
+                      size: 14.sp,
+                      color: const Color(0xFFFBBC05),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'جميع التقارير محمية ومشفرة وفقاً لمعايير الأمن السيبراني',
+                      style: TextStyle(
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 9.sp,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
-// Card widget for displaying a report
 class OfferCard extends StatelessWidget {
   final Report report;
   final int index;
@@ -39,63 +160,55 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = [
-      Colors.blueAccent,
-      Colors.lightBlueAccent, // Simplified gradient colors
-    ];
-
     return Card(
-      elevation: AppConstants.cardElevation,
+      elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        borderRadius: BorderRadius.circular(12),
       ),
       margin: const EdgeInsets.symmetric(
-        horizontal: AppConstants.padding,
-        vertical: AppConstants.spacing,
+        vertical: 8,
       ),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradient,
+            gradient: const LinearGradient(
+              colors: [Colors.blueAccent, Colors.lightBlueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.blue, width: 1),
           ),
-          padding: const EdgeInsets.all(AppConstants.padding),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const SizedBox(width: AppConstants.spacing),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       report.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: Appfontstring.ChangaLight,
-                          ),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 16,
+                      ),
                     ),
-                    const SizedBox(height: AppConstants.spacing),
+                    const SizedBox(height: 8),
                     Text(
                       report.description,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.brown),
+                      style: const TextStyle(color: Colors.white70),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppConstants.spacing),
+                    const SizedBox(height: 8),
                     Text(
                       report.date,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 12),
                     ),
                   ],
                 ),
@@ -113,92 +226,13 @@ class OfferCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.borderRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Icon(Icons.read_more, color: Colors.black),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// Main screen for displaying reports
-class ReportsScreen extends StatelessWidget {
-  const ReportsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final offerData = OfferData();
-
-    return Scaffold(
-      appBar: CustomAppBar(),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Appcolors.primaryColor, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        padding: const EdgeInsets.all(AppConstants.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                'تـقارير فنية و هندسية',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 212, 237, 24),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: Appfontstring.ChangaLight,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacing),
-            const Divider(thickness: 2, indent: 50, endIndent: 50),
-            const SizedBox(height: AppConstants.padding),
-            Expanded(
-              child: FutureBuilder<List<Report>>(
-                future: offerData.fetchReports(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      child: ListView.builder(
-                        itemCount: 6,
-                        itemBuilder: (context, index) => Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          height: 100,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return const Center(child: Text('Failed to load reports'));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No reports available'));
-                  }
-
-                  final reports = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: reports.length,
-                    itemBuilder: (context, index) =>
-                        OfferCard(report: reports[index], index: index),
-                  );
-                },
-              ),
-            ),
-          ],
         ),
       ),
     );

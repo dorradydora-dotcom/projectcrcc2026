@@ -60,6 +60,20 @@ class _CairoscreenState extends State<Cairoscreen> {
     setState(() {});
   }
 
+  void _handleStationEdit(
+      BuildContext context, String stationKey, bool canEdit) {
+    if (!canEdit) return;
+
+    final station = _controller.stationLoads
+        .firstWhereOrNull((s) => s.stationName == stationKey);
+    if (station != null) {
+      showDialog(
+        context: context,
+        builder: (context) => StationDialog(station: station),
+      );
+    }
+  }
+
   void updateLoads() async {
     // Controller handles this via its timer
   }
@@ -323,14 +337,19 @@ class _CairoscreenState extends State<Cairoscreen> {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           final station = stations[index];
+          final stationKey = station['key'] as String;
+          final canEdit = _controller.canEditStation(stationKey);
           return StationGaugeCard(
             title: station['title'] as String,
             subtitle: station['subtitle'] as String,
-            value: _getStationLoad(station['key'] as String),
+            value: _getStationLoad(stationKey),
             min: station['min'] as int,
             max: station['max'] as int,
             isWide: isWide,
-            onFlip: () => _flipDirection(station['key'] as String),
+            onFlip: canEdit ? () => _flipDirection(stationKey) : null,
+            onEdit: canEdit
+                ? () => _handleStationEdit(context, stationKey, canEdit)
+                : null,
           );
         },
         childCount: stations.length,
@@ -574,6 +593,7 @@ class StationGaugeCard extends StatelessWidget {
   final int max;
   final bool isWide;
   final VoidCallback? onFlip;
+  final VoidCallback? onEdit;
   final bool isToggleable;
 
   const StationGaugeCard({
@@ -585,6 +605,7 @@ class StationGaugeCard extends StatelessWidget {
     required this.max,
     required this.isWide,
     this.onFlip,
+    this.onEdit,
     this.isToggleable = true,
   });
 
@@ -637,12 +658,22 @@ class StationGaugeCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (onFlip != null && isToggleable)
-                            GestureDetector(
-                              onTap: onFlip,
-                              child: Icon(Icons.swap_horiz,
-                                  size: 18.sp, color: Colors.yellowAccent),
-                            ),
+                          if (isToggleable) ...[
+                            if (onEdit != null)
+                              GestureDetector(
+                                onTap: onEdit,
+                                child: Icon(Icons.edit,
+                                    size: 18.sp, color: Colors.blueAccent),
+                              ),
+                            if (onEdit != null && onFlip != null)
+                              SizedBox(width: 8.w),
+                            if (onFlip != null)
+                              GestureDetector(
+                                onTap: onFlip,
+                                child: Icon(Icons.swap_horiz,
+                                    size: 18.sp, color: Colors.yellowAccent),
+                              ),
+                          ],
                         ],
                       ),
                       const Spacer(),
@@ -706,6 +737,227 @@ class StationGaugeCard extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+// ============================================================================
+// STATION EDIT DIALOG (Adapted from StationLoadNav)
+// ============================================================================
+
+class StationDialog extends StatefulWidget {
+  final StationLoad station;
+
+  const StationDialog({
+    super.key,
+    required this.station,
+  });
+
+  @override
+  State<StationDialog> createState() => StationDialogState();
+}
+
+class StationDialogState extends State<StationDialog> {
+  final TextEditingController _loadController = TextEditingController();
+  final controller = Get.find<StationLoadController>();
+  String? _errorText;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadController.text = widget.station.load.toStringAsFixed(0);
+  }
+
+  @override
+  void dispose() {
+    _loadController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateLoad(double newLoad) async {
+    setState(() => _isUpdating = true);
+
+    final success = await controller.updateStationLoad(
+      widget.station.stationName,
+      newLoad,
+    );
+
+    if (mounted) {
+      if (success) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تم تحديث ${widget.station.stationName} بنجاح',
+              textDirection: TextDirection.rtl,
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'فشل التحديث، يرجى المحاولة مرة أخرى',
+              textDirection: TextDirection.rtl,
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+      setState(() => _isUpdating = false);
+    }
+  }
+
+  void _validateAndUpdate() {
+    final input =
+        _loadController.text.trim().replaceAll('٫', '.').replaceAll(',', '.');
+    final newLoad = double.tryParse(input);
+    if (newLoad == null || newLoad < 0 || newLoad > 1000) {
+      setState(() {
+        _errorText = 'يرجى إدخال قيمة صحيحة';
+      });
+      return;
+    }
+    _updateLoad(newLoad);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF163C5E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      title: Text(
+        'تحديث بيانات المحطة',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          fontFamily: Appfontstring.ChangaLight,
+          color: Colors.white,
+        ),
+        textDirection: TextDirection.rtl,
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                widget.station.stationName,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orangeAccent,
+                  fontFamily: Appfontstring.ChangaLight,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'الحمل الحالي: ${widget.station.load.toStringAsFixed(0)} م.و',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
+                fontFamily: Appfontstring.ChangaLight,
+              ),
+              textDirection: TextDirection.rtl,
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _loadController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16.sp,
+                fontFamily: Appfontstring.ChangaLight,
+              ),
+              decoration: InputDecoration(
+                hintText: 'أدخل الحمل الجديد',
+                hintStyle: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: Colors.grey,
+                ),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                errorText: _errorText,
+              ),
+              textDirection: TextDirection.ltr,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isUpdating ? null : _validateAndUpdate,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: _isUpdating
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('تحديث'),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    side: const BorderSide(color: Colors.red, width: 1),
+                  ),
+                ),
+                child: const Text('إلغاء', style: TextStyle(color: Colors.red)),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

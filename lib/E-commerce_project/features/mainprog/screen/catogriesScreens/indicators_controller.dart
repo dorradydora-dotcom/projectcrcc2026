@@ -100,14 +100,8 @@ class IndicatorsController extends GetxController
       double newSumGeneration = 0.0;
       double newSumExchanges = 0.0;
 
-      final List<String> exchangeStations = [
-        'عبور3/عاشر',
-        'الكريمات/بنى سويف',
-        'قليوب/قناطر',
-        'برقاش/ابوغالب',
-        'ابو زعبل ق / بلبيس',
-      ];
-      final String generationStation = 'الكريمات الشمسية';
+      final List<String> exchangeStations = IndicatorConstants.exchangeStations;
+      final String generationStation = IndicatorConstants.generationStation;
 
       for (int i = 0; i < newStations.length; i++) {
         final String stationName = newStations[i];

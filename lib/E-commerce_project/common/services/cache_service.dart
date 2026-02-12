@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 
+import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
+
 class CacheService {
-  static const String _stationLoadsKey = 'cached_station_loads';
-  static const String _timestampKey = 'cache_timestamp';
-  static const String _updateTimestampsKey = 'cached_update_timestamps';
-  static const int _cacheValidityMinutes = 10;
+  static const String _stationLoadsKey = CacheConstants.stationLoadsKey;
+  static const String _timestampKey = CacheConstants.timestampKey;
+  static const String _updateTimestampsKey = CacheConstants.updateTimestampsKey;
+  static const int _cacheValidityMinutes = CacheConstants.cacheValidityMinutes;
 
   /// Save station loads to local cache
   Future<void> saveStationLoads(List<StationLoad> loads) async {
@@ -121,7 +123,7 @@ class CacheService {
         'yesterday': yesterday,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       };
-      await prefs.setString('cached_hourly_max_loads', jsonEncode(data));
+      await prefs.setString(CacheConstants.hourlyMaxLoadsKey, jsonEncode(data));
     } catch (e) {
       print('Cache hourly save error: $e');
     }
@@ -131,7 +133,7 @@ class CacheService {
   Future<Map<String, List<Map<String, dynamic>>>?> getHourlyMaxLoads() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString('cached_hourly_max_loads');
+      final jsonString = prefs.getString(CacheConstants.hourlyMaxLoadsKey);
 
       if (jsonString == null) return null;
 
@@ -159,9 +161,9 @@ class CacheService {
   Future<void> saveIntlLoads(Map<String, double?> loads) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cached_intl_loads', jsonEncode(loads));
-      await prefs.setInt(
-          'intl_cache_timestamp', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setString(CacheConstants.intlLoadsKey, jsonEncode(loads));
+      await prefs.setInt(CacheConstants.intlCacheTimestampKey,
+          DateTime.now().millisecondsSinceEpoch);
     } catch (e) {
       print('Intl cache save error: $e');
     }
@@ -171,7 +173,7 @@ class CacheService {
   Future<Map<String, double?>?> getIntlLoads() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString('cached_intl_loads');
+      final jsonString = prefs.getString(CacheConstants.intlLoadsKey);
       if (jsonString == null) return null;
 
       final Map<String, dynamic> decoded = jsonDecode(jsonString);

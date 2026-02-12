@@ -18,6 +18,7 @@ class UsersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => GoLiveController()
+        ..checkAccess()
         ..fetchUsers()
         ..startSignaling(),
       child: Scaffold(
@@ -73,6 +74,10 @@ class UsersPage extends StatelessWidget {
                       Expanded(
                         child: Consumer<GoLiveController>(
                           builder: (context, controller, child) {
+                            if (controller.isAccessDenied) {
+                              return _buildAccessDenied();
+                            }
+
                             if (controller.isLoading) {
                               return _buildShimmerLoading();
                             }
@@ -515,6 +520,41 @@ class UsersPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccessDenied() {
+    return Center(
+      child: FadeInUp(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Iconsax.shield_cross5,
+              size: 80.sp,
+              color: Colors.redAccent.withOpacity(0.5),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'عفواً، لا تملك تصريح لدخول هذه الصفحة',
+              style: TextStyle(
+                fontFamily: Appfontstring.ChangaBold,
+                fontSize: 16.sp,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              'هذه الصفحة مخصصة للمسئولين فقط',
+              style: TextStyle(
+                fontFamily: Appfontstring.ChangaLight,
+                fontSize: 12.sp,
+                color: Colors.white54,
+              ),
+            ),
+          ],
         ),
       ),
     );

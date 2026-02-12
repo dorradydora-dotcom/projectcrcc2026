@@ -72,22 +72,12 @@ class Appcolors {
   static const Color errorColor = Color(0xFFD32F2F); // Red
   static const Color backgroundColor = Color(0xFFFFFFFF); // White
 
-  static const List<List<Color>> cardGradients = [
-    [Color(0xFF7DD3FC), Color(0xFF3B82F6)], // Blue gradient
-    [Color(0xFFF472B6), Color(0xFFEC4899)], // Pink gradient
-    [Color(0xFF34D399), Color(0xFF10B981)], // Green gradient
-    [Color(0xFFFBBF24), Color(0xFFF59E0B)], // Yellow gradient
-    [Color(0xFFFB7185), Color(0xFFF43F5E)], // Red gradient
-    [Color(0xFF8B5CF6), Color(0xFF6D28D9)], // Purple gradient
-  ];
-
-  static const List<Color> buttonGradient2 = [
-    primaryColor,
-    Color.fromARGB(255, 24, 92, 144),
-    Color.fromARGB(255, 62, 133, 188),
-    Color.fromARGB(255, 169, 197, 219),
-    Color.fromARGB(255, 213, 222, 255),
-    primaryColor2,
+  static const List<Color> indicatorBackground = [
+    Appcolors.primaryColor,
+    Appcolors.primaryColor,
+    Color(0xFF163C5E),
+    Color(0xFF0F2B44),
+    Color(0xFF081A2A),
   ];
 }
 
@@ -125,50 +115,28 @@ class IndicatorAppColors {
   static const Color borderColor = Color(0xFFE0E0E0);
 }
 
-class AreapageColors {
-  static const kSecondaryColor = Color.fromARGB(187, 244, 67, 54);
-  static const kSubtitleColor = Color.fromARGB(255, 99, 110, 209);
+class StationDetailsConstants {
+  static const Color secondaryColor = Color.fromARGB(255, 230, 156, 19);
+  static const Color textColor = Colors.black;
+  static const Color subtitleColor = Color.fromARGB(255, 99, 110, 209);
+  static const Color backgroundColor = Color.fromARGB(255, 219, 216, 216);
+  static const double horizontalPadding = 13.0;
+  static const double verticalPadding = 10.0;
+  static const double borderRadius = 15.0;
 }
 
 class AppimageString {
   AppimageString._(); // Private constructor to prevent instantiation
 
-  static const String earth = 'lib/assets/images/g/earth.jpg';
-  static const String eee = 'lib/assets/images/g/eee.jpg';
-  static const String ff = 'lib/assets/images/g/ff.jpg';
-  static const String flag = 'lib/assets/images/g/flag.jpg';
-  static const String image = 'lib/assets/images/g/batte.jpg';
-  static const String image3 = 'lib/assets/images/g/image3.jpg';
   static const String image55 = 'lib/assets/images/g/image55.jpg';
   static const String minisrty = 'lib/assets/images/g/ministry.jpg';
-  static const String network = 'lib/assets/images/g/network.png';
-  static const String together = 'lib/assets/images/g/together.png';
-  static const String electric = 'lib/assets/images/g/electric.png';
-  static const String rtop = 'lib/assets/images/g/rtop.jpg';
   static const String aaa = 'lib/assets/images/g/aaa.jpg';
   static const String qq = 'lib/assets/images/g/qq.png';
-
-  static const String yes = 'lib/assets/images/payment/yes.png';
-
-  // photo
-  static const String b4 = 'lib/assets/images/photo/b4.jpg';
-  static const String rt = 'lib/assets/images/photo/rt.jpg';
-  static const String b1 = 'lib/assets/images/photo/b1.jpg';
-  static const String b2 = 'lib/assets/images/photo/b2.jpg';
-  static const String b3 = 'lib/assets/images/photo/b3.jpg';
-  static const String b5 = 'lib/assets/images/photo/b5.jpg';
-  static const String b6 = 'lib/assets/images/photo/b6.jpg';
-  static const String b7 = 'lib/assets/images/photo/b7.jpg';
-  static const String b8 = 'lib/assets/images/photo/b8.jpg';
-  static const String b9 = 'lib/assets/images/photo/b9.jpg';
-  static const String bb = 'lib/assets/images/photo/bb.jpg';
-  static const String b11 = 'lib/assets/images/photo/b11.jpg';
-  static const String gg = 'lib/assets/images/photo/gg.jpg';
-  static const String ny = 'lib/assets/images/photo/ny.jpg';
-  static const String sainai = 'lib/assets/images/photo/sainai.jpg';
-  static const String t1 = 'lib/assets/images/photo/t1.jpg';
-  static const String t2 = 'lib/assets/images/photo/t2.jpg';
-  static const String t3 = 'lib/assets/images/photo/t3.jpg';
+  static const String on1 = 'lib/assets/images/g/on1.jpg';
+  static const String on2 = 'lib/assets/images/g/on2.jpg';
+  static const String on3 = 'lib/assets/images/g/on3.jpg';
+  static const String on4 = 'lib/assets/images/g/on41.jpg';
+  static const String on5 = 'lib/assets/images/g/on42.png';
 }
 
 class AppSizes {
@@ -200,8 +168,11 @@ class AppTextString {
   static const String boarding2text2 =
       'تكامل تام بين المحطات و التحكمات الاقليمية ';
   static const String boarding3text1 =
-      'عرض كامل للاحداث اليومية بالشبكة الموحدة ';
+      'عرض كامل للاحداث بالشبكة الموحدة من تقارير مهندسى التحكم ';
   static const String boarding3text2 = ' ... ابدأ الان ';
+  static const String boarding4text1 = 'اصدار خاص';
+  static const String boarding4text2 =
+      'الشركة المصرية لنقل الكهرباء  \nبرعاية المهندسه الفاضلة / منى رزق \n رئيسة الشركة المصرية لنقل الكهربـاء';
 }
 
 class Appfontstring {
@@ -212,11 +183,8 @@ class Appfontstring {
   static const String ChangaLight = 'Changa-Light';
   static const String Rakkas_Regular = 'Rakkas_Regular';
   static const String BebasNeue_Regular = 'BebasNeue_Regular';
-  static const String BreeSerif_Regular = 'BreeSerif_Regular';
   static const String CairoPlay_Black = 'CairoPlay_Black';
   static const String CairoPlay_Bold = 'CairoPlay_Bold';
-  static const String DancingScript_Medium = 'DancingScript-Medium';
-  static const String MysteryQuest_Regular = 'MysteryQuest-Regular';
   static const String ShadowsIntoLight_Regular = 'ShadowsIntoLight-Regular';
   static const String tejwa1 = 'tejwa1';
   static const String tejw2 = 'tejwa2';
@@ -264,4 +232,90 @@ class Stringshomenav {
   static const String msgAccessDenied = 'غير مصرح لك بالوصول إلى هذه الفئة';
   static const String msgOtherDepts = 'مخصص لادارات اخرى';
   static const String msgNotReady = 'الفئة غير جاهزة بعد';
+}
+
+class OnboardingConstants {
+  // Animation durations
+  static const fadeDuration = Duration(milliseconds: 1200);
+  static const zoomDuration = Duration(milliseconds: 700);
+  static const delay200 = Duration(milliseconds: 400);
+  static const delay400 = Duration(milliseconds: 500);
+
+  // Layout ratios
+  static const double skipButtonTopRatio = 0.02;
+  static const double skipButtonRightRatio = 0.044;
+  static const double dotsBottomRatio = 0.22;
+  static const double dotsLeftRatio = 0.44;
+  static const double buttonBottomRatio = 0.04;
+  static const double buttonRightRatio = 0.04;
+  static const double contentHorizontalRatio = 0.07;
+  static const double contentVerticalRatio = 0.07;
+  static const double imageTopSpacingRatio = 0.1;
+  static const double imageMaxHeightRatio = 0.5;
+  static const double imageMaxWidthRatio = 0.8;
+  static const double titleSpacingRatio = 0.05;
+  static const double subtitleSpacingRatio = 0.015;
+
+  // UI Constants
+  static const borderRadius = 24.0;
+  static const borderWidth = 0.5;
+  static const shadowBlurRadius = 20.0;
+  static const shadowSpreadRadius = 1.0;
+  static const shadowOpacity = 0.3;
+  static const dotSpacing = 5.0;
+  static const dotRadius = 8.0;
+  static const activeDotWidth = 15.0;
+  static const inactiveDotHeight = 4.0;
+  static const buttonElevation = 6.0;
+  static const buttonPaddingRatio = 0.05;
+  static const buttonIconSizeRatio = 15.0;
+  static const baseScreenWidth = 375.0;
+  static const baseFontSizeTitle = 22.0;
+  static const baseFontSizeSubtitle = 12.0;
+  static const baseFontSizeButton = 14.0;
+
+  // Colors
+  static const Color backgroundColor = Colors.transparent;
+  static const Color shadowColor = Colors.blue;
+  static const Color inactiveDotColor = Colors.white24;
+  static const Color activeDotColor = Colors.blue;
+  static const Color buttonBackgroundColor = Colors.white;
+  static const Color borderColor = Colors.white24;
+  static const Color subtitleColor = Colors.white60;
+  static const Color skipButtonBorderColor = Colors.white30;
+
+  // Design Specifics
+  static const double glassOpacity = 0.08;
+  static const double glassBlur = 25.0;
+}
+
+class CacheConstants {
+  static const String stationLoadsKey = 'cached_station_loads';
+  static const String timestampKey = 'cache_timestamp';
+  static const String updateTimestampsKey = 'cached_update_timestamps';
+  static const int cacheValidityMinutes = 10;
+  static const String hourlyMaxLoadsKey = 'cached_hourly_max_loads';
+  static const String intlLoadsKey = 'cached_intl_loads';
+  static const String intlCacheTimestampKey = 'intl_cache_timestamp';
+}
+
+class WeatherConstants {
+  static const String weatherCacheKey = 'cached_weather_data';
+}
+
+class StationConstants {
+  static const double maxStationLoad = 700.0;
+  static const Duration updateInterval = Duration(seconds: 6);
+  static const int maxRetries = 5;
+}
+
+class IndicatorConstants {
+  static const List<String> exchangeStations = [
+    'عبور3/عاشر',
+    'الكريمات/بنى سويف',
+    'قليوب/قناطر',
+    'برقاش/ابوغالب',
+    'ابو زعبل ق / بلبيس',
+  ];
+  static const String generationStation = 'الكريمات الشمسية';
 }

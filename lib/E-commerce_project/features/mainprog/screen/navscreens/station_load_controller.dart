@@ -11,6 +11,8 @@ import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 const double maxStationLoad = 700.0;
 
 class StationLoadController extends GetxController {
+  StreamSubscription<AuthState>? _authSubscription;
+
   // Reactive state
   final RxList<StationLoad> stationLoads = <StationLoad>[].obs;
   final RxBool isLoading = true.obs;
@@ -26,9 +28,10 @@ class StationLoadController extends GetxController {
   final SupabaseService _supabaseService = SupabaseService();
   final CacheService _cacheService = CacheService();
 
-  // Timers
+  // Timers & Realtime
   Timer? _updateTimer;
   Timer? _retryTimer;
+  RealtimeChannel? _realtimeChannel;
 
   // Constants
   static const _updateInterval = Duration(seconds: 6);
@@ -64,6 +67,21 @@ class StationLoadController extends GetxController {
     _loadDirections();
     _initializeData();
     _startAutoUpdate();
+    _initRealtimeSubscription();
+    _initAuthListener(); // Add auth state listener
+  }
+
+  void _initAuthListener() {
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.signedOut ||
+          event == AuthChangeEvent.userUpdated) {
+        debugPrint('🔐 Auth state changed: $event. Refreshing permissions...');
+        _checkPermissions();
+      }
+    });
   }
 
   Future<void> _loadDirections() async {
@@ -81,22 +99,89 @@ class StationLoadController extends GetxController {
     }
   }
 
+  void _initRealtimeSubscription() {
+    try {
+      _realtimeChannel = Supabase.instance.client
+          .channel('public:station_table')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'station_table',
+            callback: (payload) {
+              debugPrint('🔔 Realtime change received: ${payload.eventType}');
+              _handleRealtimePayload(payload);
+            },
+          )
+          .subscribe();
+      debugPrint('🛰️ Supabase Realtime subscribed to station_table');
+    } catch (e) {
+      debugPrint('❌ Error setting up Realtime: $e');
+    }
+  }
+
+  void _handleRealtimePayload(PostgresChangePayload payload) {
+    if (payload.newRecord.isEmpty) return;
+
+    try {
+      final updatedStation = StationLoad.fromJson(payload.newRecord);
+      final stationName = updatedStation.stationName;
+
+      // Update in stationLoads list
+      final index =
+          stationLoads.indexWhere((s) => s.stationName == stationName);
+      if (index != -1) {
+        // Only update if data is different to avoid unnecessary UI rebuilds
+        if (stationLoads[index].load != updatedStation.load ||
+            stationLoads[index].isPositive != updatedStation.isPositive) {
+          stationLoads[index] = updatedStation;
+          // Sync directions map
+          directions[stationName] = updatedStation.isPositive;
+          stationLoads.refresh();
+        }
+      } else {
+        // New station added?
+        stationLoads.add(updatedStation);
+        directions[stationName] = updatedStation.isPositive;
+      }
+    } catch (e) {
+      debugPrint('Error parsing realtime payload: $e');
+    }
+  }
+
   Future<void> toggleDirection(String stationName) async {
     final current = directions[stationName] ?? true;
-    directions[stationName] = !current;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('dir_$stationName', !current);
-    } catch (e) {
-      debugPrint('Error saving direction: $e');
-    }
+    final newValue = !current;
+
+    // Update locally first for immediate UI responsiveness
+    directions[stationName] = newValue;
     stationLoads.refresh(); // Trigger totalLoad recalculation
+
+    try {
+      // 1. Update Supabase
+      await _supabaseService.updateStationSign(stationName, newValue);
+
+      // 2. Update the StationLoad object in the list
+      final index =
+          stationLoads.indexWhere((s) => s.stationName == stationName);
+      if (index != -1) {
+        stationLoads[index].isPositive = newValue;
+      }
+
+      // 3. Update SharedPreferences (Offline fallback)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('dir_$stationName', newValue);
+    } catch (e) {
+      debugPrint('Error syncing direction: $e');
+      // Note: We don't revert local state to avoid flickering on slow connections
+    }
   }
 
   @override
   void onClose() {
     _updateTimer?.cancel();
     _retryTimer?.cancel();
+    _realtimeChannel?.unsubscribe();
+    _authSubscription?.cancel(); // Cancel auth listener
     super.onClose();
   }
 
@@ -115,33 +200,28 @@ class StationLoadController extends GetxController {
 
   /// Check if user has CRCC permissions
   Future<void> _checkPermissions() async {
-    if (userEmail == null) return;
+    final email = userEmail;
+    if (email == null) {
+      // If email is not available yet, retry later
+      _retryPermissionsCheck();
+      return;
+    }
 
     try {
-      final response =
-          await Supabase.instance.client.from('user_crcc').select('user_email');
-      final crccEmails =
-          response.map((e) => e['user_email'] as String).toList();
-      isCrccUser.value = crccEmails.contains(userEmail);
+      final hasPermission = await _supabaseService.checkCrccPermission(email);
+      isCrccUser.value = hasPermission;
+      debugPrint('🛡️ CRCC Permission status for $email: $hasPermission');
     } catch (e) {
       debugPrint('Error checking permissions: $e');
-      // Retry silently for permission checks
       _retryPermissionsCheck();
     }
   }
 
   /// Retry permissions check silently
   Future<void> _retryPermissionsCheck() async {
-    await Future.delayed(const Duration(seconds: 3));
-    try {
-      final response =
-          await Supabase.instance.client.from('user_crcc').select('user_email');
-      final crccEmails =
-          response.map((e) => e['user_email'] as String).toList();
-      isCrccUser.value = crccEmails.contains(userEmail);
-    } catch (e) {
-      debugPrint('Retry permissions check failed: $e');
-    }
+    // If already checking/scheduled, don't schedule another one
+    await Future.delayed(const Duration(seconds: 5));
+    _checkPermissions();
   }
 
   /// Fetch data from server
@@ -164,6 +244,12 @@ class StationLoadController extends GetxController {
 
       stationLoads.value = loads;
       specificStations.value = stations;
+
+      // Sync directions map with fetched station signals
+      for (var station in loads) {
+        directions[station.stationName] = station.isPositive;
+      }
+
       isLoading.value = false;
       isFromCache.value = false;
       _retryAttempts = 0;

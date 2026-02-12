@@ -42,8 +42,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   final RxList<MainCatogoryModel> _categories = <MainCatogoryModel>[].obs;
   final RxList<AnnouncImagesModel> _announcImages = <AnnouncImagesModel>[].obs;
   final RxList<WeatherData> _weatherData = <WeatherData>[].obs;
-  final StationLoadController _stationController =
-      Get.find<StationLoadController>();
+  late final StationLoadController _stationController;
   RxList<StationLoad> get _stationLoads => _stationController.stationLoads;
   final RxString _userGroup = 'none'.obs;
   final RxBool isLoading = false.obs;
@@ -56,7 +55,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   Timer? _loadTimer;
   StreamSubscription? _connectivitySubscription;
-  static const String _weatherCacheKey = 'cached_weather_data';
+  static const String _weatherCacheKey = WeatherConstants.weatherCacheKey;
 
   @override
   List<MainCatogoryModel> get categories => _categories;
@@ -75,6 +74,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   void onInit() {
+    _stationController = Get.find<StationLoadController>();
     super.onInit();
     _checkInitialConnectivity();
     _connectivitySubscription = Connectivity()

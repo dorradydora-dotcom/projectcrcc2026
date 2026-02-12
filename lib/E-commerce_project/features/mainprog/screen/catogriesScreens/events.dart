@@ -1,13 +1,12 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
-import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:get/get.dart';
+import 'events_controller.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -17,489 +16,7 @@ class EventsScreen extends StatefulWidget {
 }
 
 class _EventsScreenState extends State<EventsScreen> {
-  bool _isLoading = false;
-  List<Event> _events = [];
-  final _supabase = Supabase.instance.client;
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _deleteReasonController = TextEditingController();
-  TimeOfDay? _selectedTime;
-  bool _isPowerCut = false;
-
-  @override
-  void initState() {
-    super.initState();
-    loadEvents();
-  }
-
-  Future<void> loadEvents() async {
-    setState(() => _isLoading = true);
-    try {
-      final response = await _supabase
-          .from('events')
-          .select()
-          .order('date', ascending: true);
-
-      if (mounted) {
-        setState(() {
-          _events = (response as List<dynamic>)
-              .map(
-                (e) => Event(
-                  id: e['id'].toString(),
-                  title: e['title'] as String,
-                  description: e['description'] as String? ?? '',
-                  date: DateTime.parse(e['date'] as String),
-                  location: e['location'] as String? ?? '',
-                  powerCut: e['power_cut'] as bool? ?? false,
-                  amount: double.parse(e['power_amount'] as String? ?? '0'),
-                ),
-              )
-              .toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('خطأ في تحميل الأحداث: $e')));
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _locationController.dispose();
-    _amountController.dispose();
-    _deleteReasonController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _addEvent() async {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('يرجى إدخال العنوان')));
-      return;
-    }
-
-    final DateTime now = DateTime.now();
-    final int hour = _selectedTime?.hour ?? now.hour;
-    final int minute = _selectedTime?.minute ?? now.minute;
-    final DateTime eventDate =
-        DateTime(now.year, now.month, now.day, hour, minute);
-
-    final double amount =
-        _isPowerCut ? double.tryParse(_amountController.text) ?? 0.0 : 0.0;
-
-    try {
-      await _supabase.from('events').insert({
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-        'date': eventDate.toIso8601String(),
-        'location': _locationController.text,
-        'power_cut': _isPowerCut,
-        'power_amount': amount,
-      });
-
-      final String eventBody = '''
-حدث جديد: ${_titleController.text}
-وصف: ${_descriptionController.text}
-تاريخ: ${DateFormat('MMM d, yyyy').format(eventDate)}
-وقت: ${DateFormat('HH:mm').format(eventDate)}
-${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amount م.و' : ''}
-الموقع: ${_locationController.text.isEmpty ? 'غير محدد' : _locationController.text}
-      '''
-          .trim();
-
-      await NotificationService.sendNotification(
-          'user_crcc', 'حدث جديد', eventBody,
-          route: 'الاحداث');
-      await NotificationService.sendNotification(
-          'user_top', 'حدث جديد', eventBody,
-          route: 'الاحداث');
-
-      _clearForm();
-      await loadEvents();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إضافة الحدث بنجاح')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('خطأ في إضافة الحدث: $e')));
-      }
-    }
-  }
-
-  Future<void> _updateEvent(Event event) async {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('يرجى إدخال العنوان')));
-      return;
-    }
-
-    final DateTime originalDate = event.date;
-    final int hour = _selectedTime?.hour ?? originalDate.hour;
-    final int minute = _selectedTime?.minute ?? originalDate.minute;
-    final DateTime eventDate = DateTime(
-        originalDate.year, originalDate.month, originalDate.day, hour, minute);
-
-    final double amount =
-        _isPowerCut ? double.tryParse(_amountController.text) ?? 0.0 : 0.0;
-
-    try {
-      await _supabase.from('events').update({
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-        'date': eventDate.toIso8601String(),
-        'location': _locationController.text,
-        'power_cut': _isPowerCut,
-        'power_amount': amount,
-      }).eq('id', event.id);
-
-      final String eventBody = '''
-حدث تعديل: ${_titleController.text}
-وصف: ${_descriptionController.text}
-تاريخ: ${DateFormat('MMM d, yyyy').format(eventDate)}
-وقت: ${DateFormat('HH:mm').format(eventDate)}
-${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amount م.و' : ''}
-الموقع: ${_locationController.text.isEmpty ? 'غير محدد' : _locationController.text}
-      '''
-          .trim();
-
-      await NotificationService.sendNotification(
-          'user_crcc', 'تعديل حدث', eventBody,
-          route: 'الاحداث');
-      await NotificationService.sendNotification(
-          'user_top', 'تعديل حدث', eventBody,
-          route: 'الاحداث');
-
-      _clearForm();
-      await loadEvents();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم تحديث الحدث بنجاح')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('خطأ في تحديث الحدث: $e')));
-      }
-    }
-  }
-
-  Future<void> _deleteEvent(Event event) async {
-    final String? deleteReason = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: Row(
-          children: [
-            Icon(Icons.report_problem_outlined,
-                color: Colors.redAccent, size: 22.sp),
-            SizedBox(width: 12.w),
-            Text('تأكيد حذف الحدث',
-                style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold,
-                    fontSize: 13.sp,
-                    color: Colors.redAccent)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-                'هل أنت متأكد من رغبتك في حذف: "${event.title}"؟ لا يمكن التراجع عن هذه الخطوة.',
-                style: TextStyle(
-                    fontFamily: Appfontstring.ChangaLight,
-                    fontSize: 11.sp,
-                    color: const Color(0xFF475569)),
-                textAlign: TextAlign.right),
-            SizedBox(height: 20.h),
-            _buildFormField(_deleteReasonController, 'سبب الحذف (اختياري)'),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('إلغاء',
-                  style: TextStyle(
-                      fontFamily: Appfontstring.ChangaBold,
-                      fontSize: 12.sp,
-                      color: const Color(0xFF64748B)))),
-          ElevatedButton(
-            onPressed: () {
-              final reason = _deleteReasonController.text.trim();
-              _deleteReasonController.clear();
-              Navigator.pop(context, reason);
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r))),
-            child: Text('حذف الآن',
-                style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
-          ),
-        ],
-      ),
-    );
-
-    if (deleteReason == null) return;
-
-    try {
-      await _supabase.from('events').delete().eq('id', event.id);
-
-      final String deleteBody =
-          'تم حذف: ${event.title}\nسبب: ${deleteReason.isEmpty ? 'غير محدد' : deleteReason}'
-              .trim();
-
-      await NotificationService.sendNotification(
-          'user_crcc', 'حذف حدث', deleteBody,
-          route: 'الاحداث');
-      await NotificationService.sendNotification(
-          'user_top', 'حذف حدث', deleteBody,
-          route: 'الاحداث');
-
-      await loadEvents();
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('تم حذف الحدث بنجاح')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('خطأ في حذف الحدث: $e')));
-      }
-    }
-  }
-
-  void _clearForm() {
-    _titleController.clear();
-    _descriptionController.clear();
-    _locationController.clear();
-    _amountController.clear();
-    _deleteReasonController.clear();
-    _selectedTime = null;
-    _isPowerCut = false;
-    if (mounted) setState(() {});
-  }
-
-  void _editEvent(Event event) {
-    _titleController.text = event.title;
-    _descriptionController.text = event.description;
-    _locationController.text = event.location;
-    _amountController.text = event.amount.toString();
-    _selectedTime = TimeOfDay.fromDateTime(event.date);
-    _isPowerCut = event.powerCut;
-    showDialog(
-        context: context, builder: (_) => _buildEventFormDialog(event: event));
-  }
-
-  Widget _buildEventFormDialog({Event? event}) {
-    const Color primaryBlue = Color(0xFF0D47A1);
-    return StatefulBuilder(
-      builder: (context, setDialogState) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
-          decoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.03),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.r),
-              topRight: Radius.circular(20.r),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                  event == null
-                      ? Icons.add_circle_outline
-                      : Icons.edit_calendar,
-                  color: primaryBlue,
-                  size: 22.sp),
-              SizedBox(width: 10.w),
-              Text(
-                event == null ? 'إضافة حدث جديد' : 'تعديل بيانات الحدث',
-                style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold,
-                    fontSize: 14.sp,
-                    color: const Color(0xFF0F172A)),
-              ),
-            ],
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildFormField(_titleController, 'عنوان الحدث'),
-              SizedBox(height: 16.h),
-              _buildFormField(_descriptionController, 'وصف تفصيلي (اختياري)',
-                  maxLines: 3),
-              SizedBox(height: 16.h),
-              _buildFormField(_locationController, 'مكان وقوع الحدث'),
-              SizedBox(height: 16.h),
-              _buildSwitchTile('نوع الحدث: انقطاع تغذية كهربائية', _isPowerCut,
-                  (value) {
-                setDialogState(() {
-                  _isPowerCut = value;
-                  if (!value) _amountController.clear();
-                });
-              }),
-              if (_isPowerCut) ...[
-                SizedBox(height: 16.h),
-                _buildFormField(
-                    _amountController, 'كمية الحمل المنقطع (ميغاواط)',
-                    keyboardType: TextInputType.number),
-              ],
-              SizedBox(height: 16.h),
-              _buildTimePickerTile(setDialogState),
-            ],
-          ),
-        ),
-        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('تجاهل',
-                  style: TextStyle(
-                      fontFamily: Appfontstring.ChangaBold,
-                      fontSize: 12.sp,
-                      color: const Color(0xFF64748B)))),
-          ElevatedButton(
-            onPressed: () async {
-              if (event == null) {
-                await _addEvent();
-              } else {
-                await _updateEvent(event);
-              }
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBlue,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r))),
-            child: Text(event == null ? 'إضافة الآن' : 'تحديث البيانات',
-                style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormField(TextEditingController controller, String label,
-      {int maxLines = 1, TextInputType? keyboardType}) {
-    return Directionality(
-      textDirection: ui.TextDirection.rtl,
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        style: TextStyle(
-            color: const Color(0xFF0F172A),
-            fontSize: 12.sp,
-            fontFamily: Appfontstring.ChangaLight),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-              fontFamily: Appfontstring.ChangaLight,
-              fontSize: 10.sp,
-              color: const Color(0xFF64748B)),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide:
-                  const BorderSide(color: Color(0xFF0D47A1), width: 1.5)),
-          filled: true,
-          fillColor: const Color(0xFFF8FAFC),
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchTile(
-      String title, bool value, ValueChanged<bool> onChanged) {
-    return Directionality(
-        textDirection: ui.TextDirection.rtl,
-        child: Container(
-            decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(5.r)),
-            child: SwitchListTile(
-              title: Text(title,
-                  style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp)),
-              value: value,
-              onChanged: onChanged,
-              activeColor: Colors.blue,
-            )));
-  }
-
-  Widget _buildTimePickerTile(StateSetter setDialogState) {
-    return GestureDetector(
-        onTap: () async {
-          final TimeOfDay? picked = await showTimePicker(
-            context: context,
-            initialTime: _selectedTime ?? TimeOfDay.now(),
-            builder: (context, child) => Theme(
-                data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(primary: Colors.purple)),
-                child: child!),
-          );
-          if (picked != null) setDialogState(() => _selectedTime = picked);
-        },
-        child: Directionality(
-          textDirection: ui.TextDirection.rtl,
-          child: Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(5.r),
-                border: Border.all(color: Colors.purple.withOpacity(0.2))),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, size: 16.sp, color: Colors.purple),
-                SizedBox(width: 6.w),
-                Text(
-                    _selectedTime == null
-                        ? 'اختر الوقت'
-                        : _selectedTime!.format(context),
-                    style: TextStyle(
-                        fontFamily: Appfontstring.ChangaLight,
-                        fontSize: 11.sp,
-                        color: Colors.purple[700])),
-              ],
-            ),
-          ),
-        ));
-  }
+  final EventsController controller = Get.put(EventsController());
 
   @override
   Widget build(BuildContext context) {
@@ -516,7 +33,7 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
           child: FloatingActionButton(
             heroTag: 'events_add_fab',
             onPressed: () {
-              _clearForm();
+              controller.clearForm();
               showDialog(
                   context: context, builder: (_) => _buildEventFormDialog());
             },
@@ -591,45 +108,45 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                         ],
                       )),
                   Expanded(
-                    child: _isLoading
-                        ? Center(
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return Center(
                             child: CircularProgressIndicator(
                                 color: const Color(0xFF03DAC6),
-                                strokeWidth: 2.w))
-                        : RefreshIndicator(
-                            color: const Color(0xFF03DAC6),
-                            backgroundColor: Colors.white,
-                            onRefresh: loadEvents,
-                            child: _events.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.event_available,
-                                            size: (isTablet ? 40 : 32).sp,
+                                strokeWidth: 2.w));
+                      }
+                      return RefreshIndicator(
+                        color: const Color(0xFF03DAC6),
+                        backgroundColor: Colors.white,
+                        onRefresh: controller.loadEvents,
+                        child: controller.events.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.event_available,
+                                        size: (isTablet ? 40 : 32).sp,
+                                        color: Colors.white.withOpacity(0.2)),
+                                    SizedBox(height: 8.h),
+                                    Text('لا يوجد أحداث حالياً',
+                                        style: TextStyle(
+                                            fontFamily:
+                                                Appfontstring.ChangaLight,
+                                            fontSize: (isTablet ? 14 : 12).sp,
                                             color:
-                                                Colors.white.withOpacity(0.2)),
-                                        SizedBox(height: 8.h),
-                                        Text('لا يوجد أحداث حالياً',
-                                            style: TextStyle(
-                                                fontFamily:
-                                                    Appfontstring.ChangaLight,
-                                                fontSize:
-                                                    (isTablet ? 14 : 12).sp,
-                                                color: Colors.white
-                                                    .withOpacity(0.5))),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    padding: EdgeInsets.all(8.w),
-                                    itemCount: _events.length,
-                                    itemBuilder: (context, index) =>
-                                        _buildEventCard(_events[index],
-                                            isTablet, isLargeScreen),
-                                  ),
-                          ),
+                                                Colors.white.withOpacity(0.5))),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.all(8.w),
+                                itemCount: controller.events.length,
+                                itemBuilder: (context, index) =>
+                                    _buildEventCard(controller.events[index],
+                                        isTablet, isLargeScreen),
+                              ),
+                      );
+                    }),
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -769,8 +286,13 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                               borderRadius: BorderRadius.circular(12.r)),
                           itemBuilder: (context) => [
                             PopupMenuItem(
-                              onTap: () =>
-                                  Future.microtask(() => _editEvent(event)),
+                              onTap: () {
+                                controller.editEvent(event);
+                                Future.microtask(() => showDialog(
+                                    context: context,
+                                    builder: (_) =>
+                                        _buildEventFormDialog(event: event)));
+                              },
                               child: Row(children: [
                                 const Icon(Icons.edit_outlined,
                                     color: primaryBlue, size: 16),
@@ -783,7 +305,7 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                             ),
                             PopupMenuItem(
                               onTap: () =>
-                                  Future.microtask(() => _deleteEvent(event)),
+                                  Future.microtask(() => _confirmDelete(event)),
                               child: Row(children: [
                                 const Icon(Icons.delete_outline,
                                     color: Colors.redAccent, size: 16),
@@ -798,53 +320,99 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
                         ),
                       ],
                     ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today,
+                            size: 10.sp, color: Colors.black38),
+                        SizedBox(width: 4.w),
+                        Text(
+                          DateFormat('MMM d, yyyy').format(event.date),
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontSize: 9.sp,
+                            color: Colors.black38,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Icon(Icons.access_time,
+                            size: 10.sp, color: Colors.blueGrey),
+                        SizedBox(width: 4.w),
+                        Text(
+                          DateFormat('HH:mm').format(event.date),
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontSize: 9.sp,
+                            color: Colors.blueGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (event.location.isNotEmpty) ...[
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined,
+                              size: 11.sp, color: Colors.black45),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: Text(
+                              event.location,
+                              style: TextStyle(
+                                fontFamily: Appfontstring.ChangaLight,
+                                fontSize: 10.sp,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     if (event.description.isNotEmpty) ...[
-                      SizedBox(height: 4.h),
+                      SizedBox(height: 8.h),
                       Text(
                         event.description,
                         style: TextStyle(
                           fontFamily: Appfontstring.ChangaLight,
                           fontSize: 10.sp,
-                          color: const Color(0xFF64748B),
+                          color: Colors.black87,
                           height: 1.4,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const Spacer(),
-                    SizedBox(height: 12.h),
-                    Row(
-                      children: [
-                        _buildCleanChip(
-                            Icons.calendar_month_outlined,
-                            DateFormat('yyyy/MM/dd').format(event.date),
-                            const Color(0xFF64748B)),
-                        SizedBox(width: 12.w),
-                        _buildCleanChip(
-                            Icons.schedule,
-                            DateFormat('HH:mm').format(event.date),
-                            const Color(0xFF64748B)),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildCleanChip(
-                              Icons.location_on_outlined,
-                              event.location.isNotEmpty
-                                  ? event.location
-                                  : 'موقع غير محدد',
-                              const Color(0xFF0F172A)),
+                    if (event.powerCut) ...[
+                      SizedBox(height: 10.h),
+                      Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
-                        if (event.powerCut && event.amount > 0) ...[
-                          SizedBox(width: 10.w),
-                          _buildCleanChip(Icons.electric_bolt,
-                              '${event.amount} ميغاواط', alertOrange),
-                        ],
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'إجمالي الحمل المفصول:',
+                              style: TextStyle(
+                                fontFamily: Appfontstring.ChangaLight,
+                                fontSize: 9.sp,
+                                color: Colors.orange[800],
+                              ),
+                            ),
+                            Text(
+                              '${event.amount} م.و',
+                              style: TextStyle(
+                                fontFamily: Appfontstring.ChangaBold,
+                                fontSize: 11.sp,
+                                color: Colors.orange[800],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -855,21 +423,265 @@ ${_isPowerCut ? 'انقطاع التغذية : يوجد\nالمقدار : $amoun
     );
   }
 
-  Widget _buildCleanChip(IconData icon, String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12.sp, color: color.withOpacity(0.6)),
-        SizedBox(width: 5.w),
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: Appfontstring.ChangaLight,
-            fontSize: 9.sp,
-            color: color,
+  Future<void> _confirmDelete(Event event) async {
+    final String? deleteReason = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: Row(
+          children: [
+            Icon(Icons.report_problem_outlined,
+                color: Colors.redAccent, size: 22.sp),
+            SizedBox(width: 12.w),
+            Text('تأكيد حذف الحدث',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaBold,
+                    fontSize: 13.sp,
+                    color: Colors.redAccent)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'هل أنت متأكد من رغبتك في حذف: "${event.title}"؟ لا يمكن التراجع عن هذه الخطوة.',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontSize: 11.sp,
+                    color: const Color(0xFF475569)),
+                textAlign: TextAlign.right),
+            SizedBox(height: 20.h),
+            _buildFormField(
+                controller.deleteReasonController, 'سبب الحذف (اختياري)'),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('إلغاء',
+                  style: TextStyle(
+                      fontFamily: Appfontstring.ChangaBold,
+                      fontSize: 12.sp,
+                      color: const Color(0xFF64748B)))),
+          ElevatedButton(
+            onPressed: () {
+              final reason = controller.deleteReasonController.text.trim();
+              Navigator.pop(context, reason);
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r))),
+            child: Text('حذف الآن',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
           ),
+        ],
+      ),
+    );
+
+    if (deleteReason != null) {
+      await controller.deleteEvent(event.id, event.title, deleteReason);
+    }
+  }
+
+  Widget _buildEventFormDialog({Event? event}) {
+    const Color primaryBlue = Color(0xFF0D47A1);
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+      titlePadding: EdgeInsets.zero,
+      title: Container(
+        padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: primaryBlue.withOpacity(0.03),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(event == null ? Icons.add_circle_outline : Icons.edit_calendar,
+                color: primaryBlue, size: 22.sp),
+            SizedBox(width: 10.w),
+            Text(
+              event == null ? 'إضافة حدث جديد' : 'تعديل بيانات الحدث',
+              style: TextStyle(
+                  fontFamily: Appfontstring.ChangaBold,
+                  fontSize: 14.sp,
+                  color: const Color(0xFF0F172A)),
+            ),
+          ],
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildFormField(controller.titleController, 'عنوان الحدث'),
+            SizedBox(height: 16.h),
+            _buildFormField(
+                controller.descriptionController, 'وصف تفصيلي (اختياري)',
+                maxLines: 3),
+            SizedBox(height: 16.h),
+            _buildFormField(controller.locationController, 'مكان وقوع الحدث'),
+            SizedBox(height: 16.h),
+            Obx(() => _buildSwitchTile('نوع الحدث: انقطاع تغذية كهربائية',
+                    controller.isPowerCut.value, (value) {
+                  controller.isPowerCut.value = value;
+                  if (!value) controller.amountController.clear();
+                })),
+            Obx(() {
+              if (controller.isPowerCut.value) {
+                return Column(
+                  children: [
+                    SizedBox(height: 16.h),
+                    _buildFormField(controller.amountController,
+                        'كمية الحمل المنقطع (ميغاواط)',
+                        keyboardType: TextInputType.number),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+            SizedBox(height: 16.h),
+            _buildTimePickerTile(),
+          ],
+        ),
+      ),
+      actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('تجاهل',
+                style: TextStyle(
+                    fontFamily: Appfontstring.ChangaBold,
+                    fontSize: 12.sp,
+                    color: const Color(0xFF64748B)))),
+        ElevatedButton(
+          onPressed: () async {
+            if (event == null) {
+              await controller.addEvent();
+            } else {
+              await controller.updateEvent(event);
+            }
+            if (mounted) Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r))),
+          child: Text(event == null ? 'إضافة الآن' : 'تحديث البيانات',
+              style: TextStyle(
+                  fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
         ),
       ],
     );
+  }
+
+  Widget _buildFormField(TextEditingController controller, String label,
+      {int maxLines = 1, TextInputType? keyboardType}) {
+    return Directionality(
+      textDirection: ui.TextDirection.rtl,
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: TextStyle(
+            color: const Color(0xFF0F172A),
+            fontSize: 12.sp,
+            fontFamily: Appfontstring.ChangaLight),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+              fontFamily: Appfontstring.ChangaLight,
+              fontSize: 10.sp,
+              color: const Color(0xFF64748B)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide:
+                  const BorderSide(color: Color(0xFF0D47A1), width: 1.5)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchTile(
+      String title, bool value, ValueChanged<bool> onChanged) {
+    return Directionality(
+        textDirection: ui.TextDirection.rtl,
+        child: Container(
+            decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(5.r)),
+            child: SwitchListTile(
+              title: Text(title,
+                  style: TextStyle(
+                      fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp)),
+              value: value,
+              onChanged: onChanged,
+              activeColor: Colors.blue,
+            )));
+  }
+
+  Widget _buildTimePickerTile() {
+    return GestureDetector(
+        onTap: () async {
+          final TimeOfDay? picked = await showTimePicker(
+            context: context,
+            initialTime: controller.selectedTime.value ?? TimeOfDay.now(),
+            builder: (context, child) => Theme(
+                data: Theme.of(context).copyWith(
+                    colorScheme:
+                        const ColorScheme.light(primary: Colors.purple)),
+                child: child!),
+          );
+          if (picked != null) controller.selectedTime.value = picked;
+        },
+        child: Directionality(
+          textDirection: ui.TextDirection.rtl,
+          child: Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(5.r),
+                border: Border.all(color: Colors.purple.withOpacity(0.2))),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, size: 16.sp, color: Colors.purple),
+                SizedBox(width: 6.w),
+                Obx(() => Text(
+                    controller.selectedTime.value == null
+                        ? 'اختر الوقت'
+                        : controller.selectedTime.value!.format(context),
+                    style: TextStyle(
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 11.sp,
+                        color: Colors.purple[700]))),
+              ],
+            ),
+          ),
+        ));
   }
 }
