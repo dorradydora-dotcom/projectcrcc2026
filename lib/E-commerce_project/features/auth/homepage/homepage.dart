@@ -275,17 +275,20 @@ class __HomePageContentState extends State<_HomePageContent>
   Widget _buildBottomNavigationBar(double height) {
     return Obx(() => Directionality(
           textDirection: TextDirection.rtl,
-          child: CurvedNavigationBar(
-            backgroundColor: const Color(0xFF081A2A),
-            color: Appcolors.primaryColor,
-            buttonBackgroundColor: const Color(0xFF081A2A),
-            height: height,
-            animationCurve: Curves.easeInOutCubic,
-            index: _controller.selectedPage.value,
-            items: _buildNavigationItems(),
-            onTap: _controller.updateSelectedPage,
-            letIndexChange: (_) => true,
-            animationDuration: const Duration(milliseconds: 350),
+          child: SafeArea(
+            top: false,
+            child: CurvedNavigationBar(
+              backgroundColor: const Color(0xFF081A2A),
+              color: Appcolors.primaryColor,
+              buttonBackgroundColor: const Color(0xFF081A2A),
+              height: height,
+              animationCurve: Curves.easeInOutCubic,
+              index: _controller.selectedPage.value,
+              items: _buildNavigationItems(),
+              onTap: _controller.updateSelectedPage,
+              letIndexChange: (_) => true,
+              animationDuration: const Duration(milliseconds: 350),
+            ),
           ),
         ));
   }

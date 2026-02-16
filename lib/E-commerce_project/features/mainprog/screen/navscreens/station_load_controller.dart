@@ -123,41 +123,62 @@ class StationLoadController extends GetxController {
     if (payload.newRecord.isEmpty) return;
 
     try {
-      final updatedStation = StationLoad.fromJson(payload.newRecord);
-      final stationName = updatedStation.stationName;
+      final newRecord = payload.newRecord;
+      final stationName = newRecord['station_name'] as String?;
+
+      if (stationName == null) return;
 
       // Update in stationLoads list
       final index =
           stationLoads.indexWhere((s) => s.stationName == stationName);
+
       if (index != -1) {
-        // Only update if data is different to avoid unnecessary UI rebuilds
-        if (stationLoads[index].load != updatedStation.load ||
-            stationLoads[index].isPositive != updatedStation.isPositive ||
-            stationLoads[index].lastUpdated != updatedStation.lastUpdated) {
-          stationLoads[index] = updatedStation;
-          // Sync directions map
-          directions[stationName] = updatedStation.isPositive;
+        final currentStation = stationLoads[index];
 
-          // Sync last update time from server if available
-          if (updatedStation.lastUpdated != null) {
-            lastUpdateTimes[stationName] = updatedStation.lastUpdated!;
-          } else {
-            // Fallback to current time if we just received a live update
-            lastUpdateTimes[stationName] = DateTime.now();
-          }
+        // Merge with existing data to handle potential partial updates
+        // Note: Realtime usually sends full row for UPDATE, but good to be safe
+        final updatedStation = StationLoad(
+          stationName: stationName,
+          load: (newRecord['station_load'] as num?)?.toDouble() ??
+              currentStation.load,
+          baseLoad: (newRecord['station_load'] as num?)?.toDouble() ??
+              (newRecord['station_load'] as num?)
+                  ?.toDouble() ?? // Fallback to new load if station_load missing
+              currentStation.baseLoad,
+          minVariation: (newRecord['min_variation'] as num?)?.toDouble() ??
+              currentStation.minVariation,
+          maxVariation: (newRecord['max_variation'] as num?)?.toDouble() ??
+              currentStation.maxVariation,
+          isPositive:
+              (newRecord['station_sign'] as bool?) ?? currentStation.isPositive,
+          lastUpdated: newRecord['updated_at'] != null
+              ? DateTime.tryParse(newRecord['updated_at'].toString())
+              : DateTime.now(), // Fallback to now if null/missing
+        );
 
-          stationLoads.refresh();
-        }
+        stationLoads[index] = updatedStation;
+
+        // Sync directions map
+        directions[stationName] = updatedStation.isPositive;
+
+        // Sync last update time
+        lastUpdateTimes[stationName] = updatedStation.lastUpdated!;
+
+        stationLoads.refresh();
       } else {
         // New station added?
-        stationLoads.add(updatedStation);
-        directions[stationName] = updatedStation.isPositive;
-        if (updatedStation.lastUpdated != null) {
-          lastUpdateTimes[stationName] = updatedStation.lastUpdated!;
+        try {
+          final newStation = StationLoad.fromJson(newRecord);
+          stationLoads.add(newStation);
+          directions[stationName] = newStation.isPositive;
+          lastUpdateTimes[stationName] =
+              newStation.lastUpdated ?? DateTime.now();
+        } catch (e) {
+          debugPrint('Error parsing new station payload: $e');
         }
       }
     } catch (e) {
-      debugPrint('Error parsing realtime payload: $e');
+      debugPrint('Error handling realtime payload: $e');
     }
   }
 
