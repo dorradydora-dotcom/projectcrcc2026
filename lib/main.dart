@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:device_preview/device_preview.dart';
 import 'dart:async';
 import 'package:amiraly/E-commerce_project/features/auth/login/loginscreen.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
@@ -41,7 +42,12 @@ void main() async {
     await Firebase.initializeApp();
 
     // 3. تشغيل التطبيق فوراً
-    runApp(const MyApp());
+    runApp(
+      DevicePreview(
+        enabled: !kReleaseMode,
+        builder: (context) => const MyApp(),
+      ),
+    );
 
     // 4. تهيئة WebView في الخلفية (للتطوير فقط)
     if (!kReleaseMode) {
@@ -164,6 +170,9 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return GetMaterialApp(
+          useInheritedMediaQuery: true, // 🔧 ضروري لـ DevicePreview
+          locale: DevicePreview.locale(context), // 🔧 ضروري لـ DevicePreview
+          builder: DevicePreview.appBuilder, // 🔧 ضروري لـ DevicePreview
           debugShowCheckedModeBanner: false,
           initialBinding: AppBindings(),
           title: 'CRCC App',
