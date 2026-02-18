@@ -94,7 +94,7 @@ class _AreanavState extends State<Areanav> {
 
   SliverAppBar buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 0.39 * ScreenUtil().screenHeight,
+      expandedHeight: 340.h, // Fixed responsive height
       floating: false,
       pinned: true,
       elevation: 0,

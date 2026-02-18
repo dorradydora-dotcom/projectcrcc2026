@@ -1,6 +1,7 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/catogriesScreens/projects_controller.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:get/get.dart';
@@ -47,7 +48,7 @@ class ProjectsScreen extends StatelessWidget {
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.w),
                       child: _buildHeader(controller),
                     ),
                   ),
@@ -55,7 +56,7 @@ class ProjectsScreen extends StatelessWidget {
                     child: _buildDashboard(controller),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
@@ -96,11 +97,11 @@ class ProjectsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'متابعة المشروعات',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 22.sp,
             fontWeight: FontWeight.bold,
             fontFamily: Appfontstring.ChangaLight,
           ),
@@ -109,7 +110,7 @@ class ProjectsScreen extends StatelessWidget {
           'إدارة وتتبع مشروعات الشبكة الكهربائية (${controller.projects.length})',
           style: TextStyle(
             color: Colors.white.withOpacity(0.7),
-            fontSize: 12,
+            fontSize: 12.sp,
             fontFamily: Appfontstring.ChangaLight,
           ),
         ),
@@ -128,11 +129,11 @@ class ProjectsScreen extends StatelessWidget {
             controller.projects.length;
 
     return Container(
-      height: 90,
-      margin: const EdgeInsets.only(bottom: 11),
+      height: 90.h,
+      margin: EdgeInsets.only(bottom: 11.h),
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
         children: [
           _buildStatCard(
               'إجمالي الميزانية',
@@ -162,30 +163,30 @@ class ProjectsScreen extends StatelessWidget {
   Widget _buildStatCard(
       String title, String value, IconData icon, Color color) {
     return Container(
-      width: 117,
-      margin: const EdgeInsetsDirectional.only(end: 9),
-      padding: const EdgeInsets.all(11),
+      width: 117.w,
+      margin: EdgeInsetsDirectional.only(end: 9.w),
+      padding: EdgeInsets.all(11.w),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 5),
+          Icon(icon, color: color, size: 18.sp),
+          SizedBox(height: 5.h),
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: Appfontstring.ChangaLight)),
           Text(title,
               style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
-                  fontSize: 10,
+                  fontSize: 10.sp,
                   fontFamily: Appfontstring.ChangaLight)),
         ],
       ),
@@ -209,19 +210,19 @@ class ProjectsScreen extends StatelessWidget {
     final cardColor = pastelColors[projectIndex % pastelColors.length];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 11),
+      margin: EdgeInsets.only(bottom: 11.h),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
         child: InkWell(
           onTap: () =>
               _showProjectDialog(context, controller, project: project),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -234,29 +235,29 @@ class ProjectsScreen extends StatelessWidget {
                         children: [
                           Text(
                             project.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.ChangaLight),
                           ),
                           if (project.description.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
+                              padding: EdgeInsets.only(top: 2.h),
                               child: Text(
                                 project.description,
                                 style: TextStyle(
                                     color: Colors.white.withOpacity(0.7),
-                                    fontSize: 11,
+                                    fontSize: 11.sp,
                                     fontFamily: Appfontstring.ChangaLight),
                               ),
                             ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2.h),
                           Text(
                             'المحطة: ${project.stationName} | الجهد: ${project.voltageLevel}',
                             style: TextStyle(
                                 color: Colors.blue.shade300,
-                                fontSize: 11,
+                                fontSize: 11.sp,
                                 fontFamily: Appfontstring.ChangaLight),
                           ),
                         ],
@@ -267,26 +268,25 @@ class ProjectsScreen extends StatelessWidget {
                 ),
                 if (project.notes.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 12.0),
+                    padding: EdgeInsets.only(top: 12.h),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
                         color: Colors.yellow.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                         border:
                             Border.all(color: Colors.yellow.withOpacity(0.2)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.note,
-                              color: Colors.yellow, size: 16),
-                          const SizedBox(width: 8),
+                          Icon(Icons.note, color: Colors.yellow, size: 16.sp),
+                          SizedBox(width: 8.w),
                           Expanded(
                             child: Text(
                               'ملاحظات: ${project.notes}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 10,
+                                  fontSize: 10.sp,
                                   fontFamily: Appfontstring.ChangaLight),
                             ),
                           ),
@@ -294,24 +294,24 @@ class ProjectsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('التقدم الحالي',
                         style: TextStyle(
                             color: Colors.white.withOpacity(0.6),
-                            fontSize: 10,
+                            fontSize: 10.sp,
                             fontFamily: Appfontstring.ChangaLight)),
                     Text('${project.progress.toInt()}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
-                            fontSize: 11,
+                            fontSize: 11.sp,
                             fontFamily: Appfontstring.ChangaLight)),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 LinearProgressIndicator(
                   value: project.progress / 100,
                   backgroundColor: Colors.white.withOpacity(0.1),
@@ -394,17 +394,17 @@ class ProjectsScreen extends StatelessWidget {
   Widget _buildProjectDetail(IconData icon, String label, String value) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white54, size: 18),
-        const SizedBox(height: 4),
+        Icon(icon, color: Colors.white54, size: 18.sp),
+        SizedBox(height: 4.h),
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white38,
-                fontSize: 8,
+                fontSize: 8.sp,
                 fontFamily: Appfontstring.ChangaLight)),
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white,
-                fontSize: 9,
+                fontSize: 9.sp,
                 fontWeight: FontWeight.w500,
                 fontFamily: Appfontstring.ChangaLight)),
       ],
@@ -417,15 +417,15 @@ class ProjectsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white38,
-                fontSize: 8,
+                fontSize: 8.sp,
                 fontFamily: Appfontstring.ChangaLight)),
         Text(
           '${formatter.format(amount)} ج.م',
           style: TextStyle(
             color: highlight ? Colors.orange : Colors.white,
-            fontSize: 11,
+            fontSize: 11.sp,
             fontWeight: FontWeight.bold,
             fontFamily: Appfontstring.ChangaLight,
           ),
@@ -439,22 +439,22 @@ class ProjectsScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_outline, color: Colors.red, size: 80),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.lock_outline, color: Colors.red, size: 80.sp),
+          SizedBox(height: 16.h),
+          Text(
             'دخول غير مصرح',
             style: TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
                 fontFamily: Appfontstring.ChangaLight),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'هذا القسم مخصص للمستخدمين المصرح لهم فقط',
             style: TextStyle(
                 color: Colors.white.withOpacity(0.6),
-                fontSize: 13,
+                fontSize: 13.sp,
                 fontFamily: Appfontstring.ChangaLight),
           ),
         ],
@@ -494,16 +494,16 @@ class ProjectsScreen extends StatelessWidget {
         child: AlertDialog(
           backgroundColor: const Color(0xFF1E293B),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
                     project == null ? 'إضافة مشروع جديد' : 'تعديل مشروع',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         fontFamily: Appfontstring.ChangaLight)),
               ),
               if (project != null)

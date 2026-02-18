@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/loadnav_controller.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/station_load_controller.dart';
@@ -133,24 +132,38 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                             width: 1,
                           ),
                         ),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.zero,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 2.2,
-                            crossAxisSpacing: 4.w,
-                            mainAxisSpacing: 4.h,
-                          ),
-                          itemCount: controller.stationLoads.length,
-                          itemBuilder: (context, index) {
-                            final station = controller.stationLoads[index];
-
-                            return StationCard(
-                              index: index,
-                              station: station,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;
+                            final crossCount = w < 360
+                                ? 2
+                                : w > 600
+                                    ? 4
+                                    : 3;
+                            final aspectRatio = w < 360
+                                ? 2.5
+                                : w > 600
+                                    ? 2.0
+                                    : 2.2;
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.zero,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossCount,
+                                childAspectRatio: aspectRatio,
+                                crossAxisSpacing: 4.w,
+                                mainAxisSpacing: 4.h,
+                              ),
+                              itemCount: controller.stationLoads.length,
+                              itemBuilder: (context, index) {
+                                final station = controller.stationLoads[index];
+                                return StationCard(
+                                  index: index,
+                                  station: station,
+                                );
+                              },
                             );
                           },
                         ),
@@ -235,8 +248,8 @@ class LoadDisplayWidget extends StatelessWidget {
     final controller = Get.find<LoadnavController>();
 
     return Container(
-      height: 115.h,
-      margin: EdgeInsets.only(left: 40.w, right: 40.w, top: 1.h, bottom: 8.h),
+      height: 135.h,
+      margin: EdgeInsets.only(left: 8.w, right: 8.w, top: 1.h, bottom: 8.h),
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -258,8 +271,7 @@ class LoadDisplayWidget extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize:
-            min(4, 4).toDouble() > 0 ? MainAxisSize.min : MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
@@ -316,29 +328,31 @@ class LoadDisplayWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        SizedBox(
-                          width: 110.w,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              (value >= 0 ? '+' : '') +
-                                  value.toStringAsFixed(0),
-                              style: TextStyle(
-                                color:
-                                    value < 0 ? Colors.red : Colors.redAccent,
-                                fontSize: 38.sp,
-                                fontFamily: Appfontstring.digital,
-                                shadows: [
-                                  Shadow(
-                                    color: (value < 0
-                                            ? Colors.red
-                                            : Colors.redAccent)
-                                        .withOpacity(0.5),
-                                    blurRadius: 15,
-                                  ),
-                                ],
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                (value >= 0 ? '+' : '') +
+                                    value.toStringAsFixed(0),
+                                style: TextStyle(
+                                  color:
+                                      value < 0 ? Colors.red : Colors.redAccent,
+                                  fontSize: 38.sp,
+                                  fontFamily: Appfontstring.digital,
+                                  shadows: [
+                                    Shadow(
+                                      color: (value < 0
+                                              ? Colors.red
+                                              : Colors.redAccent)
+                                          .withOpacity(0.5),
+                                      blurRadius: 15,
+                                    ),
+                                  ],
+                                ),
+                                textDirection: TextDirection.rtl,
                               ),
-                              textDirection: TextDirection.rtl,
                             ),
                           ),
                         ),

@@ -6,6 +6,7 @@ import 'package:amiraly/main.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -61,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: PopScope(
         canPop: false,
         child: Stack(
@@ -83,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen>
       key: _formKey,
       child: LayoutBuilder(builder: (context, constraints) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppPadding.loginpadding),
+          padding: EdgeInsets.all(24.w),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: constraints.maxHeight,
@@ -94,18 +95,18 @@ class _LoginScreenState extends State<LoginScreen>
               children: [
                 SizedBox(height: constraints.maxHeight * 0.05),
                 _buildHeaderText(),
-                const SizedBox(height: AppPadding.loginspacing * 0.3),
+                SizedBox(height: 5.h),
                 _buildDivider(),
-                const SizedBox(height: AppPadding.loginspacing * 0.5),
+                SizedBox(height: 8.h),
                 _buildCompanyTexts(),
                 SizedBox(height: constraints.maxHeight * 0.01),
-                const SizedBox(height: AppPadding.loginspacing * 16),
+                SizedBox(height: 256.h),
                 _buildEmailField(),
-                const SizedBox(height: AppPadding.loginspacing),
+                SizedBox(height: 16.h),
                 _buildPasswordField(),
-                const SizedBox(height: AppPadding.loginspacing * 2),
+                SizedBox(height: 32.h),
                 _buildLoginButton(constraints),
-                const SizedBox(height: AppPadding.loginspacing * 12),
+                SizedBox(height: 192.h),
               ],
             ),
           ),
@@ -122,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen>
         text: 'تسـجيل الدخـول',
         color: C.white,
         fontWeight: FF.B,
-        fontSize: 18,
+        fontSize: 18.sp,
         fontFamily: Appfontstring.ChangaLight,
       ),
     );
@@ -130,8 +131,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildDivider() {
     return Container(
-      height: 1,
-      width: AppSizes.screenWidth(context) * 0.3,
+      height: 1.h,
+      width: 120.w,
       decoration: const BoxDecoration(color: C.white),
     );
   }
@@ -147,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen>
             text: 'برنامج التحكم الاقليمى للقاهرة الكبرى',
             color: C.pink,
             fontWeight: FF.B,
-            fontSize: 13,
+            fontSize: 13.sp,
             fontFamily: Appfontstring.ChangaLight,
           ),
         ),
@@ -158,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen>
             text: 'الشركة المصرية لنقل الكهرباء',
             color: C.red,
             fontWeight: FF.B,
-            fontSize: 10,
+            fontSize: 10.sp,
             fontFamily: Appfontstring.ChangaLight,
           ),
         ),
@@ -169,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen>
             text: 'مـركز التحكم الاقليمى',
             color: const Color.fromARGB(255, 243, 233, 150),
             fontWeight: FF.B,
-            fontSize: 10,
+            fontSize: 10.sp,
             fontFamily: Appfontstring.ChangaLight,
           ),
         ),
@@ -232,9 +233,9 @@ class _LoginScreenState extends State<LoginScreen>
             duration: const Duration(milliseconds: 800),
             delay: const Duration(milliseconds: 200),
             child: SizedBox(
-              width: AppSizes.screenWidth(context) * 0.5,
+              width: 180.w,
               child: LoginButton(
-                buttonHeight: AppSizes.screenWidth(context) * 0.08,
+                buttonHeight: 45.h,
                 isLoading: loginController.isLoading.value,
                 onPressed: () => loginController.loginAction(
                   loginController.email.text,
@@ -250,8 +251,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildDeveloperInfo() {
     return Positioned(
-      bottom: AppSizes.screenHeight(Get.context!) * 0.03,
-      left: AppSizes.screenWidth(Get.context!) * 0.05,
+      bottom: 24.h,
+      left: 20.w,
       child: FadeInLeft(
         duration: const Duration(milliseconds: 3000),
         child: Column(
@@ -266,36 +267,36 @@ class _LoginScreenState extends State<LoginScreen>
               color2: C.white,
               color3: C.red,
               color4: C.white,
-              fontSize1: 25,
-              fontSize2: 15,
-              fontSize3: 20,
-              fontSize4: 15,
+              fontSize1: 25.sp,
+              fontSize2: 15.sp,
+              fontSize3: 20.sp,
+              fontSize4: 15.sp,
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3.h),
             TextLine(
               text: 'د/محمود عصمت : وزير الكهرباء و الطاقة  المتجددة',
               color: Colors.cyan,
               fontFamily: Appfontstring.ChangaLight,
-              fontSize: 12,
+              fontSize: 12.sp,
               fontWeight: FF.B,
             ),
             TextLine(
               text: 'م/منى رزق :رئيـسة الشركة المصرية للنقل',
               color: const Color.fromARGB(255, 97, 205, 220),
               fontFamily: Appfontstring.ChangaLight,
-              fontSize: 10,
+              fontSize: 10.sp,
               fontWeight: FF.B,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text.rich(
-              const TextSpan(
+              TextSpan(
                 children: [
                   TextSpan(
                     text: 'برمجة و تصميم : ',
                     style: TextStyle(
                       fontFamily: Appfontstring.ChangaLight,
                       fontWeight: FontWeight.bold,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       color: C.orange,
                     ),
                   ),
@@ -304,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen>
                     style: TextStyle(
                       fontFamily: Appfontstring.ChangaLight,
                       fontWeight: FontWeight.bold,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       color: C.white,
                     ),
                   ),
@@ -320,17 +321,17 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildMinistryLogo() {
     return Positioned(
       bottom: 0,
-      right: 5,
+      right: 5.w,
       child: FadeInDown(
         duration: const Duration(milliseconds: 1200),
         delay: const Duration(milliseconds: 300),
         child: Container(
-          height: 30,
-          width: 40,
+          height: 30.h,
+          width: 40.w,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             border: Border.all(color: C.blue),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
           ),
           child: Opacity(
             opacity: 0.6,
@@ -338,8 +339,8 @@ class _LoginScreenState extends State<LoginScreen>
               AppimageString.minisrty,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
-              cacheHeight: 60,
-              cacheWidth: 80,
+              cacheHeight: (60 * 1.5).toInt(),
+              cacheWidth: (80 * 1.5).toInt(),
             ),
           ),
         ),
@@ -349,19 +350,19 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildAdditionalLogo1() {
     return Positioned(
-      bottom: 70,
-      right: 5,
+      bottom: 70.h,
+      right: 5.w,
       child: FadeInDown(
         duration: const Duration(milliseconds: 1600),
         delay: const Duration(milliseconds: 800),
         child: Container(
-          height: 30,
-          width: 40,
+          height: 30.h,
+          width: 40.w,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(10),
-              bottomRight: Radius.circular(10),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10.r),
+              bottomRight: Radius.circular(10.r),
             ),
           ),
           child: Opacity(
@@ -370,8 +371,8 @@ class _LoginScreenState extends State<LoginScreen>
               AppimageString.qq,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
-              cacheHeight: 60,
-              cacheWidth: 80,
+              cacheHeight: (60 * 1.5).toInt(),
+              cacheWidth: (80 * 1.5).toInt(),
             ),
           ),
         ),
@@ -381,18 +382,18 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildAdditionalLogo2() {
     return Positioned(
-      bottom: 35,
-      right: 5,
+      bottom: 35.h,
+      right: 5.w,
       child: FadeInDown(
         duration: const Duration(milliseconds: 1400),
         delay: const Duration(milliseconds: 700),
         child: Container(
-          height: 30,
-          width: 40,
+          height: 30.h,
+          width: 40.w,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             border: Border.all(color: C.red),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
           ),
           child: Opacity(
             opacity: 0.6,
@@ -400,8 +401,8 @@ class _LoginScreenState extends State<LoginScreen>
               AppimageString.aaa,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
-              cacheHeight: 60,
-              cacheWidth: 80,
+              cacheHeight: (60 * 1.5).toInt(),
+              cacheWidth: (80 * 1.5).toInt(),
             ),
           ),
         ),
@@ -663,59 +664,59 @@ class CustomTextFormFieldloginState extends State<CustomTextFormFieldlogin> {
       obscureText: _obscureText,
       validator: widget.valid,
       onFieldSubmitted: widget.onFieldSubmitted,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white, fontSize: 14.sp),
       decoration: InputDecoration(
-        prefixIcon: Icon(widget.icon, color: Colors.white70),
+        prefixIcon: Icon(widget.icon, color: Colors.white70, size: 24.sp),
         suffixIcon: widget.obscureText == true
             ? IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                   color: Colors.white70,
-                  size: 20,
+                  size: 20.sp,
                 ),
                 onPressed: toggleObscureText,
-                splashRadius: 20,
+                splashRadius: 20.r,
               )
             : null,
         alignLabelWithHint: false,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         floatingLabelAlignment: FloatingLabelAlignment.start,
         hintText: widget.hinttext,
-        hintStyle: const TextStyle(
-          color: Color.fromARGB(154, 255, 255, 255),
-          fontSize: 14,
+        hintStyle: TextStyle(
+          color: const Color.fromARGB(154, 255, 255, 255),
+          fontSize: 14.sp,
         ),
         labelText: widget.labelText,
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           color: Colors.white,
-          fontSize: 14,
+          fontSize: 14.sp,
           fontWeight: FontWeight.w500,
         ),
         filled: true,
         fillColor: Colors.black.withOpacity(0.2),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 20.w,
+          vertical: 16.h,
         ),
         border: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white54),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white54),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white, width: 1.5),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         errorBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.red),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
       ),
     );
@@ -745,11 +746,11 @@ class LoginButton extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.white.withOpacity(0.3),
-            blurRadius: 10,
-            spreadRadius: 1,
+            blurRadius: 10.r,
+            spreadRadius: 1.r,
           ),
         ],
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(30.r),
         gradient: const LinearGradient(
           colors: [
             Colors.white,
@@ -767,25 +768,25 @@ class LoginButton extends StatelessWidget {
           shadowColor: Colors.transparent,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(30.r),
           ),
           padding: EdgeInsets.zero,
         ),
         child: isLoading
             ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
+                width: 24.w,
+                height: 24.h,
+                child: const CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text(
+            : Text(
                 'تسجيل الدخول',
                 style: TextStyle(
                   color: Colors.black,
                   fontFamily: Appfontstring.ChangaLight,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),

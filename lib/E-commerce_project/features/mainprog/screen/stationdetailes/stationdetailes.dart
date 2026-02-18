@@ -2,6 +2,7 @@ import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favorites_controller.dart';
 import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:photo_view/photo_view.dart';
@@ -11,11 +12,13 @@ const kSecondaryColor = StationDetailsConstants.secondaryColor;
 const kTextColor = StationDetailsConstants.textColor;
 const kSubtitleColor = StationDetailsConstants.subtitleColor;
 const kBackgroundColor = StationDetailsConstants.backgroundColor;
-const kPadding = EdgeInsets.symmetric(
-    horizontal: StationDetailsConstants.horizontalPadding,
-    vertical: StationDetailsConstants.verticalPadding);
-const kCardBorderRadius =
-    BorderRadius.all(Radius.circular(StationDetailsConstants.borderRadius));
+
+// Removed const to allow ScreenUtil (which is runtime)
+EdgeInsets kPadding = EdgeInsets.symmetric(
+    horizontal: StationDetailsConstants.horizontalPadding.w,
+    vertical: StationDetailsConstants.verticalPadding.h);
+BorderRadius kCardBorderRadius =
+    BorderRadius.all(Radius.circular(StationDetailsConstants.borderRadius.r));
 
 class StationDetailsPage extends StatelessWidget {
   final StationDetialesModel station;
@@ -24,14 +27,15 @@ class StationDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    // ScreenUtil takes care of sizing, so we don't strictly need MediaQuery for height if we use .h
+    // But keeping size for proportional height if desired, or switching to .h
 
     return Scaffold(
         body: Directionality(
             textDirection: TextDirection.rtl,
             child: CustomScrollView(slivers: [
               SliverAppBar(
-                  expandedHeight: size.height * 0.1,
+                  expandedHeight: 80.h, // Responsive height
                   floating: true,
                   pinned: true,
                   snap: true,
@@ -40,7 +44,7 @@ class StationDetailsPage extends StatelessWidget {
                         station.name,
                         style: TextStyle(
                             fontFamily: Appfontstring.ChangaLight,
-                            fontSize: 20,
+                            fontSize: 16.sp, // Responsive font
                             fontWeight: FontWeight.w700,
                             color: Colors.black),
                       ),
@@ -57,29 +61,29 @@ class StationDetailsPage extends StatelessWidget {
               SliverToBoxAdapter(
                   child: Column(children: [
                 Container(
-                  margin: const EdgeInsets.all(12.0),
-                  child: _buildStationImage(size),
+                  margin: EdgeInsets.all(12.w),
+                  child: _buildStationImage(),
                 ),
                 // Info card
                 Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                    padding: const EdgeInsets.all(22.0),
+                    margin: EdgeInsets.symmetric(horizontal: 12.w),
+                    padding: EdgeInsets.all(22.w),
                     decoration: BoxDecoration(
                         color: Colors.white, borderRadius: kCardBorderRadius),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildStationHeader(),
-                          const SizedBox(height: 15),
+                          SizedBox(height: 15.h),
                           _buildInfoList(),
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20.h),
                           _buildFavoriteButton(),
                         ]))
               ]))
             ])));
   }
 
-  Widget _buildStationImage(Size size) {
+  Widget _buildStationImage() {
     return GestureDetector(
       onTap: () {
         Get.to(
@@ -93,14 +97,14 @@ class StationDetailsPage extends StatelessWidget {
       child: Hero(
         tag: 'station_${station.id}',
         child: Container(
-          height: size.height * 0.3, // Taller image for visual impact
+          height: 240.h, // Fixed responsive height instead of percentage
           decoration: BoxDecoration(
             borderRadius: kCardBorderRadius,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                blurRadius: 12.r,
+                offset: Offset(0, 6.h),
               ),
             ],
           ),
@@ -113,8 +117,8 @@ class StationDetailsPage extends StatelessWidget {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
                 color: Colors.grey[300],
-                child: const Center(
-                  child: Icon(Icons.error, color: Colors.red, size: 50),
+                child: Center(
+                  child: Icon(Icons.error, color: Colors.red, size: 50.sp),
                 ),
               ),
               loadingBuilder: (context, child, loadingProgress) {
@@ -144,7 +148,7 @@ class StationDetailsPage extends StatelessWidget {
               child: Text(
                 station.name,
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                   color: kTextColor,
                   fontFamily: Appfontstring.ChangaLight,
@@ -154,17 +158,16 @@ class StationDetailsPage extends StatelessWidget {
             ),
             if (station.isnew) ...[
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
                   color: Colors.green,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(15.r),
                 ),
-                child: const Text(
+                child: Text(
                   'محطة جديدة',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -172,12 +175,12 @@ class StationDetailsPage extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Container(
-          height: 2,
+          height: 2.h,
           decoration: BoxDecoration(
             color: kPrimaryColor,
-            borderRadius: BorderRadius.circular(1),
+            borderRadius: BorderRadius.circular(1.r),
           ),
         ),
       ],
@@ -200,19 +203,19 @@ class StationDetailsPage extends StatelessWidget {
 
   Widget _buildInfoRow(IconData icon, String label, dynamic value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: 8.0.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
               color: kPrimaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10.r),
             ),
-            child: Icon(icon, color: kPrimaryColor, size: 20),
+            child: Icon(icon, color: kPrimaryColor, size: 20.sp),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -220,18 +223,18 @@ class StationDetailsPage extends StatelessWidget {
                 Text(
                   '$label:',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
                     color: kSubtitleColor,
                     fontFamily: Appfontstring.ChangaLight,
                   ),
                   textAlign: TextAlign.right,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2.h),
                 Text(
                   value.toString(),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                     color: kTextColor,
                     fontFamily: Appfontstring.ChangaLight,
@@ -262,18 +265,18 @@ class StationDetailsPage extends StatelessWidget {
                   : Iconsax.heart,
               key: ValueKey(favoritesController.isFavorite(station)),
               color: Colors.white,
-              size: 22,
+              size: 22.sp,
             ),
           ),
           label: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: EdgeInsets.symmetric(vertical: 5.h),
             child: Text(
               favoritesController.isFavorite(station)
                   ? 'إزالة من المفضلة'
                   : 'إضافة إلى المفضلة',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: 16,
+                fontSize: 16.sp,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
@@ -282,7 +285,7 @@ class StationDetailsPage extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: kSecondaryColor,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: EdgeInsets.symmetric(vertical: 5.h),
             shape: RoundedRectangleBorder(borderRadius: kCardBorderRadius),
             elevation: 5,
             shadowColor: Colors.black.withOpacity(0.25),

@@ -215,7 +215,7 @@ class __HomePageContentState extends State<_HomePageContent>
 
   @override
   Widget build(BuildContext context) {
-    final height = AppSizes.heightcurved(context);
+    final double height = 70.h;
 
     return PopScope(
       canPop: false,

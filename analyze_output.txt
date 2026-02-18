@@ -1,0 +1,21 @@
+Analyzing cairoscreen.dart...                                   
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:281:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:368:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:370:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:466:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:524:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:535:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:544:47 - deprecated_member_use
+   info - The variable name '_HUDLabel' isn't a lowerCamelCase identifier - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:564:10 - non_constant_identifier_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:572:26 - deprecated_member_use
+   info - The variable name '_HUDCorner' isn't a lowerCamelCase identifier - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:582:10 - non_constant_identifier_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:635:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:645:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:705:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:717:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:746:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:872:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\e-commerce_project\features\mainprog\screen\catogriesscreens\cairoscreen.dart:916:41 - deprecated_member_use
+
+17 issues found. (ran in 3.5s)

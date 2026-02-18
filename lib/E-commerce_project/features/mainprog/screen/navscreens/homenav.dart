@@ -121,33 +121,36 @@ class _HomeNavState extends State<HomeNav> {
           end: Alignment.bottomCenter,
         ),
       ),
-      height: 140.h,
-      child: Stack(
-        children: [
-          Positioned(
-            right: 10.w,
-            top: 40.h,
-            child: Icon(
-              Iconsax.flash5,
-              size: 130.sp,
-              color: Colors.white.withOpacity(0.09),
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Positioned(
+              right: 10.w,
+              top: 10.h,
+              child: Icon(
+                Iconsax.flash5,
+                size: 110.sp,
+                color: Colors.white.withOpacity(0.09),
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(right: 5.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(right: 10.w),
-                  child: _buildGreetingRow(),
-                ),
-                SizedBox(height: 10.h),
-                _buildCategoryList(),
-              ],
+            Padding(
+              padding: EdgeInsets.only(right: 5.w, top: 8.h, bottom: 4.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(right: 10.w),
+                    child: _buildGreetingRow(),
+                  ),
+                  SizedBox(height: 8.h),
+                  _buildCategoryList(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -211,7 +214,7 @@ class _HomeNavState extends State<HomeNav> {
           final category = categories[index];
           final isSelected = false;
           return Padding(
-            padding: const EdgeInsets.only(right: 4.0),
+            padding: EdgeInsets.only(right: 4.w),
             child: GestureDetector(
               onTap: () => _onCategoryTap(category),
               child: CategoryItem(
@@ -244,7 +247,7 @@ class _HomeNavState extends State<HomeNav> {
               color2: Colors.white70,
               isSeeAllVisible: true,
               screenHeight: 230.h,
-              screenWidth: 375.w,
+              screenWidth: 1.sw,
             ),
           ),
           SizedBox(height: 5.h),
@@ -259,7 +262,7 @@ class _HomeNavState extends State<HomeNav> {
               color1: Colors.white70,
               color2: Colors.white70,
               screenHeight: 230.h,
-              screenWidth: 375.w,
+              screenWidth: 1.sw,
               isSeeAllVisible: true,
             ),
           ),
@@ -318,7 +321,7 @@ class _HomeNavState extends State<HomeNav> {
                     return Builder(
                       builder: (BuildContext context) {
                         return Container(
-                          width: 330.5.w,
+                          width: 0.85.sw,
                           margin: EdgeInsets.symmetric(horizontal: 5.w),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12.r),
@@ -506,7 +509,7 @@ class _HomeNavState extends State<HomeNav> {
             color1: Colors.white70,
             color2: Colors.white70,
             screenHeight: 243.h,
-            screenWidth: 375.w,
+            screenWidth: 1.sw,
             isSeeAllVisible: true,
             onSeeAllPressed: _controller.gotocairoscreen,
           ),
@@ -524,7 +527,7 @@ class _HomeNavState extends State<HomeNav> {
             color1: Colors.white70,
             color2: Colors.white70,
             screenHeight: 243.h,
-            screenWidth: 375.w,
+            screenWidth: 1.sw,
             isSeeAllVisible: true,
             onSeeAllPressed: _controller.gotocairoscreen,
           ),
@@ -545,7 +548,7 @@ class _HomeNavState extends State<HomeNav> {
           color2: Colors.white70,
           isSeeAllVisible: true,
           screenHeight: 243.h,
-          screenWidth: 375.w,
+          screenWidth: 1.sw,
           onSeeAllPressed: _controller.gotocairoscreen,
         ),
         buildGaugeSection(context, 'الكريمات الشمسية', 0, 110,
@@ -880,6 +883,18 @@ class MyGaugeWidget extends StatelessWidget {
       ),
       Expanded(
           child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(formattedValue,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: Appfontstring.ChangaLight,
+                    fontSize: 30.sp,
+                    fontWeight: FontWeight.bold)),
+          ),
+        ),
+        SizedBox(width: 4.w),
         Text(
           'M.W',
           style: TextStyle(
@@ -889,13 +904,6 @@ class MyGaugeWidget extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(width: 6.w),
-        Text(formattedValue,
-            style: TextStyle(
-                color: Colors.white,
-                fontFamily: Appfontstring.ChangaLight,
-                fontSize: 30.sp,
-                fontWeight: FontWeight.bold))
       ]))
     ]);
   }
