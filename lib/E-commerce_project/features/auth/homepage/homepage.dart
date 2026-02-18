@@ -1,4 +1,5 @@
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:amiraly/E-commerce_project/common/widgets/appbar.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/Loadnav.dart';
 import 'package:amiraly/E-commerce_project/features/mainprog/screen/navscreens/favoritesnav.dart';
@@ -86,15 +87,15 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                strokeWidth: 3,
+                strokeWidth: 3.w,
                 valueColor:
                     AlwaysStoppedAnimation<Color>(Appcolors.primaryColor2),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               Text(
                 'جاري تحميل الصفحة الرئيسية...',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontFamily: Appfontstring.ChangaLight,
                   color: Colors.white,
                 ),
@@ -117,39 +118,39 @@ class _HomePageState extends State<HomePage> {
             children: [
               Icon(
                 Icons.error_outline,
-                size: 64,
+                size: 64.sp,
                 color: Colors.red.shade400,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               Text(
                 'فشل في تحميل الصفحة',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: Appfontstring.ChangaLight,
                   color: Colors.grey[800],
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Text(
                   error,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     color: Colors.grey[600],
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: 30.h),
               ElevatedButton(
                 onPressed: () => Get.offAll(() => const HomePage()),
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Appcolors.primaryColor,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12)),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h)),
                 child: const Text('إعادة المحاولة'),
               ),
             ],
@@ -299,7 +300,7 @@ class __HomePageContentState extends State<_HomePageContent>
         child: _buildNavigationIcon(item, isSelected),
         label: item.label,
         labelStyle: TextStyle(
-          fontSize: 12,
+          fontSize: 12.sp,
           fontFamily: Appfontstring.ChangaLight,
           color: C.white,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -327,11 +328,11 @@ class __HomePageContentState extends State<_HomePageContent>
                   ]
                 : null,
           ),
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(6.r),
           child: Icon(
             item.icon,
             color: C.white,
-            size: 24,
+            size: 24.sp,
           ),
         ),
       ),
@@ -360,42 +361,42 @@ class __HomePageContentState extends State<_HomePageContent>
         children: [
           Icon(
             Icons.error_outline,
-            size: 64,
+            size: 64.sp,
             color: Colors.red.shade300,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
             'حدث خطأ',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 20.sp,
               fontFamily: Appfontstring.ChangaLight,
               color: Colors.red.shade700,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Text(
               _controller.error.value ?? 'خطأ غير معروف',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14.sp,
                 fontFamily: Appfontstring.ChangaLight,
                 color: Colors.grey.shade600,
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           ElevatedButton.icon(
             onPressed: _controller.loadData,
             icon: const Icon(Icons.refresh),
             label: const Text('إعادة المحاولة'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Appcolors.primaryColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
+              padding: EdgeInsets.symmetric(
+                horizontal: 24.w,
+                vertical: 12.h,
               ),
             ),
           ),

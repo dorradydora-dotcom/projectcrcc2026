@@ -1251,7 +1251,6 @@ class SupabaseService {
           .update({
             'station_load': newLoad,
             hourStr: newLoad,
-            'updated_at': now.toIso8601String(),
           })
           .eq('station_name', stationName)
           .timeout(AppConstants.timeoutDuration);

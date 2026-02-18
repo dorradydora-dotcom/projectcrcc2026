@@ -494,8 +494,10 @@ class _StationCardState extends State<StationCard> {
             SizedBox(width: 12.w),
 
             // Station Info
-            Expanded(
+            Flexible(
               child: Column(
+                mainAxisAlignment:
+                    MainAxisAlignment.center, // Center vertically
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -509,8 +511,10 @@ class _StationCardState extends State<StationCard> {
                           : Colors.white.withOpacity(0.9),
                     ),
                     textDirection: TextDirection.rtl,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 2.h), // Reduced height
 
                   // Animated Load Value
                   TweenAnimationBuilder<double>(
@@ -525,33 +529,36 @@ class _StationCardState extends State<StationCard> {
                     duration: const Duration(seconds: 1),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, child) {
-                      return RichText(
-                        textDirection: TextDirection.rtl,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                                  '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                fontSize: 17.sp,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: Appfontstring.digital,
-                                color: widget.isUserAssigned
-                                    ? Colors.orangeAccent
-                                    : (value >= 0
-                                        ? Colors.greenAccent
-                                        : Colors.redAccent),
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: RichText(
+                          textDirection: TextDirection.rtl,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text:
+                                    '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  fontSize: 17.sp,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: Appfontstring.digital,
+                                  color: widget.isUserAssigned
+                                      ? Colors.orangeAccent
+                                      : (value >= 0
+                                          ? Colors.greenAccent
+                                          : Colors.redAccent),
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: ' م.و',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontFamily: Appfontstring.ChangaLight,
-                                color: Colors.white60,
+                              TextSpan(
+                                text: ' م.و',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontFamily: Appfontstring.ChangaLight,
+                                  color: Colors.white60,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
