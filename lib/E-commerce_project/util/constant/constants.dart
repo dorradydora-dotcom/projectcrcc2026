@@ -139,21 +139,6 @@ class AppimageString {
   static const String on5 = 'lib/assets/images/g/on42.png';
 }
 
-class AppSizes {
-  static double screenWidth(BuildContext context) =>
-      MediaQuery.sizeOf(context).width;
-  static double screenHeight(BuildContext context) =>
-      MediaQuery.sizeOf(context).height;
-  static double heightcurved(BuildContext context) {
-    final double calculated = MediaQuery.sizeOf(context).height * 0.08;
-    return calculated > 70 ? 70.0 : MediaQuery.sizeOf(context).height * 0.06;
-  }
-}
-
-double responsiveFontSize(double screenWidth, double baseFactor) {
-  return screenWidth * baseFactor.clamp(0.02, 0.06);
-}
-
 class AppPadding {
   static const double loginpadding = 24.0;
   static const double loginspacing = 16.0;

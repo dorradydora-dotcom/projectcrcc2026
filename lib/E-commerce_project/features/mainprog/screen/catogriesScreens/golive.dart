@@ -361,13 +361,17 @@ class UsersPage extends StatelessWidget {
                   color: Colors.orange, size: 24.sp),
             ),
             SizedBox(width: 12.w),
-            Text(
-              'مركز الاتصال المرئي للمحطات',
-              style: TextStyle(
-                fontSize: 15.sp,
-                color: Colors.orange,
-                fontFamily: Appfontstring.ChangaBold,
-                letterSpacing: 0.5,
+            Flexible(
+              child: Text(
+                'مركز الاتصال المرئي للمحطات',
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  color: Colors.orange,
+                  fontFamily: Appfontstring.ChangaBold,
+                  letterSpacing: 0.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -425,7 +429,7 @@ class UsersPage extends StatelessWidget {
             child: Center(
               child: ZoomIn(
                 child: Container(
-                  width: 280.w,
+                  width: 0.8.sw, // Responsive width
                   padding: EdgeInsets.all(25.r),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.1),
@@ -613,33 +617,43 @@ class VideoCallPage extends StatelessWidget {
                                   onPressed: () => _onWillPop(context),
                                 ),
                                 const Spacer(),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text('بث مباشر',
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('بث مباشر',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.sp,
+                                                  fontFamily: Appfontstring
+                                                      .ChangaBold)),
+                                          SizedBox(width: 8.w),
+                                          Pulse(
+                                              infinite: true,
+                                              child: Container(
+                                                  width: 8.w,
+                                                  height: 8.w,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                          color: Colors.red,
+                                                          shape: BoxShape
+                                                              .circle))),
+                                        ],
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                            "Connection Secured by (RtcEngine)",
                                             style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12.sp,
-                                                fontFamily:
-                                                    Appfontstring.ChangaBold)),
-                                        SizedBox(width: 8.w),
-                                        Pulse(
-                                            infinite: true,
-                                            child: Container(
-                                                width: 8.w,
-                                                height: 8.w,
-                                                decoration: const BoxDecoration(
-                                                    color: Colors.red,
-                                                    shape: BoxShape.circle))),
-                                      ],
-                                    ),
-                                    Text("Connection Secured by (RtcEngine)",
-                                        style: TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 10.sp)),
-                                  ],
+                                                color: Colors.white70,
+                                                fontSize: 10.sp)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),

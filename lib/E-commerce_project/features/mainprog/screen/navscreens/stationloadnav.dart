@@ -139,13 +139,8 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   Widget build(BuildContext context) {
     return Container(
       height: 160.h,
-      margin: EdgeInsets.only(
-          left: 45.w,
-          right: 45.w,
-          top: 1.h,
-          bottom: 10.h), // Added bottom margin for spacing
-      padding: EdgeInsets.symmetric(
-          horizontal: 10.w, vertical: 8.h), // Reduced vertical padding
+      margin: EdgeInsets.only(left: 8.w, right: 8.w, top: 1.h, bottom: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -230,19 +225,16 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        // Fixed width container to prevent shaking
-                        SizedBox(
-                          width: 140.w, // Fixed width for number
-                          child: Align(
-                            alignment: Alignment
-                                .centerLeft, // Push number towards 'MW'
+                        // Flexible container to prevent shaking
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
                             child: Text(
                               (value >= 0 ? '+' : '') +
                                   value.toStringAsFixed(0),
                               style: TextStyle(
-                                color: value < 0
-                                    ? Colors.red
-                                    : Colors.redAccent, // Red for negative
+                                color:
+                                    value < 0 ? Colors.red : Colors.redAccent,
                                 fontSize: 50.sp,
                                 fontFamily: Appfontstring.digital,
                                 shadows: [
@@ -453,7 +445,7 @@ class _StationCardState extends State<StationCard> {
           children: [
             // Station Number Badge
             Container(
-              width: 26.w, // Smaller badge
+              width: 26.w,
               height: 26.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -491,11 +483,13 @@ class _StationCardState extends State<StationCard> {
                 ),
               ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 8.w),
 
             // Station Info
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -509,8 +503,9 @@ class _StationCardState extends State<StationCard> {
                           : Colors.white.withOpacity(0.9),
                     ),
                     textDirection: TextDirection.rtl,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4.h),
 
                   // Animated Load Value
                   TweenAnimationBuilder<double>(
@@ -525,33 +520,36 @@ class _StationCardState extends State<StationCard> {
                     duration: const Duration(seconds: 1),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, child) {
-                      return RichText(
-                        textDirection: TextDirection.rtl,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                                  '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                fontSize: 17.sp,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: Appfontstring.digital,
-                                color: widget.isUserAssigned
-                                    ? Colors.orangeAccent
-                                    : (value >= 0
-                                        ? Colors.greenAccent
-                                        : Colors.redAccent),
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: RichText(
+                          textDirection: TextDirection.rtl,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text:
+                                    '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: Appfontstring.digital,
+                                  color: widget.isUserAssigned
+                                      ? Colors.orangeAccent
+                                      : (value >= 0
+                                          ? Colors.greenAccent
+                                          : Colors.redAccent),
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: ' م.و',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontFamily: Appfontstring.ChangaLight,
-                                color: Colors.white60,
+                              TextSpan(
+                                text: ' م.و',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontFamily: Appfontstring.ChangaLight,
+                                  color: Colors.white60,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -560,7 +558,7 @@ class _StationCardState extends State<StationCard> {
               ),
             ),
 
-            // Edit Button
+            // Edit Button — far left in RTL
             if (showUpdateButton)
               CustomActionButton(
                 onPressed: widget.onEditTap,

@@ -205,8 +205,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                       Colors.white.withOpacity(0.1)),
                                   dataRowColor: MaterialStateProperty.all(
                                       Colors.transparent),
-                                  dataRowMinHeight: 27.h,
-                                  dataRowMaxHeight: 27.h,
+                                  dataRowMinHeight: 32.h,
+                                  dataRowMaxHeight: 35.h,
                                   columnSpacing: 0,
                                   horizontalMargin: 4.w,
                                   columns: [
@@ -306,6 +306,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                         DataCell(SizedBox(
                                             width: col2,
                                             child: Text(stationName,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                     fontSize: 10.sp,
                                                     color: Colors.white70)))),
@@ -326,9 +328,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                   : null,
                                               child: Container(
                                                 margin: EdgeInsets.symmetric(
-                                                    horizontal: 10.w),
+                                                    horizontal: 4.w),
                                                 padding: EdgeInsets.symmetric(
-                                                    horizontal: 6.w,
+                                                    horizontal: 4.w,
                                                     vertical: 2.h),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white

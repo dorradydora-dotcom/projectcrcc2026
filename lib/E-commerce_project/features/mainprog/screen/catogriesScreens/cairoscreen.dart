@@ -211,7 +211,7 @@ class _CairoscreenState extends State<Cairoscreen> {
                   Icon(Icons.error_outline,
                       size: isWideError ? 80.sp : 64.sp, color: Colors.red),
                   SizedBox(height: 16.h),
-                  Text(errorMessage!,
+                  Text(errorMessage ?? 'حدث خطأ غير متوقع',
                       style: TextStyle(
                         fontSize: isWideError ? 18.sp : 16.sp,
                         fontFamily: Appfontstring.ChangaLight,
@@ -331,8 +331,9 @@ class _CairoscreenState extends State<Cairoscreen> {
         crossAxisCount: isWide ? 2 : 1,
         mainAxisSpacing: 2.h, // Reduced from 4.h
         crossAxisSpacing: 8.w,
-        childAspectRatio:
-            isWide ? 3.0 : 3.8, // Adjusted from 4.2 : 5.8 to fix overflow
+        childAspectRatio: isWide
+            ? 2.8
+            : 3.5, // Fixed 2.4px overflow by increasing height factor
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -500,22 +501,30 @@ class TotalLoadCard extends StatelessWidget {
                   SizedBox(height: 12.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        isLoading ? 'SCANNING' : totalLoad.toStringAsFixed(0),
-                        style: TextStyle(
-                          color: (totalLoad < 0) ? alertRed : Colors.white,
-                          fontSize: 48.sp,
-                          fontFamily: Appfontstring.BebasNeue_Regular,
-                          letterSpacing: 2,
-                          shadows: [
-                            Shadow(
-                                color: (totalLoad < 0 ? alertRed : tacticalCyan)
-                                    .withOpacity(0.8),
-                                blurRadius: 10),
-                          ],
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            isLoading
+                                ? 'SCANNING'
+                                : totalLoad.toStringAsFixed(0),
+                            style: TextStyle(
+                              color: (totalLoad < 0) ? alertRed : Colors.white,
+                              fontSize: 48.sp,
+                              fontFamily: Appfontstring.BebasNeue_Regular,
+                              letterSpacing: 2,
+                              shadows: [
+                                Shadow(
+                                    color: (totalLoad < 0
+                                            ? alertRed
+                                            : tacticalCyan)
+                                        .withOpacity(0.8),
+                                    blurRadius: 10),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(width: 8.w),
@@ -638,7 +647,7 @@ class StationGaugeCard extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -678,23 +687,27 @@ class StationGaugeCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            value,
-                            style: TextStyle(
-                              color: isNegative ? alertRed : Colors.white,
-                              fontFamily: Appfontstring.BebasNeue_Regular,
-                              fontSize: 24.sp,
-                              letterSpacing: 1,
-                              shadows: isNegative
-                                  ? [
-                                      Shadow(
-                                          color: alertRed.withOpacity(0.5),
-                                          blurRadius: 5)
-                                    ]
-                                  : null,
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  color: isNegative ? alertRed : Colors.white,
+                                  fontFamily: Appfontstring.BebasNeue_Regular,
+                                  fontSize: 24.sp,
+                                  letterSpacing: 1,
+                                  shadows: isNegative
+                                      ? [
+                                          Shadow(
+                                              color: alertRed.withOpacity(0.5),
+                                              blurRadius: 5)
+                                        ]
+                                      : null,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(width: 4.w),
@@ -708,7 +721,7 @@ class StationGaugeCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 6.h),
+                      SizedBox(height: 4.h),
                       // HUD Style Multi-Bar Progress
                       _buildHUDProgressBar(progress, tacticalCyan),
                     ],

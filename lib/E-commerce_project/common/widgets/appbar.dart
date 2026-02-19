@@ -3,6 +3,7 @@ import 'package:amiraly/E-commerce_project/util/constant/constants.dart';
 import 'package:amiraly/E-commerce_project/util/validators/validatorHeper.dart';
 import 'package:amiraly/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -98,30 +99,28 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = AppSizes.screenWidth(context);
-
     return AppBar(
       centerTitle: true,
       backgroundColor: Appcolors.primaryColor,
-      title: _buildAppBarTitle(context, screenWidth),
+      title: _buildAppBarTitle(context),
       actions: [
         if (widget.onRefresh != null)
           IconButton(
             icon: Icon(
               Icons.refresh,
               color: Colors.white,
-              size: responsiveFontSize(screenWidth, 0.066),
+              size: 25.sp,
             ),
             onPressed: widget.onRefresh,
           ),
         if (widget.extraActions != null) ...widget.extraActions!,
-        _buildSignOutButton(context, screenWidth),
-        SizedBox(width: screenWidth * 0.01),
+        _buildSignOutButton(context),
+        SizedBox(width: 4.w),
       ],
     );
   }
 
-  Widget _buildAppBarTitle(BuildContext context, double screenWidth) {
+  Widget _buildAppBarTitle(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -130,7 +129,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           style: TextStyle(
               color: C.white,
               fontFamily: Appfontstring.ChangaLight,
-              fontSize: responsiveFontSize(screenWidth, 0.044),
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold),
         ),
         Row(
@@ -142,36 +141,36 @@ class _CustomAppBarState extends State<CustomAppBar> {
               style: TextStyle(
                 color: C.yellow,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: responsiveFontSize(screenWidth, 0.033),
+                fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: screenWidth * 0.01),
+            SizedBox(width: 4.w),
             Text(
               AppBarText.regionalControl,
               style: TextStyle(
                 color: C.white,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: responsiveFontSize(screenWidth, 0.033),
+                fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 3),
-        _buildUserEmailWidget(screenWidth),
+        SizedBox(height: 3.h),
+        _buildUserEmailWidget(),
       ],
     );
   }
 
-  Widget _buildUserEmailWidget(double screenWidth) {
+  Widget _buildUserEmailWidget() {
     if (_isLoading) {
       return SizedBox(
-        height: responsiveFontSize(screenWidth, 0.025),
+        height: 10.h,
         child: Center(
           child: SizedBox(
-            width: responsiveFontSize(screenWidth, 0.02),
-            height: responsiveFontSize(screenWidth, 0.02),
+            width: 8.w,
+            height: 8.h,
             child: const CircularProgressIndicator(
               strokeWidth: 1.5,
               valueColor: AlwaysStoppedAnimation<Color>(
@@ -193,14 +192,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
               style: TextStyle(
                 color: const Color.fromARGB(255, 255, 123, 123),
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: responsiveFontSize(screenWidth, 0.023),
+                fontSize: 9.sp,
                 fontWeight: FontWeight.normal,
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4.w),
             Icon(
               Icons.refresh,
-              size: responsiveFontSize(screenWidth, 0.02),
+              size: 8.sp,
               color: const Color.fromARGB(255, 255, 123, 123),
             ),
           ],
@@ -213,13 +212,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
       style: TextStyle(
         color: const Color.fromARGB(116, 178, 223, 155),
         fontFamily: Appfontstring.ChangaLight,
-        fontSize: responsiveFontSize(screenWidth, 0.025),
+        fontSize: 10.sp,
         fontWeight: FontWeight.normal,
       ),
     );
   }
 
-  Widget _buildSignOutButton(BuildContext context, double screenWidth) {
+  Widget _buildSignOutButton(BuildContext context) {
     return IconButton(
       onPressed: _isLoading ? null : () => _showSignOutDialog(context),
       icon: Icon(
@@ -227,7 +226,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
         color: _isLoading
             ? const Color.fromARGB(100, 217, 10, 10) // شفاف عند التحميل
             : const Color.fromARGB(255, 217, 10, 10),
-        size: responsiveFontSize(screenWidth, 0.066),
+        size: 25.sp,
       ),
     );
   }
