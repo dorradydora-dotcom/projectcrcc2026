@@ -231,6 +231,8 @@ class __HomePageContentState extends State<_HomePageContent>
         }
       },
       child: Scaffold(
+        backgroundColor: const Color(
+            0xFF081A2A), // 🔧 إضافة لون الخلفية لمنع ظهور الفراغ الأبيض
         appBar: const CustomAppBar(),
         bottomNavigationBar: _buildBottomNavigationBar(height),
         body: _buildBody(),
