@@ -395,7 +395,7 @@ class UsersPage extends StatelessWidget {
 
       if (context.mounted) {
         Navigator.pop(context); // Dismiss loading
-        controller.playRinging(); // Start ringback as we navigate
+        controller.playRinging();
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -542,7 +542,7 @@ class UsersPage extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              'عفواً، لا تملك تصريح لدخول هذه الصفحة',
+              'عفواً، لا تملك تصريح لدخول الصفحة',
               style: TextStyle(
                 fontFamily: Appfontstring.ChangaBold,
                 fontSize: 16.sp,

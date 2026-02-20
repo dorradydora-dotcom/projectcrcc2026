@@ -34,7 +34,7 @@ class StationLoadController extends GetxController {
   RealtimeChannel? _realtimeChannel;
 
   // Constants
-  static const _updateInterval = Duration(seconds: 6);
+  static const _updateInterval = Duration(seconds: 7);
   static const _maxRetries = 5; // Increased from 3
   int _retryAttempts = 0;
   int _consecutiveFailures = 0; // Track consecutive failures
@@ -137,23 +137,28 @@ class StationLoadController extends GetxController {
 
         // Merge with existing data to handle potential partial updates
         // Note: Realtime usually sends full row for UPDATE, but good to be safe
+        double parseSafe(dynamic value, double fallback) {
+          if (value == null) return fallback;
+          if (value is num) return value.toDouble();
+          if (value is String) return double.tryParse(value) ?? fallback;
+          return fallback;
+        }
+
         final updatedStation = StationLoad(
           stationName: stationName,
-          load: (newRecord['station_load'] as num?)?.toDouble() ??
-              currentStation.load,
-          baseLoad: (newRecord['station_load'] as num?)?.toDouble() ??
-              (newRecord['station_load'] as num?)
-                  ?.toDouble() ?? // Fallback to new load if station_load missing
-              currentStation.baseLoad,
-          minVariation: (newRecord['min_variation'] as num?)?.toDouble() ??
-              currentStation.minVariation,
-          maxVariation: (newRecord['max_variation'] as num?)?.toDouble() ??
-              currentStation.maxVariation,
+          load: parseSafe(newRecord['station_load'], currentStation.load),
+          baseLoad:
+              parseSafe(newRecord['station_load'], currentStation.baseLoad),
+          minVariation: parseSafe(
+              newRecord['min_variation'], currentStation.minVariation),
+          maxVariation: parseSafe(
+              newRecord['max_variation'], currentStation.maxVariation),
           isPositive:
               (newRecord['station_sign'] as bool?) ?? currentStation.isPositive,
           lastUpdated: newRecord['updated_at'] != null
-              ? DateTime.tryParse(newRecord['updated_at'].toString())
-              : DateTime.now(), // Fallback to now if null/missing
+              ? (DateTime.tryParse(newRecord['updated_at'].toString()))
+                  ?.toLocal()
+              : DateTime.now(),
         );
 
         stationLoads[index] = updatedStation;
@@ -282,9 +287,9 @@ class StationLoadController extends GetxController {
       // Sync directions map with fetched station signals
       for (var station in loads) {
         directions[station.stationName] = station.isPositive;
-        // Sync last update time if available from server
+        // Sync last update time if available from server (convert to local)
         if (station.lastUpdated != null) {
-          lastUpdateTimes[station.stationName] = station.lastUpdated!;
+          lastUpdateTimes[station.stationName] = station.lastUpdated!.toLocal();
         }
       }
 
@@ -455,7 +460,7 @@ class StationLoadController extends GetxController {
   bool wasUpdatedThisHour(String stationName) {
     if (!lastUpdateTimes.containsKey(stationName)) return false;
 
-    final lastUpdate = lastUpdateTimes[stationName]!;
+    final lastUpdate = lastUpdateTimes[stationName]!.toLocal();
     final now = DateTime.now();
 
     return lastUpdate.year == now.year &&
