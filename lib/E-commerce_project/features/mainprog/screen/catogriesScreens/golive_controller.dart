@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:amiraly/E-commerce_project/common/models/appmodels.dart';
@@ -17,7 +18,8 @@ class GoLiveController extends ChangeNotifier {
   final AudioPlayer _effectPlayer = AudioPlayer();
 
   // Constants
-  static const String _appId = 'f9f1ce77ba3a4596a78eef4805699aec';
+  String get _appId => dotenv.env['AGORA_APP_ID'] ?? '';
+
   static const List<String> _excludedStations = [
     'عبور3/عاشر',
     'برقاش/ابوغالب',
@@ -109,6 +111,10 @@ class GoLiveController extends ChangeNotifier {
       if (statuses[Permission.microphone] != PermissionStatus.granted ||
           statuses[Permission.camera] != PermissionStatus.granted) {
         throw 'يجب منح صلاحيات الميكروفون والكاميرا لبدء البث';
+      }
+
+      if (_appId.isEmpty) {
+        throw 'Agora App ID is missing. Please check your .env file.';
       }
 
       _engine = createAgoraRtcEngine();
