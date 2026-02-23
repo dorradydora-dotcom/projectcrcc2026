@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 
 class SupabaseService {
   SupabaseClient get _client => Supabase.instance.client;

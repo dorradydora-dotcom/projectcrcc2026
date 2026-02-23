@@ -1,7 +1,7 @@
 import 'package:amiraly/app/common/widgets/headlinetext.dart';
 import 'package:amiraly/app/features/auth/homepage/homepage.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';

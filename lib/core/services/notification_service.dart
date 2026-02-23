@@ -5,7 +5,7 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 
 class NotificationService {
   static Future<Map<String, dynamic>> getServiceAccountJson() async {

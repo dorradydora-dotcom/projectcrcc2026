@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/cmscreen.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
 import 'package:amiraly/core/services/auth_service.dart';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';

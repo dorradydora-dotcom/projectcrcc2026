@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:amiraly/app/features/auth/login/loginscreen.dart';
 import 'package:amiraly/app/features/auth/homepage/homepage.dart';
 import 'package:amiraly/app/features/auth/onboarding/onboardingscreen.dart';

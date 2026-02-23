@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 
 void main() {
   group('validInput Tests', () {

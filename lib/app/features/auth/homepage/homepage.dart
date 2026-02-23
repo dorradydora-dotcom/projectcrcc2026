@@ -10,7 +10,7 @@ import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/areanav.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
+import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/main.dart' show ensureServicesInitialized;
