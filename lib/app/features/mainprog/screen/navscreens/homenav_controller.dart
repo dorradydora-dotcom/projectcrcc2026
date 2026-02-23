@@ -49,9 +49,13 @@ class HomenavcontrollerImp extends Homenavcontroller {
   final RxBool isOffline = false.obs;
   final RxString userEmail = 'جاري التحميل...'.obs;
   final RxString currentDate = ''.obs;
-  final RxInt currentCarouselIndex = 0.obs;
   final CarouselSliderController carouselController =
       CarouselSliderController();
+
+  final RxList<String> electricityNews = <String>[].obs;
+  final RxList<String> techNews = <String>[].obs;
+  final RxBool isNewsLoading = false.obs;
+  final RxInt currentCarouselIndex = 0.obs;
 
   Timer? _loadTimer;
   StreamSubscription? _connectivitySubscription;
@@ -130,6 +134,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
         fetchAnnouncImages(),
         fetchCairoWeather(),
         fetchStationLoads(),
+        fetchNews(),
       ]);
     } catch (e) {
       AppLogger.logError('Error initializing data', e);
@@ -414,6 +419,53 @@ class HomenavcontrollerImp extends Homenavcontroller {
   @override
   Future<void> refreshWeather() async {
     await fetchCairoWeather();
+  }
+
+  Future<void> fetchNews() async {
+    isNewsLoading.value = true;
+    try {
+      await Future.wait([
+        _fetchRssNews(
+            'https://news.google.com/rss/search?q=%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1%20%D9%85%D8%B5%D8%B1%20%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
+            electricityNews),
+        _fetchRssNews(
+            'https://news.google.com/rss/search?q=%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A7%20%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
+            techNews),
+      ]);
+    } catch (e) {
+      AppLogger.logError('Error fetching news', e);
+    } finally {
+      isNewsLoading.value = false;
+    }
+  }
+
+  Future<void> _fetchRssNews(String url, RxList<String> targetList) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final decoded = utf8.decode(response.bodyBytes);
+        // Target titles inside <item> tags only to avoid channel/image metadata
+        final regExp = RegExp(r'<item>.*?<title>(.*?)<\/title>', dotAll: true);
+        final matches = regExp.allMatches(decoded);
+        final news = matches
+            .map((m) => m.group(1) ?? '')
+            .map((t) => t
+                .replaceAll('&#39;', "'")
+                .replaceAll('&quot;', '"')
+                .replaceAll('&amp;', '&'))
+            .map((t) => t.contains(' - ')
+                ? t.split(' - ')[0]
+                : t) // Remove publication name suffix
+            .where((t) =>
+                t.isNotEmpty &&
+                !t.contains('Google News') &&
+                !t.contains('أخبار Google'))
+            .toList();
+        targetList.assignAll(news);
+      }
+    } catch (e) {
+      AppLogger.logError('Error fetching RSS news from $url', e);
+    }
   }
 
   void _startLoadVariationTimer() {

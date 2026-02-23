@@ -11,6 +11,7 @@ import 'package:animate_do/animate_do.dart';
 import 'dart:ui';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/homenav_controller.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:amiraly/app/common/widgets/news_ticker.dart';
 
 class HomeNav extends StatefulWidget {
   const HomeNav({super.key});
@@ -54,7 +55,7 @@ class _HomeNavState extends State<HomeNav> {
                 Appcolors.primaryColor,
                 Color(0xFF163C5E),
                 Color(0xFF0F2B44),
-                Color(0xFF081A2A)
+                Color(0xFF081A2A),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -134,20 +135,41 @@ class _HomeNavState extends State<HomeNav> {
                 color: Colors.white.withValues(alpha: 0.09),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(right: 5.w, top: 8.h, bottom: 4.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(right: 10.w),
-                    child: _buildGreetingRow(),
-                  ),
-                  SizedBox(height: 8.h),
-                  _buildCategoryList(),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 1.w),
+                  child: _buildGreetingRow(),
+                ),
+                SizedBox(height: 8.h),
+                _buildCategoryList(),
+                SizedBox(height: 5.h),
+                Obx(() {
+                  final eNews = _controller.electricityNews.toList();
+                  final tNews = _controller.techNews.toList();
+                  return Column(
+                    children: [
+                      NewsTicker(
+                        news: eNews,
+                        title: 'أخبار الكهرباء',
+                        icon: Icons.bolt,
+                        velocity: -40.0,
+                        backgroundColor: const Color.fromARGB(255, 193, 118, 6)
+                            .withValues(alpha: 0.1),
+                      ),
+                      NewsTicker(
+                        news: tNews,
+                        title: 'تكنولوجيا',
+                        icon: Icons.biotech,
+                        velocity: -25.0,
+                        backgroundColor: Colors.blue.withValues(alpha: 0.05),
+                      ),
+                    ],
+                  );
+                }),
+              ],
             ),
           ],
         ),
@@ -312,7 +334,7 @@ class _HomeNavState extends State<HomeNav> {
                     height: 170.h,
                     enlargeFactor: 0.4,
                     viewportFraction: 0.7,
-                    reverse: true,
+                    reverse: false,
                     enableInfiniteScroll: true,
                     initialPage: 0,
                     autoPlay: true,

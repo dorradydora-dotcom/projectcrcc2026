@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
-import 'cairo_widgets.dart';
+import '../../../../common/widgets/cairo_widgets.dart';
 
 class Cairoscreen extends StatefulWidget {
   const Cairoscreen({super.key});
