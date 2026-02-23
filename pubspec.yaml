@@ -139,3 +139,6 @@ flutter:
     - family: Changa-Light
       fonts:
         - asset: lib/assets/fonts/Changa-Light.ttf
+    - family: digital
+      fonts:
+        - asset: lib/assets/fonts/digital.ttf

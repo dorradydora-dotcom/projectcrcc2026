@@ -4,6 +4,7 @@ import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'package:amiraly/core/services/supabase_service.dart';
+import 'package:amiraly/core/utils/cache_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -238,8 +239,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
-                              (value >= 0 ? '+' : '') +
-                                  value.toStringAsFixed(0),
+                              value.toStringAsFixed(0),
                               style: TextStyle(
                                 color:
                                     value < 0 ? Colors.red : Colors.redAccent,
@@ -300,7 +300,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                     style: TextStyle(
                       color: Colors.blueAccent,
                       fontSize: 15.sp,
-                      fontFamily: Appfontstring.ChangaLight,
+                      fontFamily: Appfontstring.digital,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -493,76 +493,79 @@ class _StationCardState extends State<StationCard> {
             ),
             SizedBox(width: 8.w),
 
-            // Station Info
             Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.station.stationName,
-                    style: TextStyle(
-                      fontSize: widget.isUserAssigned ? 13.sp : 12.sp,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: Appfontstring.ChangaLight,
-                      color: widget.isUserAssigned
-                          ? Colors.orangeAccent
-                          : Colors.white.withValues(alpha: 0.9),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.station.stationName,
+                      style: TextStyle(
+                        fontSize: widget.isUserAssigned ? 13.sp : 12.sp,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: Appfontstring.ChangaLight,
+                        color: widget.isUserAssigned
+                            ? Colors.orangeAccent
+                            : Colors.white.withValues(alpha: 0.9),
+                      ),
+                      textDirection: TextDirection.rtl,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
 
-                  // Animated Load Value
-                  TweenAnimationBuilder<double>(
-                    tween: Tween<double>(
-                      begin: 0,
-                      end: (Get.find<StationLoadController>()
-                                  .directions[widget.station.stationName] ??
-                              true)
-                          ? widget.station.load
-                          : -widget.station.load,
-                    ),
-                    duration: const Duration(seconds: 1),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: RichText(
-                          textDirection: TextDirection.rtl,
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text:
-                                    '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: Appfontstring.digital,
-                                  color: widget.isUserAssigned
-                                      ? Colors.orangeAccent
-                                      : (value >= 0
-                                          ? Colors.greenAccent
-                                          : Colors.redAccent),
+                    // Animated Load Value
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: 0,
+                        end: (Get.find<StationLoadController>()
+                                    .directions[widget.station.stationName] ??
+                                true)
+                            ? widget.station.load
+                            : -widget.station.load,
+                      ),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: RichText(
+                            textDirection: TextDirection.rtl,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      '${value >= 0 ? '+' : ''}${value.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: Appfontstring.digital,
+                                    color: widget.isUserAssigned
+                                        ? Colors.orangeAccent
+                                        : (value >= 0
+                                            ? Colors.greenAccent
+                                            : Colors.redAccent),
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text: ' م.و',
-                                style: TextStyle(
-                                  fontSize: 10.sp,
-                                  fontFamily: Appfontstring.ChangaLight,
-                                  color: Colors.white60,
+                                TextSpan(
+                                  text: ' م.و',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    fontFamily: Appfontstring.ChangaLight,
+                                    color: Colors.white60,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -744,6 +747,20 @@ class ErrorRetryWidget extends StatelessWidget {
               ),
             ),
           ],
+          SizedBox(height: 12.h),
+          TextButton.icon(
+            onPressed: () => CacheHelper.clearImageCache(),
+            icon: Icon(Icons.delete_sweep_outlined,
+                color: Colors.white60, size: 20.sp),
+            label: Text(
+              'مسح التخزين المؤقت للصور',
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontFamily: Appfontstring.ChangaLight,
+                color: Colors.white60,
+              ),
+            ),
+          ),
         ],
       ),
     );

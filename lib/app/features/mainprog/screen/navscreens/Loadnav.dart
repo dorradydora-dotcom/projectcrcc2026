@@ -334,8 +334,7 @@ class LoadDisplayWidget extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                (value >= 0 ? '+' : '') +
-                                    value.toStringAsFixed(0),
+                                value.toStringAsFixed(0),
                                 style: TextStyle(
                                   color:
                                       value < 0 ? Colors.red : Colors.redAccent,
@@ -397,7 +396,7 @@ class LoadDisplayWidget extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.blueAccent,
                           fontSize: 12.sp,
-                          fontFamily: Appfontstring.ChangaLight,
+                          fontFamily: Appfontstring.digital,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
