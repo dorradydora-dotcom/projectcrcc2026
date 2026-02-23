@@ -3,7 +3,6 @@ import 'package:amiraly/app/features/auth/homepage/homepage.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/util/validators/validatorHeper.dart';
 import 'package:amiraly/core/services/auth_service.dart';
-
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -694,7 +693,7 @@ class CustomTextFormFieldloginState extends State<CustomTextFormFieldlogin> {
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: Colors.black.withOpacity(0.2),
+        fillColor: Colors.black.withValues(alpha: 0.2),
         contentPadding: EdgeInsets.symmetric(
           horizontal: 20.w,
           vertical: 16.h,
@@ -746,7 +745,7 @@ class LoginButton extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             blurRadius: 10.r,
             spreadRadius: 1.r,
           ),

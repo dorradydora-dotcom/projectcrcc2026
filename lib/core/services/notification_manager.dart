@@ -1,13 +1,12 @@
 import 'dart:convert';
+import 'package:amiraly/app/util/validators/validatorHeper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validatorHeper.dart';
 
 /// معالج رسائل الخلفية (يجب أن يكون top-level)
 @pragma('vm:entry-point')
@@ -82,8 +81,9 @@ class NotificationManager {
         final String? route = data['route'];
         if (route != null) _navigateToRoute(route);
       } catch (e) {
-        if (kDebugMode)
+        if (kDebugMode) {
           AppLogger.logError('Failed to handle notification tap', e);
+        }
       }
     }
   }
@@ -163,8 +163,9 @@ class NotificationManager {
           prefs.getStringList(AppConstants.processedNotificationsKey) ?? [];
       return processedList.contains(messageId);
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         AppLogger.logError('Failed to check notification status', e);
+      }
       return false;
     }
   }
@@ -181,8 +182,9 @@ class NotificationManager {
       await prefs.setStringList(
           AppConstants.processedNotificationsKey, processedList);
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         AppLogger.logError('Failed to mark notification as processed', e);
+      }
     }
   }
 }

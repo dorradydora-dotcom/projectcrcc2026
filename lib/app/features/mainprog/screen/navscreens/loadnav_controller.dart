@@ -82,7 +82,9 @@ class LoadnavController extends GetxController {
 
   // --- PDF Methods ---
   Future<void> generateAndSharePDF(BuildContext context) async {
-    if (isGeneratingPdf.value) return;
+    if (isGeneratingPdf.value) {
+      return;
+    }
     isGeneratingPdf.value = true;
     try {
       final pdf = pw.Document();

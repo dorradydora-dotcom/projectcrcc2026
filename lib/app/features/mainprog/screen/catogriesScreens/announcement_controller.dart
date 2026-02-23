@@ -24,7 +24,9 @@ class AnnouncementController extends GetxController {
       !isLoading.value;
 
   Future<void> sendAnnouncement(BuildContext context) async {
-    if (!isEnabled) return;
+    if (!isEnabled) {
+      return;
+    }
 
     isLoading.value = true;
 

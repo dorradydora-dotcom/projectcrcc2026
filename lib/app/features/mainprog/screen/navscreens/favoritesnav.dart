@@ -25,7 +25,7 @@ class FavoritesNav extends StatelessWidget {
               top: -50.h,
               right: -30.w,
               child: Icon(Iconsax.heart5,
-                  size: 200.sp, color: Colors.white.withOpacity(0.04)),
+                  size: 200.sp, color: Colors.white.withValues(alpha: 0.04)),
             ),
             Obx(
               () => Directionality(
@@ -101,10 +101,10 @@ class FavoritesNav extends StatelessWidget {
                       padding:
                           EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(20.r),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.1)),
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -141,9 +141,9 @@ class FavoritesNav extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(30.r),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(30.r),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -152,7 +152,8 @@ class FavoritesNav extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Icon(Iconsax.heart,
-                        size: 80.sp, color: Colors.white.withOpacity(0.05)),
+                        size: 80.sp,
+                        color: Colors.white.withValues(alpha: 0.05)),
                     Icon(Iconsax.heart5, size: 50.sp, color: Colors.white12),
                   ],
                 ),
@@ -163,7 +164,7 @@ class FavoritesNav extends StatelessWidget {
                     fontSize: 18.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 SizedBox(height: 12.h),

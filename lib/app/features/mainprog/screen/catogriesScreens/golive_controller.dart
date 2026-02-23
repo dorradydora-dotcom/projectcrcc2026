@@ -61,8 +61,9 @@ class GoLiveController extends GetxController {
       isLoading.value = true;
       errorMessage.value = null;
 
-      final response =
-          await Supabase.instance.client.from(AppConstants.tableUserStations).select();
+      final response = await Supabase.instance.client
+          .from(AppConstants.tableUserStations)
+          .select();
 
       final List<dynamic> data = response;
       final fetched =
@@ -100,8 +101,16 @@ class GoLiveController extends GetxController {
       final client = Supabase.instance.client;
 
       final results = await Future.wait([
-        client.from(AppConstants.tableUserTop).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserCrcc).select().eq('user_email', email).limit(1),
+        client
+            .from(AppConstants.tableUserTop)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserCrcc)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
       ]);
 
       isAccessDenied.value = results[0].isEmpty && results[1].isEmpty;
@@ -168,7 +177,9 @@ class GoLiveController extends GetxController {
 
   Future<void> joinChannel(String channelName) async {
     try {
-      if (_engine == null) await initializeAgora();
+      if (_engine == null) {
+        await initializeAgora();
+      }
 
       final token = await _fetchSecureToken(channelName);
 
@@ -203,7 +214,9 @@ class GoLiveController extends GetxController {
 
   Future<void> startSignaling() async {
     final userId = currentUserId;
-    if (userId == null) return;
+    if (userId == null) {
+      return;
+    }
 
     _signalingSubscription?.cancel();
     _signalingSubscription = Supabase.instance.client
@@ -215,11 +228,15 @@ class GoLiveController extends GetxController {
             final now = DateTime.now();
             final activeCall = data.firstWhere(
               (call) {
-                if (call['status'] != 'ringing') return false;
+                if (call['status'] != 'ringing') {
+                  return false;
+                }
                 final createdAtStr = call['created_at'];
                 if (createdAtStr != null) {
                   final createdAt = DateTime.parse(createdAtStr);
-                  if (now.difference(createdAt).inSeconds > 60) return false;
+                  if (now.difference(createdAt).inSeconds > 60) {
+                    return false;
+                  }
                 }
                 return true;
               },
@@ -252,7 +269,9 @@ class GoLiveController extends GetxController {
 
   Future<void> makeCall(String receiverId) async {
     final userId = currentUserId;
-    if (userId == null) throw 'يجب تسجيل الدخول أولاً';
+    if (userId == null) {
+      throw 'يجب تسجيل الدخول أولاً';
+    }
 
     debugPrint('Initiating call: Caller=$userId, Receiver=$receiverId');
 
@@ -306,8 +325,10 @@ class GoLiveController extends GetxController {
 
   Future<void> respondToCall(String callId, bool accept) async {
     try {
-      await Supabase.instance.client.from(AppConstants.tableCallsSignaling).update(
-          {'status': accept ? 'accepted' : 'rejected'}).eq('id', callId);
+      await Supabase.instance.client
+          .from(AppConstants.tableCallsSignaling)
+          .update({'status': accept ? 'accepted' : 'rejected'}).eq(
+              'id', callId);
 
       if (accept) {
         stopRinging();

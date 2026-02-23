@@ -190,10 +190,10 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                         return Container(
                           margin: EdgeInsets.all(10.w),
                           decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   width: 1)),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.vertical,
@@ -201,9 +201,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                             child: Column(
                               children: [
                                 DataTable(
-                                  headingRowColor: MaterialStateProperty.all(
-                                      Colors.white.withOpacity(0.1)),
-                                  dataRowColor: MaterialStateProperty.all(
+                                  headingRowColor: WidgetStateProperty.all(
+                                      Colors.white.withValues(alpha: 0.1)),
+                                  dataRowColor: WidgetStateProperty.all(
                                       Colors.transparent),
                                   dataRowMinHeight: 32.h,
                                   dataRowMaxHeight: 35.h,
@@ -216,7 +216,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                             child: Row(
                                               children: [
                                                 Icon(Icons.location_city,
-                                                    size: 12.sp, color: Appcolors.gold),
+                                                    size: 12.sp,
+                                                    color: Appcolors.gold),
                                                 SizedBox(width: 4.w),
                                                 Text('المحطة',
                                                     style: TextStyle(
@@ -334,13 +335,14 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                     vertical: 2.h),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.05),
+                                                      .withValues(alpha: 0.05),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           6.r),
                                                   border: Border.all(
                                                       color: Colors.white
-                                                          .withOpacity(0.1)),
+                                                          .withValues(
+                                                              alpha: 0.1)),
                                                 ),
                                                 child: Row(
                                                   mainAxisSize:
@@ -359,8 +361,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                           size: 8.sp,
                                                           color: Colors
                                                               .blueAccent
-                                                              .withOpacity(
-                                                                  0.8)),
+                                                              .withValues(
+                                                                  alpha: 0.8)),
                                                     ],
                                                   ],
                                                 ),
@@ -391,7 +393,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                                         .orange
                                                                     : Colors
                                                                         .green)
-                                                            .withOpacity(0.5),
+                                                            .withValues(
+                                                                alpha: 0.5),
                                                         blurRadius: 4,
                                                         spreadRadius: 1,
                                                       ),
@@ -491,20 +494,20 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
       setState(() {});
       Get.snackbar('نجاح', 'تم تحديث سعة المحطة بنجاح',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.7),
+          backgroundColor: Colors.green.withValues(alpha: 0.7),
           colorText: Colors.white);
     } catch (e) {
       Get.snackbar('خطأ', 'فشل في تحديث البيانات',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.7),
+          backgroundColor: Colors.red.withValues(alpha: 0.7),
           colorText: Colors.white);
     }
   }
 
   Widget _buildShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.1),
-      highlightColor: Colors.white.withOpacity(0.3),
+      baseColor: Colors.white.withValues(alpha: 0.1),
+      highlightColor: Colors.white.withValues(alpha: 0.3),
       child: ListView.builder(
         itemCount: 10,
         itemBuilder: (_, __) => Container(
@@ -518,7 +521,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
 
   Future<void> _generatePDF(
       BuildContext context, List<Map<String, dynamic>> data) async {
-    if (_isGeneratingPdf) return;
+    if (_isGeneratingPdf) {
+      return;
+    }
     setState(() => _isGeneratingPdf = true);
 
     try {
@@ -661,7 +666,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                             align: pw.Alignment.centerRight),
                       ],
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

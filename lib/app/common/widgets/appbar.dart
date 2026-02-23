@@ -2,7 +2,6 @@ import 'package:amiraly/app/features/auth/login/loginscreen.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/util/validators/validatorHeper.dart';
 import 'package:amiraly/core/services/auth_service.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';

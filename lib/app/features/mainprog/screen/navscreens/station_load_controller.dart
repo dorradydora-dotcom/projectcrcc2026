@@ -121,13 +121,17 @@ class StationLoadController extends GetxController {
   }
 
   void _handleRealtimePayload(PostgresChangePayload payload) {
-    if (payload.newRecord.isEmpty) return;
+    if (payload.newRecord.isEmpty) {
+      return;
+    }
 
     try {
       final newRecord = payload.newRecord;
       final stationName = newRecord['station_name'] as String?;
 
-      if (stationName == null) return;
+      if (stationName == null) {
+        return;
+      }
 
       // Update in stationLoads list
       final index =
@@ -139,9 +143,15 @@ class StationLoadController extends GetxController {
         // Merge with existing data to handle potential partial updates
         // Note: Realtime usually sends full row for UPDATE, but good to be safe
         double parseSafe(dynamic value, double fallback) {
-          if (value == null) return fallback;
-          if (value is num) return value.toDouble();
-          if (value is String) return double.tryParse(value) ?? fallback;
+          if (value == null) {
+            return fallback;
+          }
+          if (value is num) {
+            return value.toDouble();
+          }
+          if (value is String) {
+            return double.tryParse(value) ?? fallback;
+          }
           return fallback;
         }
 
@@ -413,7 +423,9 @@ class StationLoadController extends GetxController {
 
   /// Update station loads with random variations
   void _updateLoads() {
-    if (stationLoads.isEmpty) return;
+    if (stationLoads.isEmpty) {
+      return;
+    }
 
     final random = Random();
     final updatedLoads = stationLoads.map((station) {
@@ -459,7 +471,9 @@ class StationLoadController extends GetxController {
 
   /// Check if station was updated in the current hour
   bool wasUpdatedThisHour(String stationName) {
-    if (!lastUpdateTimes.containsKey(stationName)) return false;
+    if (!lastUpdateTimes.containsKey(stationName)) {
+      return false;
+    }
 
     final lastUpdate = lastUpdateTimes[stationName]!.toLocal();
     final now = DateTime.now();
@@ -472,7 +486,9 @@ class StationLoadController extends GetxController {
 
   /// Check if user can edit a station
   bool canEditStation(String stationName) {
-    if (isCrccUser.value) return true;
+    if (isCrccUser.value) {
+      return true;
+    }
 
     final requiredEmail = specificStations[stationName];
     if (requiredEmail != null && userEmail == requiredEmail) {

@@ -116,7 +116,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
   }
 
   Future<void> _initializeData() async {
-    if (isOffline.value) return;
+    if (isOffline.value) {
+      return;
+    }
 
     isLoading.value = true;
     try {
@@ -158,12 +160,36 @@ class HomenavcontrollerImp extends Homenavcontroller {
     try {
       final client = Supabase.instance.client;
       final results = await Future.wait([
-        client.from(AppConstants.tableUserCm).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserStations).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserTop).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserCrcc).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserProject).select().eq('user_email', email).limit(1),
-        client.from(AppConstants.tableUserOthers).select().eq('user_email', email).limit(1),
+        client
+            .from(AppConstants.tableUserCm)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserStations)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserTop)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserCrcc)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserProject)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
+        client
+            .from(AppConstants.tableUserOthers)
+            .select()
+            .eq('user_email', email)
+            .limit(1),
       ]);
 
       if (results[0].isNotEmpty) {
@@ -249,7 +275,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   Future<void> fetchCategories() async {
-    if (isOffline.value) return;
+    if (isOffline.value) {
+      return;
+    }
     try {
       final response = await Supabase.instance.client
           .from(AppConstants.tableCategoryItems)
@@ -267,7 +295,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   Future<void> fetchAnnouncImages() async {
-    if (isOffline.value) return;
+    if (isOffline.value) {
+      return;
+    }
     try {
       final response = await Supabase.instance.client
           .from(AppConstants.tableAnnouncingImages)
@@ -285,13 +315,17 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   Future<void> fetchStationLoads() async {
-    if (isOffline.value) return;
+    if (isOffline.value) {
+      return;
+    }
     await _stationController.fetchData();
   }
 
   @override
   Future<void> fetchCairoWeather() async {
-    if (isOffline.value) return;
+    if (isOffline.value) {
+      return;
+    }
 
     const apiUrl =
         'https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto&forecast_days=5';

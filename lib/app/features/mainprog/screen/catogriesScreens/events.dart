@@ -103,7 +103,7 @@ class _EventsScreenState extends State<EventsScreen> {
                           ),
                           const Spacer(),
                           Icon(Icons.event_note,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               size: 24.sp),
                         ],
                       )),
@@ -126,15 +126,16 @@ class _EventsScreenState extends State<EventsScreen> {
                                   children: [
                                     Icon(Icons.event_available,
                                         size: (isTablet ? 40 : 32).sp,
-                                        color: Colors.white.withOpacity(0.2)),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.2)),
                                     SizedBox(height: 8.h),
                                     Text('لا يوجد أحداث حالياً',
                                         style: TextStyle(
                                             fontFamily:
                                                 Appfontstring.ChangaLight,
                                             fontSize: (isTablet ? 14 : 12).sp,
-                                            color:
-                                                Colors.white.withOpacity(0.5))),
+                                            color: Colors.white
+                                                .withValues(alpha: 0.5))),
                                   ],
                                 ),
                               )
@@ -152,8 +153,8 @@ class _EventsScreenState extends State<EventsScreen> {
                     decoration: BoxDecoration(
                         color: const Color.fromARGB(191, 250, 211, 114),
                         borderRadius: BorderRadius.circular(4.r),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.1))),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1))),
                     padding:
                         EdgeInsets.symmetric(vertical: 4.h, horizontal: 16.w),
                     child: Text(
@@ -170,10 +171,10 @@ class _EventsScreenState extends State<EventsScreen> {
                     padding:
                         EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       border: Border(
-                          top:
-                              BorderSide(color: Colors.white.withOpacity(0.1))),
+                          top: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.1))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -213,7 +214,7 @@ class _EventsScreenState extends State<EventsScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -258,7 +259,7 @@ class _EventsScreenState extends State<EventsScreen> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8.w, vertical: 2.h),
                             decoration: BoxDecoration(
-                              color: alertOrange.withOpacity(0.1),
+                              color: alertOrange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Row(
@@ -387,7 +388,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.05),
+                          color: Colors.orange.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Row(
@@ -501,7 +502,7 @@ class _EventsScreenState extends State<EventsScreen> {
       title: Container(
         padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: primaryBlue.withOpacity(0.03),
+          color: primaryBlue.withValues(alpha: 0.03),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20.r),
             topRight: Radius.circular(20.r),
@@ -537,7 +538,9 @@ class _EventsScreenState extends State<EventsScreen> {
             Obx(() => _buildSwitchTile('نوع الحدث: انقطاع تغذية كهربائية',
                     controller.isPowerCut.value, (value) {
                   controller.isPowerCut.value = value;
-                  if (!value) controller.amountController.clear();
+                  if (!value) {
+                    controller.amountController.clear();
+                  }
                 })),
             Obx(() {
               if (controller.isPowerCut.value) {
@@ -573,7 +576,9 @@ class _EventsScreenState extends State<EventsScreen> {
             } else {
               await controller.updateEvent(event);
             }
-            if (mounted) Navigator.pop(context);
+            if (mounted) {
+              Navigator.pop(context);
+            }
           },
           style: ElevatedButton.styleFrom(
               backgroundColor: primaryBlue,
@@ -610,10 +615,12 @@ class _EventsScreenState extends State<EventsScreen> {
               color: const Color(0xFF64748B)),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
+              borderSide:
+                  BorderSide(color: Colors.black.withValues(alpha: 0.08))),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
+              borderSide:
+                  BorderSide(color: Colors.black.withValues(alpha: 0.08))),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
               borderSide:
@@ -633,7 +640,7 @@ class _EventsScreenState extends State<EventsScreen> {
         textDirection: ui.TextDirection.rtl,
         child: Container(
             decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.08),
+                color: Colors.blue.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(5.r)),
             child: SwitchListTile(
               title: Text(title,
@@ -657,16 +664,19 @@ class _EventsScreenState extends State<EventsScreen> {
                         const ColorScheme.light(primary: Colors.purple)),
                 child: child!),
           );
-          if (picked != null) controller.selectedTime.value = picked;
+          if (picked != null) {
+            controller.selectedTime.value = picked;
+          }
         },
         child: Directionality(
           textDirection: ui.TextDirection.rtl,
           child: Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.05),
+                color: Colors.purple.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(5.r),
-                border: Border.all(color: Colors.purple.withOpacity(0.2))),
+                border:
+                    Border.all(color: Colors.purple.withValues(alpha: 0.2))),
             child: Row(
               children: [
                 Icon(Icons.access_time, size: 16.sp, color: Colors.purple),

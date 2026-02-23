@@ -68,12 +68,12 @@ class Mapscreen extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -84,7 +84,8 @@ class Mapscreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.black, size: 17.5.sp),
+                    Icon(Icons.info_outline,
+                        color: Colors.black, size: 17.5.sp),
                     SizedBox(width: 8.w),
                     Text(
                       'بيانات الخريطة :',
@@ -108,7 +109,7 @@ class Mapscreen extends StatelessWidget {
                   padding:
                       EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Row(
@@ -144,7 +145,7 @@ class Mapscreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(5.w),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -159,7 +160,7 @@ class Mapscreen extends StatelessWidget {
               text,
               style: TextStyle(
                 fontSize: 10.5.sp,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontFamily: Appfontstring.ChangaLight,
                 height: 1.4,
               ),
@@ -177,10 +178,11 @@ class Mapscreen extends StatelessWidget {
         // height removed to fill Expanded space
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -237,7 +239,7 @@ class Mapscreen extends StatelessWidget {
               Obx(() {
                 if (controller.isLoading.value) {
                   return Container(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -306,7 +308,7 @@ class Mapscreen extends StatelessWidget {
             icon: const Icon(Icons.refresh, size: 16),
             label: const Text("إعادة المحاولة"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.withOpacity(0.8),
+              backgroundColor: Colors.blue.withValues(alpha: 0.8),
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
               textStyle: TextStyle(

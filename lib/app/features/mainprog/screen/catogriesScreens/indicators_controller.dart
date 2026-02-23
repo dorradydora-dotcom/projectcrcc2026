@@ -146,7 +146,7 @@ class IndicatorsController extends GetxController
       totalDynamic.value = 0.0;
       hasPieData.value = false;
       animationController.forward();
-      print("Error fetching station data: $e");
+      debugPrint("Error fetching station data: $e");
     }
   }
 

@@ -211,8 +211,9 @@ class AuthService extends GetxController {
       return null;
     } catch (e, stackTrace) {
       AppLogger.logError('Login failed - Unknown error', e, stackTrace);
-      if (context.mounted)
+      if (context.mounted) {
         _showSnackbar(context, 'حدث خطأ غير متوقع', isError: true);
+      }
       return null;
     }
   }
@@ -234,8 +235,9 @@ class AuthService extends GetxController {
       AppLogger.logSuccess('✅ User signed out successfully');
     } catch (e, stackTrace) {
       AppLogger.logError('Sign out failed', e, stackTrace);
-      if (context.mounted)
+      if (context.mounted) {
         _showSnackbar(context, 'فشل تسجيل الخروج', isError: true);
+      }
     }
   }
 

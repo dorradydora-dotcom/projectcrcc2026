@@ -91,7 +91,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                         SizedBox(height: 24.h),
 
                         Divider(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             thickness: 1,
                             height: 30.h),
 
@@ -110,7 +110,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                         SizedBox(height: 24.h),
 
                         Divider(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             thickness: 1,
                             height: 30.h),
 
@@ -143,9 +143,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -183,9 +183,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       return Container(
         padding: EdgeInsets.all(8.w),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -211,14 +211,14 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                   selected: isSelected,
                   selectedColor: Colors.orangeAccent,
                   checkmarkColor: Colors.black,
-                  backgroundColor: Colors.white.withOpacity(0.1),
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     side: BorderSide(
                       color: isSelected
                           ? Colors.orangeAccent
-                          : Colors.white.withOpacity(0.2),
+                          : Colors.white.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
@@ -237,9 +237,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
     return Container(
       height: (isSmallScreen ? 60 : 80).h,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Center(
         child: Padding(
@@ -270,9 +270,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       return Container(
           height: chartHeight,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Padding(
               padding: EdgeInsets.all(8.w),
@@ -285,11 +285,11 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                       horizontalInterval: 50,
                       verticalInterval: 4,
                       getDrawingHorizontalLine: (value) => FlLine(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         strokeWidth: 1,
                       ),
                       getDrawingVerticalLine: (value) => FlLine(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         strokeWidth: 1,
                       ),
                     ),
@@ -370,7 +370,8 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                     ),
                     borderData: FlBorderData(
                       show: true,
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     minX: 0,
                     maxX: 23,
@@ -404,8 +405,8 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    color.withOpacity(0.3),
-                                    color.withOpacity(0)
+                                    color.withValues(alpha: 0.3),
+                                    color.withValues(alpha: 0)
                                   ])));
                     }).toList(),
                     lineTouchData: LineTouchData(
@@ -440,9 +441,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
     return Obx(() => Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           constraints: BoxConstraints(maxHeight: 100.h),
           child: Wrap(
@@ -483,9 +484,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       return Container(
         height: chartHeight,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Padding(
           padding: EdgeInsets.all(16.w),
@@ -554,11 +555,12 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
         badgeWidget: Container(
           padding: EdgeInsets.all(isSmallScreen ? 6.w : 8.w),
           decoration: BoxDecoration(
-            color: AppConstants.indicatorstationColors[i].withOpacity(0.85),
+            color:
+                AppConstants.indicatorstationColors[i].withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 3,
                 offset: const Offset(0, 1),
               ),
@@ -624,9 +626,9 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       return Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Wrap(
           spacing: 16.0.w,
@@ -674,10 +676,11 @@ class Indicator extends StatelessWidget {
           decoration: BoxDecoration(
             shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
             color: color,
-            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5), width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
@@ -762,15 +765,15 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.06),
-                Colors.white.withOpacity(0.01),
+                Colors.white.withValues(alpha: 0.06),
+                Colors.white.withValues(alpha: 0.01),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(10.r),
             border: Border.all(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 0.8,
             ),
           ),
@@ -798,7 +801,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
                               Text(
                                 item['city'],
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 12.sp,
                                   fontFamily: Appfontstring.ChangaLight,
                                   fontWeight: FontWeight.bold,
@@ -820,7 +823,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
                                       '(من الذاكرة)',
                                       style: TextStyle(
                                         color: Colors.orangeAccent
-                                            .withOpacity(0.6),
+                                            .withValues(alpha: 0.6),
                                         fontSize: 8.sp,
                                         fontFamily: Appfontstring.ChangaLight,
                                       ),
@@ -894,7 +897,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
                   ),
                   if (!isLast)
                     Divider(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       height: 12.h,
                       thickness: 0.5,
                     ),
@@ -931,9 +934,9 @@ class HourlyMaxLoadTable extends GetView<IndicatorsController> {
       return Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
@@ -1033,7 +1036,8 @@ class HourlyMaxLoadTable extends GetView<IndicatorsController> {
       color: color,
       barWidth: 2,
       dotData: FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
+      belowBarData:
+          BarAreaData(show: true, color: color.withValues(alpha: 0.1)),
     );
   }
 }

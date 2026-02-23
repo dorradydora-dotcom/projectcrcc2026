@@ -19,7 +19,9 @@ class AreaNavController extends GetxController {
 
   /// تصفية المحطات بناءً على البحث
   List<StationDetialesModel> get filteredStations {
-    if (searchQuery.value.trim().isEmpty) return stations;
+    if (searchQuery.value.trim().isEmpty) {
+      return stations;
+    }
     final query = searchQuery.value.trim().toLowerCase();
     return stations
         .where((s) =>
@@ -37,7 +39,9 @@ class AreaNavController extends GetxController {
 
   Future<void> fetchStations({bool refresh = false}) async {
     // التحقق مما إذا كانت البيانات موجودة بالفعل لمنع الاستدعاء المتكرر
-    if (stations.isNotEmpty && !refresh) return;
+    if (stations.isNotEmpty && !refresh) {
+      return;
+    }
 
     try {
       isLoading.value = true;
@@ -62,11 +66,13 @@ class AreaNavController extends GetxController {
         'فشل في جلب بيانات المحطات',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 5),
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
         mainButton: TextButton(
           onPressed: () {
-            if (Get.isSnackbarOpen) Get.back();
+            if (Get.isSnackbarOpen) {
+              Get.back();
+            }
             fetchStations(refresh: true);
           },
           child: const Text(

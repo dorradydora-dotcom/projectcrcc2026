@@ -95,7 +95,7 @@ class UsersPage extends StatelessWidget {
                                   Icon(
                                     Iconsax.user_remove,
                                     size: 48.sp,
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                   ),
                                   SizedBox(height: 16.h),
                                   Text(
@@ -122,14 +122,14 @@ class UsersPage extends StatelessWidget {
                             child: Container(
                               margin: EdgeInsets.all(15.w),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.15),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     width: 1.5),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 20,
                                     offset: const Offset(0, 10),
                                   ),
@@ -154,7 +154,7 @@ class UsersPage extends StatelessWidget {
                                             headingRowColor:
                                                 WidgetStateProperty.all(Colors
                                                     .white
-                                                    .withOpacity(0.12)),
+                                                    .withValues(alpha: 0.12)),
                                             dataRowColor:
                                                 WidgetStateProperty.all(
                                                     Colors.transparent),
@@ -244,19 +244,22 @@ class UsersPage extends StatelessWidget {
                                                         decoration:
                                                             BoxDecoration(
                                                           color: Colors.blue
-                                                              .withOpacity(0.2),
+                                                              .withValues(
+                                                                  alpha: 0.2),
                                                           shape:
                                                               BoxShape.circle,
                                                           border: Border.all(
                                                               color: Colors.blue
-                                                                  .withOpacity(
-                                                                      0.5),
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.5),
                                                               width: 1),
                                                           boxShadow: [
                                                             BoxShadow(
                                                               color: Colors.blue
-                                                                  .withOpacity(
-                                                                      0.3),
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.3),
                                                               blurRadius: 8,
                                                               spreadRadius: 1,
                                                             ),
@@ -312,12 +315,12 @@ class UsersPage extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.r),
-            border:
-                Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5.w),
-            color: Colors.black.withOpacity(0.4),
+            border: Border.all(
+                color: Colors.orange.withValues(alpha: 0.5), width: 1.5.w),
+            color: Colors.black.withValues(alpha: 0.4),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -388,23 +391,26 @@ class UsersPage extends StatelessWidget {
   Widget _buildIncomingCallOverlay(
       BuildContext context, GoLiveController controller) {
     final call = controller.incomingCall.value;
-    if (call == null) return const SizedBox.shrink();
+    if (call == null) {
+      return const SizedBox.shrink();
+    }
 
     return Positioned.fill(
       child: FadeIn(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             child: Center(
               child: ZoomIn(
                 child: Container(
                   width: 0.8.sw,
                   padding: EdgeInsets.all(25.r),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30.r),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -486,8 +492,8 @@ class UsersPage extends StatelessWidget {
 
   Widget _buildShimmerRow() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.12),
+      baseColor: Colors.white.withValues(alpha: 0.05),
+      highlightColor: Colors.white.withValues(alpha: 0.12),
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         height: 50.h,
@@ -508,7 +514,7 @@ class UsersPage extends StatelessWidget {
             Icon(
               Iconsax.shield_cross5,
               size: 80.sp,
-              color: Colors.redAccent.withOpacity(0.5),
+              color: Colors.redAccent.withValues(alpha: 0.5),
             ),
             SizedBox(height: 20.h),
             Text(
@@ -550,7 +556,9 @@ class VideoCallPage extends StatelessWidget {
       body: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
+          if (didPop) {
+            return;
+          }
           await _onWillPop(context);
         },
         child: Obx(() => Stack(
@@ -573,7 +581,7 @@ class VideoCallPage extends StatelessWidget {
                               left: 20,
                               right: 20),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                           ),
                           child: Row(
                             children: [
@@ -639,10 +647,11 @@ class VideoCallPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(
-                              color: Colors.white.withOpacity(0.3), width: 2),
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 2),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 blurRadius: 15,
                                 spreadRadius: 2),
                           ],
@@ -716,7 +725,7 @@ class VideoCallPage extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -752,7 +761,7 @@ class VideoCallPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SpinKitRipple(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               size: 100.r,
             ),
             SizedBox(height: 20.h),

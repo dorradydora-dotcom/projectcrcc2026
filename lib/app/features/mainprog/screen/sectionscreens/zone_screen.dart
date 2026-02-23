@@ -169,11 +169,14 @@ class _ZoneScreenState extends State<ZoneScreen>
               valueListenable: _transformationController,
               builder: (context, value, child) {
                 final scale = value.storage[0];
-                if (scale <= 1.05) return const SizedBox.shrink();
+                if (scale <= 1.05) {
+                  return const SizedBox.shrink();
+                }
 
                 return FloatingActionButton.small(
                   heroTag: 'reset_zoom_${widget.zoneName}',
-                  backgroundColor: Appcolors.primaryColor.withOpacity(0.9),
+                  backgroundColor:
+                      Appcolors.primaryColor.withValues(alpha: 0.9),
                   elevation: 6,
                   onPressed: _resetZoom,
                   child: const Icon(Iconsax.refresh, color: Colors.white),
@@ -253,7 +256,7 @@ class _ZoneScreenState extends State<ZoneScreen>
         children: [
           Icon(
             Iconsax.image,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             size: 120.sp,
           ),
           SizedBox(height: 24.h),

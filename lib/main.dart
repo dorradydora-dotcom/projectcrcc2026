@@ -11,13 +11,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:carousel_slider/carousel_controller.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/util/validators/validatorHeper.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/favorites_controller.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_controller.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
-
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
 import 'package:amiraly/core/widgets/auth_wrapper.dart';
@@ -82,8 +80,9 @@ Future<void> _initializeSupabaseInBackground() async {
   try {
     final String url = dotenv.env['SUPABASE_URL'] ?? '';
     final String key = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-    if (url.isEmpty || key.isEmpty)
+    if (url.isEmpty || key.isEmpty) {
       throw Exception('Supabase URL or Key is empty');
+    }
     await Supabase.initialize(url: url, anonKey: key);
     AppLogger.logSuccess('✅ Supabase initialized in background');
   } catch (e, stackTrace) {

@@ -1,7 +1,7 @@
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
-import 'package:amiraly/app/features/mainprog/screen/navscreens/Loadnav.dart';
+import 'package:amiraly/app/features/mainprog/screen/navscreens/loadnav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/favoritesnav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/homenav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/stationloadnav.dart';
@@ -327,7 +327,8 @@ class __HomePageContentState extends State<_HomePageContent>
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: item.glowColor.withOpacity(_glowAnimation.value),
+                      color: item.glowColor
+                          .withValues(alpha: _glowAnimation.value),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),

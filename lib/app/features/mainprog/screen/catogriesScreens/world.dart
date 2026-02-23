@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +72,10 @@ class _WorldScreenState extends State<WorldScreen>
         ),
         onWebViewCreated: controller.onWebViewCreated,
         onLoadStop: (ctrl, url) => controller.onLoadStop(),
-        onLoadError: (ctrl, url, code, message) => controller.onLoadError(),
+        onLoadError: (ctrl, url, code, message) {
+          debugPrint("Error: $message (Code: $code)");
+          controller.onLoadError();
+        },
         onProgressChanged: (ctrl, p) => controller.onProgressChanged(p),
       );
     });
@@ -92,8 +94,8 @@ class _WorldScreenState extends State<WorldScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF0F172A).withOpacity(0.9),
-                const Color(0xFF0F172A).withOpacity(0.0),
+                const Color(0xFF0F172A).withValues(alpha: 0.9),
+                const Color(0xFF0F172A).withValues(alpha: 0.0),
               ],
             ),
           ),
@@ -104,10 +106,12 @@ class _WorldScreenState extends State<WorldScreen>
 
   Widget _buildLoadingStatus() {
     return Obx(() {
-      if (!controller.isLoading.value) return const SizedBox.shrink();
+      if (!controller.isLoading.value) {
+        return const SizedBox.shrink();
+      }
       return Positioned.fill(
         child: Container(
-          color: const Color(0xFF0F172A).withOpacity(0.8),
+          color: const Color(0xFF0F172A).withValues(alpha: 0.8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -148,7 +152,9 @@ class _WorldScreenState extends State<WorldScreen>
 
   Widget _buildErrorState() {
     return Obx(() {
-      if (!controller.hasError.value) return const SizedBox.shrink();
+      if (!controller.hasError.value) {
+        return const SizedBox.shrink();
+      }
       return Container(
         color: const Color(0xFF0F172A),
         child: Center(
@@ -161,9 +167,10 @@ class _WorldScreenState extends State<WorldScreen>
                   padding: EdgeInsets.all(24.w),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.2), width: 2),
+                        color: Colors.redAccent.withValues(alpha: 0.2),
+                        width: 2),
                   ),
                   child: Icon(Icons.wifi_off_rounded,
                       size: 60.sp, color: Colors.redAccent),
@@ -199,7 +206,7 @@ class _WorldScreenState extends State<WorldScreen>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.r)),
                     elevation: 10,
-                    shadowColor: const Color(0xFF38BDF8).withOpacity(0.4),
+                    shadowColor: const Color(0xFF38BDF8).withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -212,7 +219,9 @@ class _WorldScreenState extends State<WorldScreen>
 
   Widget _buildRefreshFAB() {
     return Obx(() {
-      if (controller.isLoading.value) return const SizedBox.shrink();
+      if (controller.isLoading.value) {
+        return const SizedBox.shrink();
+      }
       return FloatingActionButton(
         onPressed: controller.fetchUrl,
         backgroundColor: const Color(0xFF38BDF8),

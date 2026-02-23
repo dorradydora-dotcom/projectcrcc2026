@@ -56,13 +56,11 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
     final thisHour = now.hour;
     try {
       final hourlyData = await _supabaseService.fetchHourlyMaxLoads(today);
-      final Map<String, dynamic>? currentEntry = hourlyData.firstWhere(
+      final Map<String, dynamic> currentEntry = hourlyData.firstWhere(
         (e) => e['hour'] == thisHour,
         orElse: () => <String, dynamic>{},
       );
-      _hourlyMax = currentEntry != null
-          ? (currentEntry['max_load'] as num).toDouble()
-          : 0.0;
+      _hourlyMax = (currentEntry['max_load'] as num).toDouble();
     } catch (e) {
       _hourlyMax = 0.0;
     }
@@ -71,7 +69,9 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   }
 
   Future<void> updateLoadHistory() async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     final now = DateTime.now();
     _loadHistory.add({'timestamp': now, 'totalLoad': widget.totalLoad});
     _loadHistory.removeWhere(
@@ -85,7 +85,9 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
           : widget.totalLoad;
     });
 
-    if (_trackedHour == null || _trackedDate == null) return;
+    if (_trackedHour == null || _trackedDate == null) {
+      return;
+    }
 
     final today = DateTime(now.year, now.month, now.day);
     final thisHour = now.hour;
@@ -97,20 +99,24 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
     if (hourChanged) {
       try {
         final hourlyData = await _supabaseService.fetchHourlyMaxLoads(today);
-        final Map<String, dynamic>? currentEntry = hourlyData.firstWhere(
+        final Map<String, dynamic> currentEntry = hourlyData.firstWhere(
           (e) => e['hour'] == thisHour,
-          orElse: () => <String, dynamic>{},
+          orElse: () => <String, dynamic>{'max_load': 0.0},
         );
-        final existingMax = currentEntry != null
-            ? (currentEntry['max_load'] as num).toDouble()
-            : 0.0;
+        final existingMax = (currentEntry['max_load'] as num).toDouble();
         final newMax = max(existingMax, widget.totalLoad);
         _hourlyMax = newMax;
         if (widget.totalLoad > existingMax) {
+          if (!mounted) {
+            return;
+          }
           await _supabaseService.upsertHourlyMaxLoad(thisHour, today, newMax);
         }
       } catch (e) {
         _hourlyMax = widget.totalLoad;
+        if (!mounted) {
+          return;
+        }
         await _supabaseService.upsertHourlyMaxLoad(thisHour, today, _hourlyMax);
       }
       _trackedHour = thisHour;
@@ -126,7 +132,9 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   @override
   void didUpdateWidget(LoadDisplayWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.totalLoad != oldWidget.totalLoad) updateLoadHistory();
+    if (widget.totalLoad != oldWidget.totalLoad) {
+      updateLoadHistory();
+    }
   }
 
   @override
@@ -152,12 +160,12 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -171,7 +179,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
             padding: EdgeInsets.symmetric(
                 horizontal: 8.w, vertical: 3.h), // Reduced vertical padding
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Row(
@@ -181,7 +189,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                 Text(
                   'الحمل الكلي للشبكة',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
@@ -203,8 +211,8 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
           SizedBox(height: 2.h), // Reduced spacing
           widget.isLoading
               ? Shimmer.fromColors(
-                  baseColor: Colors.red.withOpacity(0.3),
-                  highlightColor: Colors.red.withOpacity(0.7),
+                  baseColor: Colors.red.withValues(alpha: 0.3),
+                  highlightColor: Colors.red.withValues(alpha: 0.7),
                   child: Text(
                     '---',
                     style: TextStyle(
@@ -242,7 +250,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                                     color: (value < 0
                                             ? Colors.red
                                             : Colors.redAccent)
-                                        .withOpacity(0.5),
+                                        .withValues(alpha: 0.5),
                                     blurRadius: 15,
                                   ),
                                 ],
@@ -255,7 +263,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                         Text(
                           'ميجا واط',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 12.sp,
                             fontFamily: Appfontstring.ChangaLight,
                           ),
@@ -269,10 +277,10 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
           Container(
             padding: EdgeInsets.all(3.h),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.08),
+              color: Colors.blueAccent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8.r),
               border: Border.all(
-                color: Colors.blueAccent.withOpacity(0.2),
+                color: Colors.blueAccent.withValues(alpha: 0.2),
               ),
             ),
             child: RichText(
@@ -329,16 +337,16 @@ class ShimmerLoadingGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             return Shimmer.fromColors(
-              baseColor: Colors.white.withOpacity(0.05),
-              highlightColor: Colors.white.withOpacity(0.15),
+              baseColor: Colors.white.withValues(alpha: 0.05),
+              highlightColor: Colors.white.withValues(alpha: 0.15),
               child: Container(
                 margin: EdgeInsets.only(bottom: 6.h),
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     width: 1.0,
                   ),
                 ),
@@ -415,11 +423,11 @@ class _StationCardState extends State<StationCard> {
           gradient: LinearGradient(
             colors: [
               widget.isUserAssigned
-                  ? Colors.orange.withOpacity(0.12)
-                  : Colors.white.withOpacity(0.08),
+                  ? Colors.orange.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.08),
               widget.isUserAssigned
-                  ? Colors.orange.withOpacity(0.05)
-                  : Colors.white.withOpacity(0.03),
+                  ? Colors.orange.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.03),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -427,15 +435,15 @@ class _StationCardState extends State<StationCard> {
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: widget.isUserAssigned
-                ? Colors.orangeAccent.withOpacity(0.3)
-                : Colors.white.withOpacity(0.15),
+                ? Colors.orangeAccent.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.15),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: widget.isUserAssigned
-                  ? Colors.orange.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.1),
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -455,17 +463,17 @@ class _StationCardState extends State<StationCard> {
                       : widget.isUserAssigned
                           ? [Colors.orangeAccent, Colors.orange]
                           : [
-                              Colors.blueAccent.withOpacity(0.6),
-                              Colors.blue.withOpacity(0.4)
+                              Colors.blueAccent.withValues(alpha: 0.6),
+                              Colors.blue.withValues(alpha: 0.4)
                             ],
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: widget.isUpdatedRecently
-                        ? Colors.green.withOpacity(0.3)
+                        ? Colors.green.withValues(alpha: 0.3)
                         : widget.isUserAssigned
-                            ? Colors.orange.withOpacity(0.3)
-                            : Colors.blue.withOpacity(0.2),
+                            ? Colors.orange.withValues(alpha: 0.3)
+                            : Colors.blue.withValues(alpha: 0.2),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -500,7 +508,7 @@ class _StationCardState extends State<StationCard> {
                       fontFamily: Appfontstring.ChangaLight,
                       color: widget.isUserAssigned
                           ? Colors.orangeAccent
-                          : Colors.white.withOpacity(0.9),
+                          : Colors.white.withValues(alpha: 0.9),
                     ),
                     textDirection: TextDirection.rtl,
                     maxLines: 1,
@@ -610,8 +618,8 @@ class CustomActionButton extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: isHighlighted
-                    ? Colors.orange.withOpacity(0.3)
-                    : Colors.black.withOpacity(0.2),
+                    ? Colors.orange.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -656,15 +664,15 @@ class ErrorRetryWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.red.withOpacity(0.1),
-            Colors.red.withOpacity(0.05),
+            Colors.red.withValues(alpha: 0.1),
+            Colors.red.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: Colors.redAccent.withOpacity(0.3),
+          color: Colors.redAccent.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -684,7 +692,7 @@ class ErrorRetryWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 14.sp,
               fontFamily: Appfontstring.ChangaLight,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               height: 1.5,
             ),
           ),
@@ -754,8 +762,13 @@ class StationloadnavScreen extends StatelessWidget {
     // Use centralized controller
     final controller = Get.find<StationLoadController>();
 
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          return;
+        }
+      },
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
@@ -813,10 +826,10 @@ class StationloadnavScreen extends StatelessWidget {
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 10.w, vertical: 6.h),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(20.r),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.white.withValues(alpha: 0.1),
                                     width: 1,
                                   ),
                                 ),
@@ -1038,7 +1051,7 @@ class StationDialogState extends State<StationDialog> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
@@ -1082,7 +1095,7 @@ class StationDialogState extends State<StationDialog> {
                   color: Colors.grey,
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
+                fillColor: Colors.white.withValues(alpha: 0.1),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide.none,

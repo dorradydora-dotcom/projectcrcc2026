@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/util/validators/validatorHeper.dart';
 
@@ -117,8 +116,9 @@ class NotificationService {
     String body, {
     String? route,
   }) async {
-    if (tableName.isEmpty)
+    if (tableName.isEmpty) {
       return {'success': false, 'message': 'Table name is empty'};
+    }
 
     try {
       final supabase = Supabase.instance.client;
