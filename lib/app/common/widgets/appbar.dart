@@ -129,7 +129,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           style: TextStyle(
               color: Colors.white,
               fontFamily: Appfontstring.ChangaLight,
-              fontSize: 16.sp,
+              fontSize: 14.sp,
               fontWeight: FontWeight.bold),
         ),
         Row(
@@ -141,7 +141,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               style: TextStyle(
                 color: Colors.yellow,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: 12.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -151,7 +151,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               style: TextStyle(
                 color: Colors.white,
                 fontFamily: Appfontstring.ChangaLight,
-                fontSize: 12.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -212,7 +212,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
       style: TextStyle(
         color: const Color.fromARGB(116, 178, 223, 155),
         fontFamily: Appfontstring.ChangaLight,
-        fontSize: 10.sp,
+        fontSize: 9.sp,
         fontWeight: FontWeight.normal,
       ),
     );

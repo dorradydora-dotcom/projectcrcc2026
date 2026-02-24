@@ -108,10 +108,10 @@ class _CairoscreenState extends State<Cairoscreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 14.w),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
                         child: Column(
                           children: [
-                            SizedBox(height: 15.h),
+                            SizedBox(height: 10.h),
                             TotalLoadCard(
                               totalLoad: totalLoad,
                               isLoading: _controller.isLoading.value,
@@ -123,7 +123,7 @@ class _CairoscreenState extends State<Cairoscreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        padding: EdgeInsets.symmetric(vertical: 4.h),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -147,26 +147,25 @@ class _CairoscreenState extends State<Cairoscreen> {
                       ),
                     ),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       sliver: _buildSliverSectionHeader(
                           'التبادلات البينية', Icons.swap_horiz),
                     ),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       sliver: _buildStationsGrid(isWide),
                     ),
-                    SliverToBoxAdapter(child: SizedBox(height: 15.h)),
+                    SliverToBoxAdapter(child: SizedBox(height: 8.h)),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       sliver: _buildSliverSectionHeader(
                           'محطات التوليد', Icons.bolt),
                     ),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       sliver: SliverToBoxAdapter(
                         child: SizedBox(
-                          height:
-                              100.h, // Adjusted height for more breathing room
+                          height: 92.h, // Reverted to tighter height
                           child: StationGaugeCard(
                             title: 'الكريمات الشمسية',
                             subtitle: 'توليد الطاقة المتجددة',
@@ -179,13 +178,13 @@ class _CairoscreenState extends State<Cairoscreen> {
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: SizedBox(height: 15.h)),
+                    SliverToBoxAdapter(child: SizedBox(height: 10.h)),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       sliver: SliverToBoxAdapter(
                           child: _buildNotesExpansion(isWide)),
                     ),
-                    SliverToBoxAdapter(child: SizedBox(height: 30.h)),
+                    SliverToBoxAdapter(child: SizedBox(height: 20.h)),
                   ],
                 );
               }),
@@ -255,8 +254,7 @@ class _CairoscreenState extends State<Cairoscreen> {
   Widget _buildSliverSectionHeader(String title, IconData icon) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding:
-            EdgeInsetsDirectional.only(bottom: 12.h, start: 8.w, top: 16.h),
+        padding: EdgeInsetsDirectional.only(bottom: 8.h, start: 8.w, top: 12.h),
         child: Row(
           children: [
             Container(
@@ -331,9 +329,9 @@ class _CairoscreenState extends State<Cairoscreen> {
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: isWide ? 2 : 1,
-        mainAxisSpacing: 6.h,
+        mainAxisSpacing: 3.h,
         crossAxisSpacing: 8.w,
-        childAspectRatio: isWide ? 2.8 : 2.5,
+        childAspectRatio: isWide ? 2.8 : 3.4,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
