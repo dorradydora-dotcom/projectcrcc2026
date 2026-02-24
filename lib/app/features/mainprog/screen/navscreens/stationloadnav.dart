@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:amiraly/core/services/heartbeat_service.dart';
 
 const double _maxStationLoad = 700.0;
 
@@ -33,7 +34,6 @@ class LoadDisplayWidget extends StatefulWidget {
 }
 
 class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
-  static const _updateInterval = Duration(seconds: 6);
   static const _historyRetentionMinutes = 60;
 
   double maxLoadInLastHour = 0.0;
@@ -42,13 +42,19 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
   DateTime? _trackedDate;
   final SupabaseService _supabaseService = SupabaseService();
   final List<Map<String, dynamic>> _loadHistory = [];
-  Timer? timer;
+  StreamSubscription? _heartbeatSubscription;
 
   @override
   void initState() {
     super.initState();
     initializeHourlyMax();
-    timer = Timer.periodic(_updateInterval, (_) => updateLoadHistory());
+
+    // Subscribe to central heartbeat for history updates every 6 seconds
+    _heartbeatSubscription = HeartbeatService.instance.onTick.listen((tick) {
+      if (tick % 6 == 0) {
+        updateLoadHistory();
+      }
+    });
   }
 
   Future<void> initializeHourlyMax() async {
@@ -140,7 +146,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
 
   @override
   void dispose() {
-    timer?.cancel();
+    _heartbeatSubscription?.cancel();
     super.dispose();
   }
 

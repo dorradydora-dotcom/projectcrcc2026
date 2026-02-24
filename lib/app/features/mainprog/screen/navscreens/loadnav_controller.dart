@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:amiraly/core/services/heartbeat_service.dart';
 
 class LoadnavController extends GetxController {
   final StationLoadController _stationController =
@@ -27,9 +28,8 @@ class LoadnavController extends GetxController {
   final RxBool isGeneratingPdf = false.obs;
   final List<Map<String, dynamic>> _loadHistory = [];
 
-  // --- Timers ---
-  Timer? _stationRefreshTimer;
-  Timer? _simulationTimer;
+  // --- Subscriptions ---
+  StreamSubscription? _heartbeatSubscription;
 
   @override
   void onInit() {
@@ -37,19 +37,23 @@ class LoadnavController extends GetxController {
     // Use microtask to avoid calling build-triggering updates during the very first build
     Future.microtask(() => _initializeAllData());
 
-    // Auto-refresh station data from API every minute
-    _stationRefreshTimer = Timer.periodic(
-        const Duration(seconds: 60), (_) => _stationController.fetchData());
+    // Listen to central heartbeat
+    _heartbeatSubscription = HeartbeatService.instance.onTick.listen((tick) {
+      // Auto-refresh station data from API every minute (60 seconds)
+      if (tick % 60 == 0) {
+        _stationController.fetchData();
+      }
 
-    // Simulation timer for micro-variations
-    _simulationTimer = Timer.periodic(
-        const Duration(seconds: 6), (_) => _simulateLoadChanges());
+      // Simulation for micro-variations every 6 seconds
+      if (tick % 6 == 0) {
+        _simulateLoadChanges();
+      }
+    });
   }
 
   @override
   void onClose() {
-    _stationRefreshTimer?.cancel();
-    _simulationTimer?.cancel();
+    _heartbeatSubscription?.cancel();
     super.onClose();
   }
 
@@ -95,7 +99,7 @@ class LoadnavController extends GetxController {
       final ttf = pw.Font.ttf(fontData);
 
       final digitalFontData =
-          await rootBundle.load("lib/assets/fonts/Digital.ttf");
+          await rootBundle.load("lib/assets/fonts/digital.ttf");
       final digitalTtf = pw.Font.ttf(digitalFontData);
 
       final now = DateTime.now();

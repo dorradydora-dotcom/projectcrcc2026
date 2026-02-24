@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/core/services/heartbeat_service.dart';
 
 const double maxStationLoad = 700.0;
 
@@ -29,13 +30,12 @@ class StationLoadController extends GetxController {
   final SupabaseService _supabaseService = SupabaseService();
   final CacheService _cacheService = CacheService();
 
-  // Timers & Realtime
-  Timer? _updateTimer;
-  Timer? _retryTimer;
+  // Heartbeat Subscription
+  StreamSubscription? _heartbeatSubscription;
   RealtimeChannel? _realtimeChannel;
 
   // Constants
-  static const _updateInterval = Duration(seconds: 7);
+
   static const _maxRetries = 5; // Increased from 3
   int _retryAttempts = 0;
   int _consecutiveFailures = 0; // Track consecutive failures
@@ -67,9 +67,26 @@ class StationLoadController extends GetxController {
     _checkPermissions();
     _loadDirections();
     _initializeData();
-    _startAutoUpdate();
     _initRealtimeSubscription();
-    _initAuthListener(); // Add auth state listener
+    _initAuthListener();
+    _initHeartbeat();
+  }
+
+  void _initHeartbeat() {
+    _heartbeatSubscription = HeartbeatService.instance.onTick.listen((tick) {
+      // Automatic load updates (simulation) every 7 seconds
+      if (tick % 7 == 0) {
+        _updateLoads();
+      }
+
+      // Retry countdown every second
+      if (retryCountdown.value > 0) {
+        retryCountdown.value--;
+        if (retryCountdown.value == 0) {
+          _fetchData();
+        }
+      }
+    });
   }
 
   void _initAuthListener() {
@@ -228,8 +245,7 @@ class StationLoadController extends GetxController {
 
   @override
   void onClose() {
-    _updateTimer?.cancel();
-    _retryTimer?.cancel();
+    _heartbeatSubscription?.cancel();
     _realtimeChannel?.unsubscribe();
     _authSubscription?.cancel(); // Cancel auth listener
     super.onClose();
@@ -377,16 +393,6 @@ class StationLoadController extends GetxController {
     _retryAttempts++;
     final retryDelay = pow(2, _retryAttempts).toInt(); // Exponential backoff
     retryCountdown.value = retryDelay;
-
-    _retryTimer?.cancel();
-    _retryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (retryCountdown.value > 0) {
-        retryCountdown.value--;
-      } else {
-        timer.cancel();
-        _fetchData();
-      }
-    });
   }
 
   /// Schedule extended retry for persistent errors
@@ -394,16 +400,6 @@ class StationLoadController extends GetxController {
     const retryDelay = 15; // 15 seconds
     retryCountdown.value = retryDelay;
     _retryAttempts = 0; // Reset attempts
-
-    _retryTimer?.cancel();
-    _retryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (retryCountdown.value > 0) {
-        retryCountdown.value--;
-      } else {
-        timer.cancel();
-        _fetchData();
-      }
-    });
   }
 
   /// Schedule silent background retry
@@ -413,12 +409,6 @@ class StationLoadController extends GetxController {
         _fetchData(showLoading: false);
       }
     });
-  }
-
-  /// Start automatic load updates (simulation)
-  void _startAutoUpdate() {
-    _updateTimer?.cancel();
-    _updateTimer = Timer.periodic(_updateInterval, (_) => _updateLoads());
   }
 
   /// Update station loads with random variations

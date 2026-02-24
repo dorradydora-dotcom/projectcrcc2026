@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:carousel_slider/carousel_controller.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/core/services/heartbeat_service.dart';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/favorites_controller.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_controller.dart';
@@ -124,6 +125,7 @@ class AppBindings implements Bindings {
   @override
   void dependencies() {
     Get.put(AuthService(), permanent: true);
+    Get.put(HeartbeatService(), permanent: true);
     Get.lazyPut(() => StationLoadController());
     Get.lazyPut(() => FavoritesController());
     Get.lazyPut(() => CarouselSliderController());

@@ -78,6 +78,8 @@ class _CairoscreenState extends State<Cairoscreen> {
               colors: [
                 Appcolors.primaryColor,
                 Appcolors.primaryColor,
+                Color(0xFF163C5E),
+                Color(0xFF0F2B44),
                 Color(0xFF081A2A)
               ],
               begin: Alignment.topCenter,
@@ -106,69 +108,84 @@ class _CairoscreenState extends State<Cairoscreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        padding: EdgeInsets.symmetric(horizontal: 14.w),
                         child: Column(
                           children: [
-                            SizedBox(height: 2.h),
+                            SizedBox(height: 15.h),
                             TotalLoadCard(
                               totalLoad: totalLoad,
                               isLoading: _controller.isLoading.value,
                               isWide: isWide,
                             ),
-                            SizedBox(height: 8.h),
                           ],
                         ),
                       ),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 0.h, bottom: 0.h),
-                        child: Text(
-                          'تحديث تلقائي كل 60 ثانية',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white24,
-                            fontSize: 7.sp,
-                            fontFamily: Appfontstring.ChangaLight,
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                    color: Colors.greenAccent,
+                                    shape: BoxShape.circle)),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'البث المباشر للأحمال مفعل',
+                              style: TextStyle(
+                                color: Colors.white30,
+                                fontSize: 9.sp,
+                                fontFamily: Appfontstring.ChangaLight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      sliver: _buildSliverSectionHeader(
+                          'التبادلات البينية', Icons.swap_horiz),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      sliver: _buildStationsGrid(isWide),
+                    ),
+                    SliverToBoxAdapter(child: SizedBox(height: 15.h)),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      sliver: _buildSliverSectionHeader(
+                          'محطات التوليد', Icons.bolt),
+                    ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      sliver: SliverToBoxAdapter(
+                        child: SizedBox(
+                          height:
+                              100.h, // Adjusted height for more breathing room
+                          child: StationGaugeCard(
+                            title: 'الكريمات الشمسية',
+                            subtitle: 'توليد الطاقة المتجددة',
+                            value: _getStationLoad('الكريمات الشمسية'),
+                            min: 0,
+                            max: 120,
+                            isWide: isWide,
+                            isToggleable: false,
                           ),
                         ),
                       ),
                     ),
+                    SliverToBoxAdapter(child: SizedBox(height: 15.h)),
                     SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      sliver: _buildSliverSectionHeader(
-                          'التبادلات خارج القاهرة', Icons.swap_horiz),
-                    ),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      sliver: _buildStationsGrid(isWide),
-                    ),
-                    SliverToBoxAdapter(child: SizedBox(height: 4.h)),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      sliver: _buildSliverSectionHeader('التوليد', Icons.bolt),
-                    ),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      sliver: SliverToBoxAdapter(
-                        child: StationGaugeCard(
-                          title: 'الكريمات الشمسية',
-                          subtitle: '',
-                          value: _getStationLoad('الكريمات الشمسية'),
-                          min: 0,
-                          max: 120,
-                          isWide: isWide,
-                          isToggleable: false,
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: SizedBox(height: 4.h)),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
                       sliver: SliverToBoxAdapter(
                           child: _buildNotesExpansion(isWide)),
                     ),
-                    SliverToBoxAdapter(child: SizedBox(height: 10.h)),
+                    SliverToBoxAdapter(child: SizedBox(height: 30.h)),
                   ],
                 );
               }),
@@ -314,9 +331,9 @@ class _CairoscreenState extends State<Cairoscreen> {
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: isWide ? 2 : 1,
-        mainAxisSpacing: 2.h,
+        mainAxisSpacing: 6.h,
         crossAxisSpacing: 8.w,
-        childAspectRatio: isWide ? 2.8 : 3.5,
+        childAspectRatio: isWide ? 2.8 : 2.5,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
