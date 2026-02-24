@@ -19,7 +19,7 @@ import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_con
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
-import 'package:amiraly/core/widgets/auth_wrapper.dart';
+import 'package:amiraly/app/features/splash/splash_screen.dart';
 import 'package:amiraly/core/widgets/error_app.dart';
 
 // 🔧 متغيرات تتبع حالة التهيئة
@@ -158,7 +158,7 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             fontFamily: Appfontstring.ChangaLight,
           ),
-          home: const AuthWrapper(),
+          home: const SplashScreen(),
           routes: pageRoutes,
         );
       },

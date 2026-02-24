@@ -61,7 +61,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingServices) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(backgroundColor: Colors.black);
     }
 
     if (_errorMessage != null) {
@@ -88,8 +88,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       future: _isOnboardingCompleted(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(backgroundColor: Colors.black);
         }
 
         if (snapshot.hasError) {
