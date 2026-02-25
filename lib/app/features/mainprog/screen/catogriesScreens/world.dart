@@ -180,7 +180,7 @@ class _WorldScreenState extends State<WorldScreen>
                   'فشل الاتصال بالشبكة التفاعلية',
                   style: TextStyle(
                     color: Colors.white,
-                    fontFamily: Appfontstring.ChangaBold,
+                    fontFamily: Appfontstring.ChangaLight,
                     fontSize: 18.sp,
                   ),
                 ),

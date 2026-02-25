@@ -475,7 +475,7 @@ class _StationDialogState extends State<StationDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
       title: Text('تحديث ${widget.station.stationName}',
           style: TextStyle(
-              fontFamily: Appfontstring.ChangaBold,
+              fontFamily: Appfontstring.ChangaLight,
               fontSize: 14.sp,
               color: Colors.white)),
       content: TextField(

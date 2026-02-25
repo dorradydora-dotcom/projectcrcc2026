@@ -379,7 +379,7 @@ class _AreanavState extends State<Areanav> {
       }
 
       if (filteredList.isEmpty && !_controller.isSearchActive) {
-        return const SizedBox.shrink();
+        return _buildEmptyStationsState();
       }
 
       return SizedBox(
@@ -404,6 +404,68 @@ class _AreanavState extends State<Areanav> {
         ),
       );
     });
+  }
+
+  Widget _buildEmptyStationsState() {
+    return FadeInUp(
+      duration: const Duration(milliseconds: 400),
+      child: Container(
+        height: 145.h,
+        margin: EdgeInsets.symmetric(horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Iconsax.buildings,
+                size: 36.sp, color: Colors.white.withValues(alpha: 0.15)),
+            SizedBox(height: 8.h),
+            Text(
+              'لا توجد محطات',
+              style: TextStyle(
+                fontFamily: Appfontstring.ChangaLight,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white70,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            GestureDetector(
+              onTap: () => _controller.fetchStations(refresh: true),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0ED2D2).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(
+                      color: const Color(0xFF0ED2D2).withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.refresh,
+                        color: const Color(0xFF0ED2D2), size: 14.sp),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'تحديث',
+                      style: TextStyle(
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 11.sp,
+                        color: const Color(0xFF0ED2D2),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptySearchState() {

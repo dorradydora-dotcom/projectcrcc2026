@@ -82,7 +82,7 @@ class _EventsScreenState extends State<EventsScreen> {
                             children: [
                               Text('الأحداث الهامة والتقرير اليومي',
                                   style: TextStyle(
-                                      fontFamily: Appfontstring.ChangaBold,
+                                      fontFamily: Appfontstring.ChangaLight,
                                       fontSize: (isLargeScreen
                                               ? 18
                                               : isTablet
@@ -160,7 +160,7 @@ class _EventsScreenState extends State<EventsScreen> {
                     child: Text(
                       'اسحب الشاشة لأسفل لتحديث البيانات',
                       style: TextStyle(
-                          fontFamily: Appfontstring.ChangaBold,
+                          fontFamily: Appfontstring.ChangaLight,
                           fontSize: 10.sp,
                           color: Colors.black),
                       textAlign: TextAlign.center,
@@ -246,7 +246,7 @@ class _EventsScreenState extends State<EventsScreen> {
                           child: Text(
                             event.title,
                             style: TextStyle(
-                              fontFamily: Appfontstring.ChangaBold,
+                              fontFamily: Appfontstring.ChangaLight,
                               fontSize: 14.sp,
                               color: const Color(0xFF1E293B),
                             ),
@@ -271,7 +271,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                 Text(
                                   'تنبيه انقطاع',
                                   style: TextStyle(
-                                    fontFamily: Appfontstring.ChangaBold,
+                                    fontFamily: Appfontstring.ChangaLight,
                                     fontSize: 8.sp,
                                     color: alertOrange,
                                   ),
@@ -405,7 +405,7 @@ class _EventsScreenState extends State<EventsScreen> {
                             Text(
                               '${event.amount} م.و',
                               style: TextStyle(
-                                fontFamily: Appfontstring.ChangaBold,
+                                fontFamily: Appfontstring.ChangaLight,
                                 fontSize: 11.sp,
                                 color: Colors.orange[800],
                               ),
@@ -439,7 +439,7 @@ class _EventsScreenState extends State<EventsScreen> {
             SizedBox(width: 12.w),
             Text('تأكيد حذف الحدث',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold,
+                    fontFamily: Appfontstring.ChangaLight,
                     fontSize: 13.sp,
                     color: Colors.redAccent)),
           ],
@@ -465,7 +465,7 @@ class _EventsScreenState extends State<EventsScreen> {
               onPressed: () => Navigator.pop(context),
               child: Text('إلغاء',
                   style: TextStyle(
-                      fontFamily: Appfontstring.ChangaBold,
+                      fontFamily: Appfontstring.ChangaLight,
                       fontSize: 12.sp,
                       color: const Color(0xFF64748B)))),
           ElevatedButton(
@@ -481,7 +481,7 @@ class _EventsScreenState extends State<EventsScreen> {
                     borderRadius: BorderRadius.circular(10.r))),
             child: Text('حذف الآن',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
+                    fontFamily: Appfontstring.ChangaLight, fontSize: 11.sp)),
           ),
         ],
       ),
@@ -516,7 +516,7 @@ class _EventsScreenState extends State<EventsScreen> {
             Text(
               event == null ? 'إضافة حدث جديد' : 'تعديل بيانات الحدث',
               style: TextStyle(
-                  fontFamily: Appfontstring.ChangaBold,
+                  fontFamily: Appfontstring.ChangaLight,
                   fontSize: 14.sp,
                   color: const Color(0xFF0F172A)),
             ),
@@ -566,7 +566,7 @@ class _EventsScreenState extends State<EventsScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text('تجاهل',
                 style: TextStyle(
-                    fontFamily: Appfontstring.ChangaBold,
+                    fontFamily: Appfontstring.ChangaLight,
                     fontSize: 12.sp,
                     color: const Color(0xFF64748B)))),
         ElevatedButton(
@@ -589,7 +589,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   borderRadius: BorderRadius.circular(12.r))),
           child: Text(event == null ? 'إضافة الآن' : 'تحديث البيانات',
               style: TextStyle(
-                  fontFamily: Appfontstring.ChangaBold, fontSize: 11.sp)),
+                  fontFamily: Appfontstring.ChangaLight, fontSize: 11.sp)),
         ),
       ],
     );

@@ -340,7 +340,7 @@ class UsersPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15.sp,
                   color: Colors.orange,
-                  fontFamily: Appfontstring.ChangaBold,
+                  fontFamily: Appfontstring.ChangaLight,
                   letterSpacing: 0.5,
                 ),
                 maxLines: 1,
@@ -431,7 +431,7 @@ class UsersPage extends StatelessWidget {
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 18.sp,
-                              fontFamily: Appfontstring.ChangaBold)),
+                              fontFamily: Appfontstring.ChangaLight)),
                       SizedBox(height: 30.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -520,7 +520,7 @@ class UsersPage extends StatelessWidget {
             Text(
               'عفواً، لا تملك تصريح لدخول الصفحة',
               style: TextStyle(
-                fontFamily: Appfontstring.ChangaBold,
+                fontFamily: Appfontstring.ChangaLight,
                 fontSize: 16.sp,
                 color: Colors.white,
               ),
@@ -604,7 +604,7 @@ class VideoCallPage extends StatelessWidget {
                                                 color: Colors.white,
                                                 fontSize: 12.sp,
                                                 fontFamily:
-                                                    Appfontstring.ChangaBold)),
+                                                    Appfontstring.ChangaLight)),
                                         SizedBox(width: 8.w),
                                         Pulse(
                                             infinite: true,

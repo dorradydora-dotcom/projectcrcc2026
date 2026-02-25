@@ -22,7 +22,7 @@ class Cmscreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
-              fontFamily: Appfontstring.Almarai_Bold,
+              fontFamily: Appfontstring.ChangaLight,
             ),
           ),
         ),

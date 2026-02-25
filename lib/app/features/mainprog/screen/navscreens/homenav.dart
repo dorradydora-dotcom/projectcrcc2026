@@ -925,7 +925,7 @@ class MyGaugeWidget extends StatelessWidget {
           'M.W',
           style: TextStyle(
             color: Colors.red,
-            fontFamily: Appfontstring.Almarai_Bold,
+            fontFamily: Appfontstring.ChangaLight,
             fontSize: 13.25.sp,
             fontWeight: FontWeight.bold,
           ),

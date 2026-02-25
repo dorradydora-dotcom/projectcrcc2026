@@ -60,7 +60,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         Text(
                           'التقارير الفنية',
                           style: TextStyle(
-                            fontFamily: Appfontstring.ChangaBold,
+                            fontFamily: Appfontstring.ChangaLight,
                             fontSize: 18.sp,
                             color: Colors.white,
                             letterSpacing: 0.5,

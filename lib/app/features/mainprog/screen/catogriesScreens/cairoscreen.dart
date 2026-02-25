@@ -266,7 +266,7 @@ class _CairoscreenState extends State<Cairoscreen> {
             Text(
               title.toUpperCase(),
               style: TextStyle(
-                fontFamily: Appfontstring.ChangaBold,
+                fontFamily: Appfontstring.ChangaLight,
                 fontSize: 11.sp,
                 color: Colors.white70,
                 letterSpacing: 2,
@@ -377,7 +377,7 @@ class _CairoscreenState extends State<Cairoscreen> {
               title: Text(
                 'ملاحظات هامة',
                 style: TextStyle(
-                  fontFamily: Appfontstring.ChangaBold,
+                  fontFamily: Appfontstring.ChangaLight,
                   fontSize: isWide ? 13.sp : 11.sp,
                   color: Colors.white,
                 ),

@@ -216,7 +216,7 @@ class __HomePageContentState extends State<_HomePageContent>
 
   @override
   Widget build(BuildContext context) {
-    final double height = 70.h;
+    final double height = 57.h;
 
     return PopScope(
       canPop: false,
@@ -234,7 +234,7 @@ class __HomePageContentState extends State<_HomePageContent>
       },
       child: Scaffold(
         backgroundColor: const Color(
-            0xFF081A2A), // 🔧 إضافة لون الخلفية لمنع ظهور الفراغ الأبيض
+            0xFF081A2A), // إضافة لون الخلفية لمنع ظهور الفراغ الأبيض
         appBar: const CustomAppBar(),
         bottomNavigationBar: _buildBottomNavigationBar(height),
         body: _buildBody(),
@@ -329,17 +329,17 @@ class __HomePageContentState extends State<_HomePageContent>
                     BoxShadow(
                       color: item.glowColor
                           .withValues(alpha: _glowAnimation.value),
-                      blurRadius: 10,
+                      blurRadius: 5,
                       spreadRadius: 2,
                     ),
                   ]
                 : null,
           ),
-          padding: EdgeInsets.all(6.r),
+          padding: EdgeInsets.all(7.r),
           child: Icon(
             item.icon,
             color: Colors.white,
-            size: 24.sp,
+            size: 22.sp,
           ),
         ),
       ),

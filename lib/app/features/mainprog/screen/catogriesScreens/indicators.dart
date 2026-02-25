@@ -44,7 +44,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                     Text(
                       'جاري تحميل البيانات...',
                       style: TextStyle(
-                        fontFamily: Appfontstring.Almarai_Bold,
+                        fontFamily: Appfontstring.ChangaLight,
                         color: Colors.white70,
                         fontSize: 14.sp,
                       ),
@@ -162,7 +162,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
               fontSize: (isSmallScreen ? 12 : 14).sp,
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontFamily: Appfontstring.Almarai_Bold,
+              fontFamily: Appfontstring.ChangaLight,
               height: 1.1,
             ),
           ),
@@ -195,35 +195,36 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
               final index = entry.key;
               final isSelected = controller.selectedStations.contains(index);
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 2.0.w),
-                child: FilterChip(
-                  label: Text(
-                    controller.stations[index],
-                    style: TextStyle(
-                      fontSize: (isSmallScreen ? 10 : 12).sp,
-                      fontFamily: Appfontstring.Almarai_Bold,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected
-                          ? Colors.black // Selected text color
-                          : Colors.white70,
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: Colors.orangeAccent,
-                  checkmarkColor: Colors.black,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                    side: BorderSide(
+                padding: EdgeInsets.symmetric(horizontal: 3.0.w),
+                child: GestureDetector(
+                  onTap: () =>
+                      controller.toggleStationSelection(index, !isSelected),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.orangeAccent
-                          : Colors.white.withValues(alpha: 0.2),
-                      width: 1,
+                          : const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.orangeAccent
+                            : Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      controller.stations[index],
+                      style: TextStyle(
+                        fontSize: (isSmallScreen ? 10 : 12).sp,
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.black : Colors.white,
+                      ),
                     ),
                   ),
-                  onSelected: (selected) =>
-                      controller.toggleStationSelection(index, selected),
                 ),
               );
             }).toList(),
@@ -249,7 +250,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.sp,
-              fontFamily: Appfontstring.Almarai_Bold,
+              fontFamily: Appfontstring.ChangaLight,
               color: Colors.white54,
               height: 1.3,
             ),
@@ -306,7 +307,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                               style: TextStyle(
                                 fontSize: 10.sp,
                                 color: Colors.white54,
-                                fontFamily: Appfontstring.Almarai_Bold,
+                                fontFamily: Appfontstring.ChangaLight,
                               ),
                             ),
                           ),
@@ -319,7 +320,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.white70,
-                              fontFamily: Appfontstring.Almarai_Bold,
+                              fontFamily: Appfontstring.ChangaLight,
                             ),
                           ),
                         ),
@@ -339,7 +340,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                                   style: TextStyle(
                                     fontSize: 10.sp,
                                     color: Colors.white54,
-                                    fontFamily: Appfontstring.Almarai_Bold,
+                                    fontFamily: Appfontstring.ChangaLight,
                                   ),
                                 ),
                               );
@@ -355,7 +356,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.white70,
-                              fontFamily: Appfontstring.Almarai_Bold,
+                              fontFamily: Appfontstring.ChangaLight,
                             ),
                           ),
                         ),
@@ -421,7 +422,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                               TextStyle(
                                 color: Colors.white,
                                 fontSize: 11.sp,
-                                fontFamily: Appfontstring.Almarai_Bold,
+                                fontFamily: Appfontstring.ChangaLight,
                                 fontWeight: FontWeight.w500,
                               ),
                             );
@@ -574,7 +575,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                 style: TextStyle(
                   fontSize: (isSmallScreen ? 11 : 13).sp,
                   color: Colors.white,
-                  fontFamily: Appfontstring.Almarai_Bold,
+                  fontFamily: Appfontstring.ChangaLight,
                   fontWeight: FontWeight.bold,
                   shadows: shadows,
                   height: 1.1,
@@ -586,7 +587,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                 style: TextStyle(
                   fontSize: (isSmallScreen ? 9 : 11).sp,
                   color: Colors.white,
-                  fontFamily: Appfontstring.Almarai_Bold,
+                  fontFamily: Appfontstring.ChangaLight,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -693,7 +694,7 @@ class Indicator extends StatelessWidget {
             text,
             style: TextStyle(
               fontSize: 12.sp,
-              fontFamily: Appfontstring.Almarai_Bold,
+              fontFamily: Appfontstring.ChangaLight,
               color: textColor,
               fontWeight: FontWeight.w500,
             ),
@@ -720,7 +721,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'city': 'الـقـاهـرة',
           'country': 'مصر',
           'load': controller.intlLoads['القاهرة'],
-          'color': Colors.redAccent,
+          'color': Colors.orangeAccent,
           'update': 'الان',
           'flag': '🇪🇬',
         },
@@ -728,7 +729,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'city': 'طوكيو',
           'country': 'اليابان',
           'load': controller.intlLoads['طوكيو'],
-          'color': Colors.orangeAccent,
+          'color': Colors.redAccent,
           'update': controller.intlLastUpdate['طوكيو'] ?? 'يومي',
           'flag': '🇯🇵',
         },
@@ -736,7 +737,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'city': 'المانيا',
           'country': 'ألمانيا',
           'load': controller.intlLoads['المانيا'],
-          'color': Colors.blueAccent,
+          'color': Colors.greenAccent,
           'update': controller.intlLastUpdate['المانيا'] ?? 'يومي',
           'flag': '🇩🇪',
         },
@@ -744,7 +745,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'city': 'فرنسا',
           'country': 'فرنسا',
           'load': controller.intlLoads['فرنسا'],
-          'color': const Color.fromARGB(255, 145, 21, 234),
+          'color': const Color.fromARGB(255, 228, 211, 240),
           'update': controller.intlLastUpdate['فرنسا'] ?? 'يومي',
           'flag': '🇫🇷',
         },
@@ -752,7 +753,7 @@ class RealCapitalLoadCards extends GetView<IndicatorsController> {
           'city': 'السعودية',
           'country': 'السعودية',
           'load': controller.intlLoads['السعودية'],
-          'color': Colors.greenAccent,
+          'color': Colors.yellow,
           'update': controller.intlLastUpdate['السعودية'] ?? 'تقرير شهري',
           'flag': '🇸🇦',
         },

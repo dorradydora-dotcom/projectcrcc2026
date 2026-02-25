@@ -139,9 +139,9 @@ class _SplashScreenState extends State<SplashScreen>
                           AppBarText.companyName,
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18, // تصغير حجم الخط
+                            fontSize: 16, // تصغير حجم الخط
                             fontWeight: FontWeight.w800,
-                            fontFamily: Appfontstring.ChangaBold,
+                            fontFamily: Appfontstring.ChangaLight,
                             letterSpacing: 1.2,
                           ),
                           textAlign: TextAlign.center,
@@ -187,7 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 color: Colors.orange,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: Appfontstring.ChangaBold,
+                                fontFamily: Appfontstring.ChangaLight,
                               ),
                             ),
                             const SizedBox(height: 4),
