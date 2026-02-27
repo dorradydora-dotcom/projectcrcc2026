@@ -233,52 +233,64 @@ class UsersPage extends StatelessWidget {
                                                     ))),
                                                 DataCell(SizedBox(
                                                   width: col2,
-                                                  child: ZoomIn(
-                                                    child: IconButton(
-                                                      padding: EdgeInsets.zero,
-                                                      constraints:
-                                                          const BoxConstraints(),
-                                                      icon: Container(
+                                                  child: Obx(() {
+                                                    if (!controller
+                                                        .canInitiateCalls
+                                                        .value) {
+                                                      return const SizedBox
+                                                          .shrink();
+                                                    }
+                                                    return ZoomIn(
+                                                      child: IconButton(
                                                         padding:
-                                                            EdgeInsets.all(8.r),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.blue
-                                                              .withValues(
-                                                                  alpha: 0.2),
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          border: Border.all(
-                                                              color: Colors.blue
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.5),
-                                                              width: 1),
-                                                          boxShadow: [
-                                                            BoxShadow(
-                                                              color: Colors.blue
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.3),
-                                                              blurRadius: 8,
-                                                              spreadRadius: 1,
-                                                            ),
-                                                          ],
+                                                            EdgeInsets.zero,
+                                                        constraints:
+                                                            const BoxConstraints(),
+                                                        icon: Container(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  8.r),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.blue
+                                                                .withValues(
+                                                                    alpha: 0.2),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            border: Border.all(
+                                                                color: Colors
+                                                                    .blue
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.5),
+                                                                width: 1),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .blue
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.3),
+                                                                blurRadius: 8,
+                                                                spreadRadius: 1,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          child: Icon(
+                                                              Iconsax.video5,
+                                                              size: 18.sp,
+                                                              color:
+                                                                  Colors.white),
                                                         ),
-                                                        child: Icon(
-                                                            Iconsax.video5,
-                                                            size: 18.sp,
-                                                            color:
-                                                                Colors.white),
+                                                        onPressed: () async {
+                                                          await _handleStartCall(
+                                                              context,
+                                                              controller,
+                                                              user.id);
+                                                        },
                                                       ),
-                                                      onPressed: () async {
-                                                        await _handleStartCall(
-                                                            context,
-                                                            controller,
-                                                            user.id);
-                                                      },
-                                                    ),
-                                                  ),
+                                                    );
+                                                  }),
                                                 )),
                                               ]);
                                             }).toList(),
@@ -561,125 +573,108 @@ class VideoCallPage extends StatelessWidget {
           }
           await _onWillPop(context);
         },
-        child: Obx(() => Stack(
-              children: [
-                Positioned.fill(
-                  child: _remoteVideo(controller),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: FadeInDown(
-                    child: ClipRRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).padding.top + 10,
-                              bottom: 15,
-                              left: 20,
-                              right: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.3),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.arrow_back_ios,
-                                    color: Colors.white),
-                                onPressed: () => _onWillPop(context),
-                              ),
-                              const Spacer(),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text('بث مباشر',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12.sp,
-                                                fontFamily:
-                                                    Appfontstring.ChangaLight)),
-                                        SizedBox(width: 8.w),
-                                        Pulse(
-                                            infinite: true,
-                                            child: Container(
-                                                width: 8.w,
-                                                height: 8.w,
-                                                decoration: const BoxDecoration(
-                                                    color: Colors.red,
-                                                    shape: BoxShape.circle))),
-                                      ],
-                                    ),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                          "Connection Secured by (RtcEngine)",
-                                          style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 10.sp)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _remoteVideo(controller),
+            ),
+            // Header Positioned
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: FadeInDown(
+                child: Container(
+                  padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 10,
+                      bottom: 15,
+                      left: 20,
+                      right: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
                   ),
-                ),
-
-                // Local Video Preview
-                if (controller.localUserJoined.value)
-                  Positioned(
-                    top: 100,
-                    right: 20,
-                    child: FadeInRight(
-                      child: Container(
-                        width: 110.w,
-                        height: 160.h,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                blurRadius: 15,
-                                spreadRadius: 2),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios,
+                            color: Colors.white),
+                        onPressed: () => _onWillPop(context),
+                      ),
+                      const Spacer(),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('بث مباشر',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12.sp,
+                                        fontFamily: Appfontstring.ChangaLight)),
+                                SizedBox(width: 8.w),
+                                Pulse(
+                                    infinite: true,
+                                    child: Container(
+                                        width: 8.w,
+                                        height: 8.w,
+                                        decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle))),
+                              ],
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text("Connection Secured by (RtcEngine)",
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 10.sp)),
+                            ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18.r),
-                          child: AgoraVideoView(
-                            controller: VideoViewController(
-                              rtcEngine: controller.engine!,
-                              canvas: const VideoCanvas(uid: 0),
-                            ),
-                          ),
-                        ),
                       ),
-                    ),
-                  ),
-
-                // Controls
-                Positioned(
-                  bottom: 40,
-                  left: 0,
-                  right: 0,
-                  child: FadeInUp(
-                    child: _buildControls(context, controller),
+                    ],
                   ),
                 ),
-              ],
-            )),
+              ),
+            ),
+
+            // Local Video Preview
+            Obx(() {
+              if (controller.isVideoEnabled.value &&
+                  controller.localViewController.value != null) {
+                return Positioned(
+                  top: 100,
+                  right: 20,
+                  child: Container(
+                    width: 110.w,
+                    height: 160.h,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3), width: 2),
+                    ),
+                    child: AgoraVideoView(
+                      controller: controller.localViewController.value!,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+
+            // Controls
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: FadeInUp(
+                child: _buildControls(context, controller),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -688,12 +683,22 @@ class VideoCallPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        Obx(() => _buildControlButton(
+              icon: controller.isAudioEnabled.value
+                  ? Iconsax.microphone_2
+                  : Iconsax.microphone_slash,
+              color: controller.isAudioEnabled.value
+                  ? Colors.white24
+                  : Colors.redAccent.withValues(alpha: 0.8),
+              onPressed: () => controller.toggleAudio(),
+            )),
+        SizedBox(width: 15.w),
         _buildControlButton(
-          icon: Iconsax.microphone_slash,
+          icon: Iconsax.refresh,
           color: Colors.white24,
-          onPressed: () {},
+          onPressed: () => controller.switchCamera(),
         ),
-        SizedBox(width: 25.w),
+        SizedBox(width: 15.w),
         _buildControlButton(
           icon: Iconsax.call_remove5,
           color: Colors.redAccent,
@@ -701,11 +706,15 @@ class VideoCallPage extends StatelessWidget {
           onPressed: () => _onWillPop(context),
         ),
         SizedBox(width: 25.w),
-        _buildControlButton(
-          icon: Iconsax.camera5,
-          color: Colors.white24,
-          onPressed: () {},
-        ),
+        Obx(() => _buildControlButton(
+              icon: controller.isVideoEnabled.value
+                  ? Iconsax.camera5
+                  : Iconsax.camera_slash,
+              color: controller.isVideoEnabled.value
+                  ? Colors.white24
+                  : Colors.redAccent.withValues(alpha: 0.8),
+              onPressed: () => controller.toggleVideo(),
+            )),
       ],
     );
   }
@@ -744,38 +753,37 @@ class VideoCallPage extends StatelessWidget {
   }
 
   Widget _remoteVideo(GoLiveController controller) {
-    if (controller.remoteUid.value != null) {
-      return FadeIn(
-        child: AgoraVideoView(
-          controller: VideoViewController.remote(
-            rtcEngine: controller.engine!,
-            canvas: VideoCanvas(uid: controller.remoteUid.value),
-            connection: RtcConnection(channelId: channelName),
+    return Obx(() {
+      if (controller.remoteViewController.value != null &&
+          controller.remoteUid.value != null) {
+        return SizedBox.expand(
+          child: AgoraVideoView(
+            controller: controller.remoteViewController.value!,
           ),
-        ),
-      );
-    } else {
-      return Container(
-        color: const Color(0xFF0F172A),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SpinKitRipple(
-              color: Colors.white.withValues(alpha: 0.3),
-              size: 100.r,
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'بانتظار انضمام المحــطة ...',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14.sp,
-                fontFamily: Appfontstring.ChangaLight,
+        );
+      } else {
+        return Container(
+          color: const Color(0xFF0F172A),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SpinKitRipple(
+                color: Colors.white.withValues(alpha: 0.3),
+                size: 100.r,
               ),
-            ),
-          ],
-        ),
-      );
-    }
+              SizedBox(height: 20.h),
+              Text(
+                'بانتظار انضمام المحــطة',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    });
   }
 }

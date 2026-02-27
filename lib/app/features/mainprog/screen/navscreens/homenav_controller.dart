@@ -238,13 +238,13 @@ class HomenavcontrollerImp extends Homenavcontroller {
         allowedCategories = ['القاهرة', 'مؤشرات', 'الازمات', 'خريطة', 'العالم'];
         break;
       case 'stations':
-        allowedCategories = ['القاهرة', 'مؤشرات', 'خريطة', 'العالم'];
+        allowedCategories = ['القاهرة', 'مؤشرات', 'خريطة', 'العالم', 'Go live'];
         break;
       case 'project':
         allowedCategories = [
           'القاهرة',
           'مؤشرات',
-          'الازمات',
+          'تقارير',
           'خريطة',
           'العالم',
           'المشروعات'

@@ -21,6 +21,7 @@ import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
 import 'package:amiraly/app/features/splash/splash_screen.dart';
 import 'package:amiraly/core/widgets/error_app.dart';
+import 'package:amiraly/core/services/global_call_service.dart';
 
 // 🔧 متغيرات تتبع حالة التهيئة
 bool _isServicesInitialized = false;
@@ -39,7 +40,7 @@ void main() async {
 
     runApp(
       DevicePreview(
-        enabled: !kReleaseMode,
+        enabled: false,
         builder: (context) => const MyApp(),
       ),
     );
@@ -126,6 +127,7 @@ class AppBindings implements Bindings {
   void dependencies() {
     Get.put(AuthService(), permanent: true);
     Get.put(HeartbeatService(), permanent: true);
+    Get.put(GlobalCallService(), permanent: true);
     Get.lazyPut(() => StationLoadController());
     Get.lazyPut(() => FavoritesController());
     Get.lazyPut(() => CarouselSliderController());

@@ -15,13 +15,21 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     await Firebase.initializeApp();
     await NotificationManager().initialize();
 
-    final String title = message.data['title'] ?? 'تعليمات طارئة';
-    final String body = message.data['body'] ?? '';
+    final String title =
+        message.data['title'] ?? message.notification?.title ?? 'تعليمات طارئة';
+    final String body =
+        message.data['body'] ?? message.notification?.body ?? '';
     final String? route = message.data['route'];
 
+    if (route == 'call') {
+      // In foreground, navigate directly
+      Get.toNamed('Go live', arguments: message.data);
+      return;
+    }
+
     if (body.isNotEmpty) {
-      await NotificationManager()
-          .show(title, body, message.messageId, route: route);
+      await NotificationManager().show(title, body, message.messageId,
+          route: route, data: message.data);
     }
   } catch (e, stackTrace) {
     AppLogger.logError('Background message handler failed', e, stackTrace);
@@ -79,7 +87,7 @@ class NotificationManager {
       try {
         final Map<String, dynamic> data = jsonDecode(response.payload!);
         final String? route = data['route'];
-        if (route != null) _navigateToRoute(route);
+        if (route != null) _navigateToRoute(route, data: data);
       } catch (e) {
         if (kDebugMode) {
           AppLogger.logError('Failed to handle notification tap', e);
@@ -88,16 +96,20 @@ class NotificationManager {
     }
   }
 
-  void _navigateToRoute(String route) {
+  void _navigateToRoute(String route, {Map<String, dynamic>? data}) {
     switch (route) {
       case AppConstants.routeService:
-        Get.toNamed('/${AppConstants.routeService}');
+        Get.toNamed('/${AppConstants.routeService}', arguments: data);
         break;
       case AppConstants.routeAnnouncement:
-        Get.toNamed('/${AppConstants.routeInstructions}');
+        Get.toNamed('/${AppConstants.routeInstructions}', arguments: data);
         break;
       case AppConstants.routeEvents:
-        Get.toNamed('/${AppConstants.routeEvents}');
+        Get.toNamed('/${AppConstants.routeEvents}', arguments: data);
+        break;
+      case 'call':
+        // نتوجه لصفحة GoLive مباشرة مع تمرير بيانات المكالمة
+        Get.toNamed('Go live', arguments: data);
         break;
       default:
         if (kDebugMode) AppLogger.logWarning('Unknown route: $route');
@@ -109,6 +121,7 @@ class NotificationManager {
     String body,
     String? messageId, {
     String? route,
+    Map<String, dynamic>? data,
   }) async {
     if (messageId == null || !_isInitialized) return;
 
@@ -147,7 +160,10 @@ class NotificationManager {
         title,
         body,
         NotificationDetails(android: androidDetails),
-        payload: jsonEncode({'route': route ?? AppConstants.routeAnnouncement}),
+        payload: jsonEncode({
+          'route': route ?? AppConstants.routeAnnouncement,
+          if (data != null) ...data,
+        }),
       );
 
       AppLogger.logSuccess('📨 Notification shown: $title');
