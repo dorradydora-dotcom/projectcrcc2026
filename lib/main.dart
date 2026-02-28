@@ -21,7 +21,7 @@ import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
 import 'package:amiraly/app/features/splash/splash_screen.dart';
 import 'package:amiraly/core/widgets/error_app.dart';
-import 'package:amiraly/core/services/global_call_service.dart';
+import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 
 // 🔧 متغيرات تتبع حالة التهيئة
 bool _isServicesInitialized = false;

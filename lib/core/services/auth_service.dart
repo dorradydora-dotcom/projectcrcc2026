@@ -111,6 +111,12 @@ class AuthService extends GetxController {
         final String title = message.data['title'] ?? 'تعليمات طارئة';
         final String body = message.data['body'] ?? '';
         final String? route = message.data['route'];
+
+        if (route == 'call') {
+          NotificationManager().showCallKit(message.data);
+          return;
+        }
+
         if (body.isNotEmpty) {
           NotificationManager()
               .show(title, body, message.messageId, route: route);
