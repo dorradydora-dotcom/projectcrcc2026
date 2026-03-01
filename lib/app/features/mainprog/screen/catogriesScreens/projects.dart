@@ -109,7 +109,7 @@ class ProjectsScreen extends StatelessWidget {
         Text(
           'إدارة وتتبع مشروعات الشبكة الكهربائية (${controller.projects.length})',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Colors.white.withOpacity(0.7),
             fontSize: 12.sp,
             fontFamily: Appfontstring.ChangaLight,
           ),
@@ -167,9 +167,9 @@ class ProjectsScreen extends StatelessWidget {
       margin: EdgeInsetsDirectional.only(end: 9.w),
       padding: EdgeInsets.all(11.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +185,7 @@ class ProjectsScreen extends StatelessWidget {
                   fontFamily: Appfontstring.ChangaLight)),
           Text(title,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Colors.white.withOpacity(0.6),
                   fontSize: 10.sp,
                   fontFamily: Appfontstring.ChangaLight)),
         ],
@@ -198,14 +198,14 @@ class ProjectsScreen extends StatelessWidget {
     // Generate pastel color based on project index
     final projectIndex = controller.projects.indexOf(project);
     final pastelColors = [
-      Colors.blue.withValues(alpha: 0.08),
-      Colors.purple.withValues(alpha: 0.08),
-      Colors.green.withValues(alpha: 0.08),
-      Colors.orange.withValues(alpha: 0.08),
-      Colors.pink.withValues(alpha: 0.08),
-      Colors.teal.withValues(alpha: 0.08),
-      Colors.amber.withValues(alpha: 0.08),
-      Colors.indigo.withValues(alpha: 0.08),
+      Colors.blue.withOpacity(0.08),
+      Colors.purple.withOpacity(0.08),
+      Colors.green.withOpacity(0.08),
+      Colors.orange.withOpacity(0.08),
+      Colors.pink.withOpacity(0.08),
+      Colors.teal.withOpacity(0.08),
+      Colors.amber.withOpacity(0.08),
+      Colors.indigo.withOpacity(0.08),
     ];
     final cardColor = pastelColors[projectIndex % pastelColors.length];
 
@@ -214,7 +214,7 @@ class ProjectsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18.r),
@@ -247,7 +247,7 @@ class ProjectsScreen extends StatelessWidget {
                               child: Text(
                                 project.description,
                                 style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withOpacity(0.7),
                                     fontSize: 11.sp,
                                     fontFamily: Appfontstring.ChangaLight),
                               ),
@@ -272,10 +272,10 @@ class ProjectsScreen extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
-                        color: Colors.yellow.withValues(alpha: 0.1),
+                        color: Colors.yellow.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8.r),
                         border: Border.all(
-                            color: Colors.yellow.withValues(alpha: 0.2)),
+                            color: Colors.yellow.withOpacity(0.2)),
                       ),
                       child: Row(
                         children: [
@@ -300,7 +300,7 @@ class ProjectsScreen extends StatelessWidget {
                   children: [
                     Text('التقدم الحالي',
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: Colors.white.withOpacity(0.6),
                             fontSize: 10.sp,
                             fontFamily: Appfontstring.ChangaLight)),
                     Text('${project.progress.toInt()}%',
@@ -314,7 +314,7 @@ class ProjectsScreen extends StatelessWidget {
                 SizedBox(height: 8.h),
                 LinearProgressIndicator(
                   value: project.progress / 100,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  backgroundColor: Colors.white.withOpacity(0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     project.progress < 30
                         ? Colors.red
@@ -378,9 +378,9 @@ class ProjectsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(text,
           style: TextStyle(
@@ -453,7 +453,7 @@ class ProjectsScreen extends StatelessWidget {
           Text(
             'هذا القسم مخصص للمستخدمين المصرح لهم فقط',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.white.withOpacity(0.6),
                 fontSize: 13.sp,
                 fontFamily: Appfontstring.ChangaLight),
           ),
@@ -556,7 +556,7 @@ class ProjectsScreen extends StatelessWidget {
                       ],
                     )),
                 Obx(() => DropdownButtonFormField<String>(
-                      value: status.value,
+                      initialValue: status.value,
                       dropdownColor: const Color(0xFF1E293B),
                       decoration: InputDecoration(
                         labelText: 'الحالة',

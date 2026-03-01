@@ -1,7 +1,7 @@
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
-import 'package:amiraly/app/features/mainprog/screen/navscreens/loadnav.dart';
+import 'package:amiraly/app/features/mainprog/screen/navscreens/load_nav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/favoritesnav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/homenav.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/stationloadnav.dart';

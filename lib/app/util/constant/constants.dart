@@ -72,7 +72,6 @@ class Appcolors {
   static const Color textButton = Colors.white;
   static const Color borderColor = Color(0xFFD1D5DB);
   static const Color dividerColor = Color(0xFFE5E7EB);
-  static const Color primaryColor3 = Color(0xFF6200EA); // Deep purple
   static const Color secondaryColor = Color(0xFF03DAC6); // Teal
   static const Color warningColor = Color(0xFFFFB300); // Amber
   static const Color errorColor = Color(0xFFD32F2F); // Red
@@ -87,14 +86,6 @@ class Appcolors {
     Color(0xFF081A2A),
   ];
 }
-
-List<Color> glowColors = [
-  Colors.blue,
-  Colors.green,
-  Colors.red,
-  Colors.orange,
-  Colors.purple
-];
 
 class StationDetailsConstants {
   static const Color secondaryColor = Color.fromARGB(255, 230, 156, 19);
@@ -142,19 +133,7 @@ class AppTextString {
 }
 
 class Appfontstring {
-  static const String Abril_Regular = 'Abril_Regular';
-  static const String Almarai_Bold = 'Almarai_Bold';
-  static const String ChangaBold = 'Changa-Bold';
-  static const String Almarai_Light = 'Almarai_Light';
   static const String ChangaLight = 'Changa-Light';
-  static const String Rakkas_Regular = 'Rakkas_Regular';
-  static const String BebasNeue_Regular = 'BebasNeue_Regular';
-  static const String CairoPlay_Black = 'CairoPlay_Black';
-  static const String CairoPlay_Bold = 'CairoPlay_Bold';
-  static const String ShadowsIntoLight_Regular = 'ShadowsIntoLight-Regular';
-  static const String tejwa1 = 'tejwa1';
-  static const String tejw2 = 'tejwa2';
-  static const String tejwal3 = 'tejwa3';
   static const String digital = 'digital';
 }
 

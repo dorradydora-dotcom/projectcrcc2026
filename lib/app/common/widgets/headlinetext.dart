@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 class TextLine extends StatelessWidget {
   final String text;
   final Color color;
-  final String fontFamily;
+  final String? fontFamily;
   final FontWeight? fontWeight;
   final double? fontSize;
   const TextLine({
     super.key,
     required this.text,
     required this.color,
-    this.fontFamily = Appfontstring.ChangaLight,
+    this.fontFamily,
     this.fontWeight,
     this.fontSize,
   });
@@ -22,6 +22,7 @@ class TextLine extends StatelessWidget {
       text,
       style: TextStyle(
         fontFamily: fontFamily,
+        fontFamilyFallback: const [Appfontstring.ChangaLight],
         fontWeight: fontWeight,
         fontSize: fontSize,
         color: color,
@@ -65,7 +66,7 @@ class TextRichLine extends StatelessWidget {
       TextSpan(
           text: text1,
           style: TextStyle(
-            fontFamily: Appfontstring.Abril_Regular,
+            fontFamily: Appfontstring.ChangaLight,
             fontWeight: FF.B,
             fontSize: fontSize1,
             color: color1,
@@ -73,21 +74,21 @@ class TextRichLine extends StatelessWidget {
       TextSpan(
           text: 'owered',
           style: TextStyle(
-              fontFamily: Appfontstring.Abril_Regular,
+              fontFamily: Appfontstring.ChangaLight,
               fontWeight: FF.B,
               fontSize: fontSize2,
               color: color2)),
       TextSpan(
           text: text3,
           style: TextStyle(
-              fontFamily: Appfontstring.Abril_Regular,
+              fontFamily: Appfontstring.ChangaLight,
               fontWeight: FF.B,
               fontSize: fontSize3,
               color: color3)),
       TextSpan(
           text: text4,
           style: TextStyle(
-              fontFamily: Appfontstring.Abril_Regular,
+              fontFamily: Appfontstring.ChangaLight,
               fontWeight: FF.B,
               fontSize: fontSize4,
               color: color4))
@@ -137,6 +138,7 @@ class HeadlineText extends StatelessWidget {
                 fontSize: fontSize,
                 fontWeight: FontWeight.bold,
                 fontFamily: fontfamily,
+                fontFamilyFallback: const [Appfontstring.ChangaLight],
                 color: color1,
               ),
             ),
@@ -155,6 +157,7 @@ class HeadlineText extends StatelessWidget {
                 style: TextStyle(
                   fontSize: fontSize * 0.7,
                   fontFamily: fontfamily,
+                  fontFamilyFallback: const [Appfontstring.ChangaLight],
                   color: color2,
                 ),
               ),

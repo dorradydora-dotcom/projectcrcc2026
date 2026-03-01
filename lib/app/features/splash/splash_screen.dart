@@ -187,7 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 color: Colors.orange,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: Appfontstring.ChangaLight,
+                                fontFamily: Appfontstring.digital,
                               ),
                             ),
                             const SizedBox(height: 4),

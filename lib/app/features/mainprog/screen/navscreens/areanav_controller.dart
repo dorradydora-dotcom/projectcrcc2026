@@ -66,7 +66,7 @@ class AreaNavController extends GetxController {
         'فشل في جلب بيانات المحطات',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 5),
-        backgroundColor: Colors.red.withValues(alpha: 0.8),
+        backgroundColor: Colors.red.withOpacity(0.8),
         colorText: Colors.white,
         mainButton: TextButton(
           onPressed: () {

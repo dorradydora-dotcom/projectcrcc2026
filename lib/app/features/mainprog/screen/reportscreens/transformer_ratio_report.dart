@@ -190,10 +190,10 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                         return Container(
                           margin: EdgeInsets.all(10.w),
                           decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: Colors.white.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.1),
+                                  color: Colors.white.withOpacity(0.1),
                                   width: 1)),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.vertical,
@@ -202,7 +202,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                               children: [
                                 DataTable(
                                   headingRowColor: WidgetStateProperty.all(
-                                      Colors.white.withValues(alpha: 0.1)),
+                                      Colors.white.withOpacity(0.1)),
                                   dataRowColor: WidgetStateProperty.all(
                                       Colors.transparent),
                                   dataRowMinHeight: 32.h,
@@ -318,6 +318,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                 liveLoad.toStringAsFixed(1),
                                                 style: TextStyle(
                                                     fontSize: 10.sp,
+                                                    fontFamily:
+                                                        Appfontstring.digital,
                                                     color: Colors.blue)))),
                                         DataCell(
                                           SizedBox(
@@ -335,7 +337,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                     vertical: 2.h),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withValues(alpha: 0.05),
+                                                      .withOpacity(0.05),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           6.r),
@@ -353,6 +355,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                             .toStringAsFixed(0),
                                                         style: TextStyle(
                                                             fontSize: 10.sp,
+                                                            fontFamily:
+                                                                Appfontstring
+                                                                    .digital,
                                                             color:
                                                                 Colors.white)),
                                                     if (_canEditUser) ...[
@@ -406,6 +411,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                     '${ratio.toStringAsFixed(1)}%',
                                                     style: TextStyle(
                                                         fontSize: 12.sp,
+                                                        fontFamily:
+                                                            Appfontstring
+                                                                .digital,
                                                         color: ratio > 90
                                                             ? Colors.red
                                                             : ratio > 70
@@ -494,20 +502,20 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
       setState(() {});
       Get.snackbar('نجاح', 'تم تحديث سعة المحطة بنجاح',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.7),
+          backgroundColor: Colors.green.withOpacity(0.7),
           colorText: Colors.white);
     } catch (e) {
       Get.snackbar('خطأ', 'فشل في تحديث البيانات',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withValues(alpha: 0.7),
+          backgroundColor: Colors.red.withOpacity(0.7),
           colorText: Colors.white);
     }
   }
 
   Widget _buildShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.1),
-      highlightColor: Colors.white.withValues(alpha: 0.3),
+      baseColor: Colors.white.withOpacity(0.1),
+      highlightColor: Colors.white.withOpacity(0.3),
       child: ListView.builder(
         itemCount: 10,
         itemBuilder: (_, __) => Container(

@@ -62,10 +62,12 @@ class _ZoneScreenState extends State<ZoneScreen>
       targetScale = 1.0;
     }
 
-    final Matrix4 endMatrix = Matrix4.identity()
-      ..translate(
-          -position.dx * (targetScale - 1), -position.dy * (targetScale - 1))
-      ..scale(targetScale);
+    final Matrix4 endMatrix = Matrix4.identity();
+    endMatrix.setTranslationRaw(-position.dx * (targetScale - 1),
+        -position.dy * (targetScale - 1), 0.0);
+    endMatrix.setEntry(0, 0, targetScale);
+    endMatrix.setEntry(1, 1, targetScale);
+    endMatrix.setEntry(2, 2, 1.0);
 
     _animateToMatrix(endMatrix);
   }
@@ -176,7 +178,7 @@ class _ZoneScreenState extends State<ZoneScreen>
                 return FloatingActionButton.small(
                   heroTag: 'reset_zoom_${widget.zoneName}',
                   backgroundColor:
-                      Appcolors.primaryColor.withValues(alpha: 0.9),
+                      Appcolors.primaryColor.withOpacity(0.9),
                   elevation: 6,
                   onPressed: _resetZoom,
                   child: const Icon(Iconsax.refresh, color: Colors.white),
@@ -256,7 +258,7 @@ class _ZoneScreenState extends State<ZoneScreen>
         children: [
           Icon(
             Iconsax.image,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: Colors.white.withOpacity(0.3),
             size: 120.sp,
           ),
           SizedBox(height: 24.h),

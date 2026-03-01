@@ -79,7 +79,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     const Spacer(),
                     Icon(
                       Icons.description_outlined,
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: Colors.white.withOpacity(0.3),
                       size: 28.sp,
                     ),
                   ],
@@ -123,9 +123,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    top: BorderSide(color: Colors.white.withOpacity(0.1)),
                   ),
                 ),
                 child: Row(

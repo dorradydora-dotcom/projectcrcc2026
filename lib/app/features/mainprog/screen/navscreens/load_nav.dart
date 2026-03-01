@@ -76,11 +76,11 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                     margin: EdgeInsets.only(left: 10.w, right: 10.w, top: 6.h),
                     padding: EdgeInsets.all(10.w),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: Colors.white.withOpacity(0.03),
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(16.r)),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                         width: 1,
                       ),
                     ),
@@ -124,11 +124,11 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
                         margin: EdgeInsets.symmetric(horizontal: 10.w),
                         padding: EdgeInsets.all(4.w),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.03),
+                          color: Colors.white.withOpacity(0.03),
                           borderRadius: BorderRadius.vertical(
                               bottom: Radius.circular(16.r)),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: Colors.white.withOpacity(0.1),
                             width: 1,
                           ),
                         ),
@@ -259,12 +259,12 @@ class LoadDisplayWidget extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withOpacity(0.15),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -277,7 +277,7 @@ class LoadDisplayWidget extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Row(
@@ -287,7 +287,7 @@ class LoadDisplayWidget extends StatelessWidget {
                 Text(
                   'الحمل الكلي للشبكة',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                     fontSize: 11.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
@@ -306,8 +306,8 @@ class LoadDisplayWidget extends StatelessWidget {
           SizedBox(height: 2.h),
           isLoading
               ? Shimmer.fromColors(
-                  baseColor: Colors.red.withValues(alpha: 0.3),
-                  highlightColor: Colors.red.withValues(alpha: 0.7),
+                  baseColor: Colors.red.withOpacity(0.3),
+                  highlightColor: Colors.red.withOpacity(0.7),
                   child: Text(
                     '---',
                     style: TextStyle(
@@ -345,7 +345,7 @@ class LoadDisplayWidget extends StatelessWidget {
                                       color: (value < 0
                                               ? Colors.red
                                               : Colors.redAccent)
-                                          .withValues(alpha: 0.5),
+                                          .withOpacity(0.5),
                                       blurRadius: 15,
                                     ),
                                   ],
@@ -359,7 +359,7 @@ class LoadDisplayWidget extends StatelessWidget {
                         Text(
                           'ميجا واط',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             fontSize: 11.sp,
                             fontFamily: Appfontstring.ChangaLight,
                           ),
@@ -373,10 +373,10 @@ class LoadDisplayWidget extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(2.h),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withValues(alpha: 0.08),
+              color: Colors.blueAccent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8.r),
               border:
-                  Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
+                  Border.all(color: Colors.blueAccent.withOpacity(0.2)),
             ),
             child: Obx(() => RichText(
                   textDirection: TextDirection.rtl,
@@ -445,20 +445,20 @@ class _StationCardState extends State<StationCard> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withValues(alpha: 0.08),
-              Colors.white.withValues(alpha: 0.03),
+              Colors.white.withOpacity(0.08),
+              Colors.white.withOpacity(0.03),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: Colors.white.withOpacity(0.15),
             width: 0.8,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -473,8 +473,8 @@ class _StationCardState extends State<StationCard> {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: [
-                    Colors.blueAccent.withValues(alpha: 0.6),
-                    Colors.blue.withValues(alpha: 0.4)
+                    Colors.blueAccent.withOpacity(0.6),
+                    Colors.blue.withOpacity(0.4)
                   ],
                 ),
               ),
@@ -484,7 +484,7 @@ class _StationCardState extends State<StationCard> {
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
-                    fontFamily: Appfontstring.ChangaLight,
+                    fontFamily: Appfontstring.digital,
                     color: Colors.white,
                   ),
                 ),
@@ -504,7 +504,7 @@ class _StationCardState extends State<StationCard> {
                       fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: Appfontstring.ChangaLight,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                     textDirection: TextDirection.rtl,
                   ),
@@ -577,15 +577,15 @@ class ShimmerLoadingGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             return Shimmer.fromColors(
-              baseColor: Colors.white.withValues(alpha: 0.05),
-              highlightColor: Colors.white.withValues(alpha: 0.15),
+              baseColor: Colors.white.withOpacity(0.05),
+              highlightColor: Colors.white.withOpacity(0.15),
               child: Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: Colors.white.withOpacity(0.15),
                     width: 1.0,
                   ),
                 ),

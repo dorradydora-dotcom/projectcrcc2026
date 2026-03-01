@@ -124,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen>
         color: Colors.white,
         fontWeight: FF.B,
         fontSize: 18.sp,
-        fontFamily: Appfontstring.ChangaLight,
       ),
     );
   }
@@ -149,7 +148,6 @@ class _LoginScreenState extends State<LoginScreen>
             color: Colors.pink,
             fontWeight: FF.B,
             fontSize: 13.sp,
-            fontFamily: Appfontstring.ChangaLight,
           ),
         ),
         FadeInDown(
@@ -160,7 +158,6 @@ class _LoginScreenState extends State<LoginScreen>
             color: Colors.red,
             fontWeight: FF.B,
             fontSize: 10.sp,
-            fontFamily: Appfontstring.ChangaLight,
           ),
         ),
         FadeInDown(
@@ -171,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen>
             color: const Color.fromARGB(255, 243, 233, 150),
             fontWeight: FF.B,
             fontSize: 10.sp,
-            fontFamily: Appfontstring.ChangaLight,
           ),
         ),
       ],
@@ -294,8 +290,6 @@ class _LoginScreenState extends State<LoginScreen>
                   TextSpan(
                     text: 'برمجة و تصميم : ',
                     style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight,
-                      fontWeight: FontWeight.bold,
                       fontSize: 11.sp,
                       color: Colors.orange,
                     ),
@@ -303,8 +297,6 @@ class _LoginScreenState extends State<LoginScreen>
                   TextSpan(
                     text: 'م/امير محمود بدوى',
                     style: TextStyle(
-                      fontFamily: Appfontstring.ChangaLight,
-                      fontWeight: FontWeight.bold,
                       fontSize: 10.sp,
                       color: Colors.white,
                     ),
@@ -693,7 +685,7 @@ class CustomTextFormFieldloginState extends State<CustomTextFormFieldlogin> {
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: Colors.black.withValues(alpha: 0.2),
+        fillColor: Colors.black.withOpacity(0.2),
         contentPadding: EdgeInsets.symmetric(
           horizontal: 20.w,
           vertical: 16.h,
@@ -745,7 +737,7 @@ class LoginButton extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: Colors.white.withOpacity(0.3),
             blurRadius: 10.r,
             spreadRadius: 1.r,
           ),
@@ -785,7 +777,6 @@ class LoginButton extends StatelessWidget {
                 'تسجيل الدخول',
                 style: TextStyle(
                   color: Colors.black,
-                  fontFamily: Appfontstring.ChangaLight,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),

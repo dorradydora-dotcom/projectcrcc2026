@@ -94,12 +94,12 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withOpacity(0.15),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -112,7 +112,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Row(
@@ -122,7 +122,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                 Text(
                   'الحمل الكلي لمنطقة القاهرة',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                     fontSize: 13.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
@@ -141,8 +141,8 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
           SizedBox(height: 2.h),
           widget.isLoading
               ? Shimmer.fromColors(
-                  baseColor: Colors.red.withValues(alpha: 0.3),
-                  highlightColor: Colors.red.withValues(alpha: 0.7),
+                  baseColor: Colors.red.withOpacity(0.3),
+                  highlightColor: Colors.red.withOpacity(0.7),
                   child: Text(
                     '---',
                     style: TextStyle(
@@ -179,7 +179,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                                     color: (isNegative
                                             ? Colors.red
                                             : Colors.redAccent)
-                                        .withValues(alpha: 0.5),
+                                        .withOpacity(0.5),
                                     blurRadius: 15,
                                   ),
                                 ],
@@ -192,7 +192,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                         Text(
                           'ميجا واط',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             fontSize: 12.sp,
                             fontFamily: Appfontstring.ChangaLight,
                           ),
@@ -206,10 +206,10 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
           Container(
             padding: EdgeInsets.all(3.h),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withValues(alpha: 0.08),
+              color: Colors.blueAccent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8.r),
               border:
-                  Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
+                  Border.all(color: Colors.blueAccent.withOpacity(0.2)),
             ),
             child: RichText(
               textDirection: TextDirection.rtl,
@@ -291,20 +291,20 @@ class StationGaugeCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withValues(alpha: 0.08),
-            Colors.white.withValues(alpha: 0.03),
+            Colors.white.withOpacity(0.08),
+            Colors.white.withOpacity(0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withOpacity(0.15),
           width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -320,7 +320,7 @@ class StationGaugeCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                     fontSize: 11.sp,
                     fontFamily: Appfontstring.ChangaLight,
                     fontWeight: FontWeight.bold,
@@ -346,7 +346,6 @@ class StationGaugeCard extends StatelessWidget {
                             color: color,
                             fontSize: 18.sp,
                             fontFamily: Appfontstring.digital,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(width: 4.w),
@@ -408,9 +407,9 @@ class _CircleAction extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
+          border: Border.all(color: color.withOpacity(0.3), width: 0.5),
         ),
         child: Icon(icon, color: color, size: 14.sp),
       ),
@@ -435,7 +434,7 @@ class HudProgressBar extends StatelessWidget {
             height: 3,
             margin: const EdgeInsets.symmetric(horizontal: 1),
             decoration: BoxDecoration(
-              color: isActive ? color : Colors.white.withValues(alpha: 0.05),
+              color: isActive ? color : Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -485,7 +484,7 @@ class _StationDialogState extends State<StationDialog> {
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.05),
+          fillColor: Colors.white.withOpacity(0.05),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
               borderSide: BorderSide.none),
@@ -504,7 +503,9 @@ class _StationDialogState extends State<StationDialog> {
                     setState(() => _loading = true);
                     await stationController.updateStationLoad(
                         widget.station.stationName, val);
-                    if (mounted) Navigator.pop(context);
+                    if (mounted) {
+                      Navigator.of(this.context).pop();
+                    }
                   }
                 },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),

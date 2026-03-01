@@ -38,7 +38,11 @@ class _CairoscreenState extends State<Cairoscreen> {
       double absLoad = station.load.abs();
       bool isPositive = _controller.directions[stationName] ?? true;
       double signedLoad = isPositive ? absLoad : -absLoad;
-      return '${signedLoad >= 0 ? '+' : ''}${signedLoad.toStringAsFixed(0)}';
+
+      // Force Western digits (123) for digital font compatibility
+      String sign = signedLoad >= 0 ? '+' : '';
+      String value = signedLoad.toStringAsFixed(0);
+      return '$sign$value';
     } catch (_) {
       return '0';
     }
@@ -276,9 +280,9 @@ class _CairoscreenState extends State<Cairoscreen> {
             Text(
               'SEC_ID: 0x${title.hashCode.toRadixString(16).toUpperCase().substring(0, 4)}',
               style: TextStyle(
-                fontFamily: Appfontstring.ChangaLight,
+                fontFamily: Appfontstring.digital,
                 fontSize: 7.sp,
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
+                color: const Color(0xFF00E5FF).withOpacity(0.3),
               ),
             ),
           ],
@@ -363,9 +367,9 @@ class _CairoscreenState extends State<Cairoscreen> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.amber.withValues(alpha: 0.1),
+            color: Colors.amber.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+            border: Border.all(color: Colors.amber.withOpacity(0.2)),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

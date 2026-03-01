@@ -140,7 +140,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
               AppBarText.cairo,
               style: TextStyle(
                 color: Colors.yellow,
-                fontFamily: Appfontstring.ChangaLight,
+                fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight],
                 fontSize: 11.sp,
                 fontWeight: FontWeight.bold,
               ),
@@ -150,7 +151,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
               AppBarText.regionalControl,
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: Appfontstring.ChangaLight,
+                fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight],
                 fontSize: 11.sp,
                 fontWeight: FontWeight.bold,
               ),
@@ -191,7 +193,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
               AppBarText.loadingFailed,
               style: TextStyle(
                 color: const Color.fromARGB(255, 255, 123, 123),
-                fontFamily: Appfontstring.ChangaLight,
+                fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight],
                 fontSize: 9.sp,
                 fontWeight: FontWeight.normal,
               ),
@@ -241,12 +244,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
           child: AlertDialog(
             title: const Text(
               AppBarText.signOutTitle,
-              style: TextStyle(fontFamily: Appfontstring.ChangaLight),
+              style: TextStyle(
+                  fontFamily: Appfontstring.digital,
+                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
               textAlign: TextAlign.right,
             ),
             content: const Text(
               AppBarText.signOutMessage,
-              style: TextStyle(fontFamily: Appfontstring.ChangaLight),
+              style: TextStyle(
+                  fontFamily: Appfontstring.digital,
+                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
               textAlign: TextAlign.right,
             ),
             actions: [
@@ -286,8 +293,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
       if (mounted) {
         // إغلاق dialog التحميل (Root Navigator لأنه dialog)
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
+        if (Navigator.of(this.context, rootNavigator: true).canPop()) {
+          Navigator.of(this.context, rootNavigator: true).pop();
         }
         await Get.offAll(() => const LoginScreen());
       }
@@ -299,22 +306,24 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
       if (mounted) {
         // إغلاق dialog التحميل عند الخطأ أيضاً
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
+        if (Navigator.of(this.context, rootNavigator: true).canPop()) {
+          Navigator.of(this.context, rootNavigator: true).pop();
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: const Text(
               AppBarText.signOutError,
               textDirection: TextDirection.rtl,
-              style: TextStyle(fontFamily: Appfontstring.ChangaLight),
+              style: TextStyle(
+                  fontFamily: Appfontstring.digital,
+                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: AppBarText.retry,
-              onPressed: () => _handleSignOut(context),
+              onPressed: () => _handleSignOut(this.context),
             ),
           ),
         );

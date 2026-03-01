@@ -245,7 +245,6 @@ class GoLiveController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isAccessDenied = false.obs;
   final RxBool canInitiateCalls = false.obs;
-  final RxBool isVideoEnabled = true.obs;
   final RxBool isAudioEnabled = true.obs;
   final Rx<String?> errorMessage = Rx<String?>(null);
 
@@ -277,6 +276,7 @@ class GoLiveController extends GetxController {
   Timer? _timeoutTimer;
 
   RtcEngine? _engine;
+
   RtcEngine? get engine => _engine;
 
   // Persistent Controllers to prevent flickering/noise on rebuild
@@ -542,50 +542,19 @@ class GoLiveController extends GetxController {
   Future<void> leaveChannel() async {
     try {
       if (_engine != null) {
-        await _engine!.stopPreview();
         await _engine!.leaveChannel();
         localUserJoined.value = false;
         remoteUid.value = null;
         remoteViewController.value = null;
-        localViewController.value = null;
       }
     } catch (e) {
       debugPrint('Error leaving channel: $e');
     }
   }
 
-  Future<void> toggleVideo() async {
-    if (_engine == null) return;
-
-    isVideoEnabled.value = !isVideoEnabled.value;
-
-    if (isVideoEnabled.value) {
-      await _engine!.enableLocalVideo(true);
-      await _engine!.startPreview();
-      localViewController.value = VideoViewController(
-        rtcEngine: _engine!,
-        canvas: const VideoCanvas(
-          uid: 0,
-          renderMode: RenderModeType.renderModeFit,
-        ),
-      );
-    } else {
-      await _engine!.enableLocalVideo(false);
-      await _engine!.stopPreview();
-      localViewController.value = null;
-    }
-    // Update publishing state if we are already in a channel (currentCallId exists)
-    if (currentCallId.value != null) {
-      await _engine!.updateChannelMediaOptions(
-        ChannelMediaOptions(
-          publishCameraTrack: isVideoEnabled.value,
-        ),
-      );
-    }
-  }
-
   Future<void> toggleAudio() async {
     if (_engine == null) return;
+    debugPrint('Toggle Audio: Current value = ${isAudioEnabled.value}');
     isAudioEnabled.value = !isAudioEnabled.value;
     await _engine!.enableLocalAudio(isAudioEnabled.value);
 
@@ -599,8 +568,24 @@ class GoLiveController extends GetxController {
   }
 
   Future<void> switchCamera() async {
-    if (_engine == null) return;
-    await _engine!.switchCamera();
+    debugPrint('!!! TRIGGER: switchCamera() called !!!');
+    if (_engine == null) {
+      debugPrint('!!! ERROR: switchCamera failed - Engine is NULL !!!');
+      return;
+    }
+    try {
+      await _engine!.switchCamera();
+      debugPrint('!!! SUCCESS: switchCamera completed !!!');
+    } catch (e) {
+      debugPrint('!!! EXCEPTION in switchCamera: $e');
+      Get.snackbar(
+        'خطأ',
+        'فشل تحويل الكاميرا: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.7),
+        colorText: Colors.white,
+      );
+    }
   }
 
   String? get currentUserId => Supabase.instance.client.auth.currentUser?.id;
@@ -766,12 +751,14 @@ class GoLiveController extends GetxController {
   }
 
   Future<void> endCall() async {
+    debugPrint('Ending Call...');
     _timeoutTimer?.cancel();
     if (currentCallId.value != null) {
       try {
         await Supabase.instance.client
             .from(AppConstants.tableCallsSignaling)
             .update({'status': 'ended'}).eq('id', currentCallId.value!);
+        debugPrint('Signaling record updated to ended');
       } catch (e) {
         debugPrint('Error ending call record: $e');
       }
@@ -781,6 +768,7 @@ class GoLiveController extends GetxController {
     await leaveChannel();
     currentCallId.value = null;
     incomingCall.value = null;
+    debugPrint('Call Ended Cleanly');
   }
 
   Future<void> disposeAgora() async {
@@ -835,6 +823,8 @@ class GoLiveController extends GetxController {
 
   @override
   void onClose() {
+    debugPrint('GoLiveController onClose called!');
+    debugPrint(StackTrace.current.toString());
     _ringPlayer.stop();
     _ringPlayer.dispose();
     _effectPlayer.stop();
@@ -850,7 +840,7 @@ class UsersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(GoLiveController());
+    final controller = Get.put(GoLiveController(), permanent: true);
 
     return Scaffold(
       backgroundColor: Appcolors.primaryColor,
@@ -929,7 +919,7 @@ class UsersPage extends StatelessWidget {
                                   Icon(
                                     Iconsax.user_remove,
                                     size: 48.sp,
-                                    color: Colors.white.withValues(alpha: 0.2),
+                                    color: Colors.white.withOpacity(0.2),
                                   ),
                                   SizedBox(height: 16.h),
                                   Text(
@@ -956,14 +946,14 @@ class UsersPage extends StatelessWidget {
                             child: Container(
                               margin: EdgeInsets.all(15.w),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.08),
+                                color: Colors.white.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.15),
+                                    color: Colors.white.withOpacity(0.15),
                                     width: 1.5),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
+                                    color: Colors.black.withOpacity(0.3),
                                     blurRadius: 20,
                                     offset: const Offset(0, 10),
                                   ),
@@ -988,7 +978,7 @@ class UsersPage extends StatelessWidget {
                                             headingRowColor:
                                                 WidgetStateProperty.all(Colors
                                                     .white
-                                                    .withValues(alpha: 0.12)),
+                                                    .withOpacity(0.12)),
                                             dataRowColor:
                                                 WidgetStateProperty.all(
                                                     Colors.transparent),
@@ -1020,7 +1010,7 @@ class UsersPage extends StatelessWidget {
                                                                         13.sp,
                                                                     fontFamily:
                                                                         Appfontstring
-                                                                            .ChangaBold,
+                                                                            .ChangaLight,
                                                                     color: Appcolors
                                                                         .gold))
                                                           ])))),
@@ -1040,7 +1030,7 @@ class UsersPage extends StatelessWidget {
                                                                       13.sp,
                                                                   fontFamily:
                                                                       Appfontstring
-                                                                          .ChangaBold,
+                                                                          .ChangaLight,
                                                                   color: Colors
                                                                       .white)),
                                                         ],
@@ -1087,24 +1077,22 @@ class UsersPage extends StatelessWidget {
                                                           decoration:
                                                               BoxDecoration(
                                                             color: Colors.blue
-                                                                .withValues(
-                                                                    alpha: 0.2),
+                                                                .withOpacity(
+                                                                    0.2),
                                                             shape:
                                                                 BoxShape.circle,
                                                             border: Border.all(
                                                                 color: Colors
                                                                     .blue
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.5),
+                                                                    .withOpacity(
+                                                                        0.5),
                                                                 width: 1),
                                                             boxShadow: [
                                                               BoxShadow(
                                                                 color: Colors
                                                                     .blue
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.3),
+                                                                    .withOpacity(
+                                                                        0.3),
                                                                 blurRadius: 8,
                                                                 spreadRadius: 1,
                                                               ),
@@ -1161,12 +1149,12 @@ class UsersPage extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.r),
-            border: Border.all(
-                color: Colors.orange.withValues(alpha: 0.5), width: 1.5.w),
-            color: Colors.black.withValues(alpha: 0.4),
+            border:
+                Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5.w),
+            color: Colors.black.withOpacity(0.4),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withValues(alpha: 0.1),
+                color: Colors.orange.withOpacity(0.1),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -1215,13 +1203,10 @@ class UsersPage extends StatelessWidget {
       if (context.mounted) {
         Navigator.pop(context);
         controller.playRinging();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VideoCallPage(
-                controller: controller,
-                channelName: controller.currentUserId ?? 'g-live'),
-          ),
+        Get.to(
+          () => VideoCallPage(
+              controller: controller,
+              channelName: controller.currentUserId ?? 'g-live'),
         );
       }
     } catch (e) {
@@ -1246,17 +1231,16 @@ class UsersPage extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             child: Center(
               child: ZoomIn(
                 child: Container(
                   width: 0.8.sw,
                   padding: EdgeInsets.all(25.r),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(30.r),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1305,13 +1289,10 @@ class UsersPage extends StatelessWidget {
                             ),
                             onPressed: () {
                               controller.respondToCall(call['id'], true);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => VideoCallPage(
-                                      controller: controller,
-                                      channelName: call['channel_name']),
-                                ),
+                              Get.to(
+                                () => VideoCallPage(
+                                    controller: controller,
+                                    channelName: call['channel_name']),
                               );
                             },
                           ),
@@ -1338,8 +1319,8 @@ class UsersPage extends StatelessWidget {
 
   Widget _buildShimmerRow() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.05),
-      highlightColor: Colors.white.withValues(alpha: 0.12),
+      baseColor: Colors.white.withOpacity(0.05),
+      highlightColor: Colors.white.withOpacity(0.12),
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         height: 50.h,
@@ -1360,7 +1341,7 @@ class UsersPage extends StatelessWidget {
             Icon(
               Iconsax.shield_cross5,
               size: 80.sp,
-              color: Colors.redAccent.withValues(alpha: 0.5),
+              color: Colors.redAccent.withOpacity(0.5),
             ),
             SizedBox(height: 20.h),
             Text(
@@ -1397,6 +1378,7 @@ class VideoCallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('Building VideoCallPage for channel: $channelName');
     return Scaffold(
       backgroundColor: Colors.black,
       body: PopScope(
@@ -1425,7 +1407,7 @@ class VideoCallPage extends StatelessWidget {
                       left: 20,
                       right: 20),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
+                    color: Colors.black.withOpacity(0.6),
                   ),
                   child: Row(
                     children: [
@@ -1476,8 +1458,7 @@ class VideoCallPage extends StatelessWidget {
 
             // Local Video Preview
             Obx(() {
-              if (controller.isVideoEnabled.value &&
-                  controller.localViewController.value != null) {
+              if (controller.localViewController.value != null) {
                 return Positioned(
                   top: 100,
                   right: 20,
@@ -1487,7 +1468,7 @@ class VideoCallPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.black,
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3), width: 2),
+                          color: Colors.white.withOpacity(0.3), width: 2),
                     ),
                     child: AgoraVideoView(
                       controller: controller.localViewController.value!,
@@ -1521,68 +1502,78 @@ class VideoCallPage extends StatelessWidget {
               icon: controller.isAudioEnabled.value
                   ? Iconsax.microphone_2
                   : Iconsax.microphone_slash,
+              label: 'صوت',
               color: controller.isAudioEnabled.value
                   ? Colors.white24
-                  : Colors.redAccent.withValues(alpha: 0.8),
+                  : Colors.redAccent.withOpacity(0.8),
               onPressed: () => controller.toggleAudio(),
             )),
-        SizedBox(width: 15.w),
+        SizedBox(width: 40.w),
         _buildControlButton(
           icon: Iconsax.refresh,
+          label: 'تبديل',
           color: Colors.white24,
           onPressed: () => controller.switchCamera(),
         ),
-        SizedBox(width: 15.w),
+        SizedBox(width: 40.w),
         _buildControlButton(
           icon: Iconsax.call_remove5,
+          label: 'إنهاء',
           color: Colors.redAccent,
           isLarge: true,
           onPressed: () => _onWillPop(context),
         ),
-        SizedBox(width: 15.w),
-        Obx(() => _buildControlButton(
-              icon: controller.isVideoEnabled.value
-                  ? Iconsax.camera5
-                  : Iconsax.camera_slash,
-              color: controller.isVideoEnabled.value
-                  ? Colors.white24
-                  : Colors.redAccent.withValues(alpha: 0.8),
-              onPressed: () => controller.toggleVideo(),
-            )),
       ],
     );
   }
 
   Widget _buildControlButton(
       {required IconData icon,
+      required String label,
       required Color color,
       bool isLarge = false,
       required VoidCallback onPressed}) {
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
-        width: isLarge ? 70.w : 55.w,
-        height: isLarge ? 70.w : 55.w,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 15,
-              spreadRadius: 2,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isLarge ? 65.w : 50.w,
+            height: isLarge ? 65.w : 50.w,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Icon(icon, color: Colors.white, size: isLarge ? 32.sp : 24.sp),
+            child:
+                Icon(icon, color: Colors.white, size: isLarge ? 28.sp : 20.sp),
+          ),
+          SizedBox(height: 5.h),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 10.sp,
+              fontFamily: Appfontstring.ChangaLight,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Future<void> _onWillPop(BuildContext context) async {
+    debugPrint('_onWillPop triggered');
     await controller.endCall();
     if (context.mounted) {
-      Navigator.pop(context);
+      Get.back();
     }
   }
 
@@ -1597,12 +1588,18 @@ class VideoCallPage extends StatelessWidget {
         );
       } else {
         return Container(
-          color: const Color(0xFF0F172A),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+            ),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SpinKitRipple(
-                color: Colors.white.withValues(alpha: 0.3),
+                color: Colors.white.withOpacity(0.3),
                 size: 100.r,
               ),
               SizedBox(height: 20.h),

@@ -129,7 +129,7 @@ class _AreanavState extends State<Areanav> {
               child: FadeInLeft(
                 duration: const Duration(seconds: 2),
                 child: Icon(Iconsax.flash5,
-                    size: 140.sp, color: Colors.white.withValues(alpha: 0.03)),
+                    size: 140.sp, color: Colors.white.withOpacity(0.03)),
               ),
             ),
             Positioned(
@@ -138,14 +138,14 @@ class _AreanavState extends State<Areanav> {
               child: FadeInRight(
                 duration: const Duration(seconds: 3),
                 child: Icon(Iconsax.building_35,
-                    size: 80.sp, color: Colors.white.withValues(alpha: 0.02)),
+                    size: 80.sp, color: Colors.white.withOpacity(0.02)),
               ),
             ),
             Positioned(
                 bottom: -20.h,
                 left: -20.w,
                 child: Icon(Icons.location_on,
-                    size: 80.sp, color: Colors.white.withValues(alpha: 0.02))),
+                    size: 80.sp, color: Colors.white.withOpacity(0.02))),
             SafeArea(
               child: Column(
                 children: [
@@ -190,10 +190,10 @@ class _AreanavState extends State<Areanav> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
         decoration: BoxDecoration(
-          color: const Color(0xFF0ED2D2).withValues(alpha: 0.1),
+          color: const Color(0xFF0ED2D2).withOpacity(0.1),
           borderRadius: BorderRadius.circular(10.r),
           border:
-              Border.all(color: const Color(0xFF0ED2D2).withValues(alpha: 0.2)),
+              Border.all(color: const Color(0xFF0ED2D2).withOpacity(0.2)),
         ),
         child: Text(
           text,
@@ -212,9 +212,9 @@ class _AreanavState extends State<Areanav> {
     return Container(
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
+          border: Border.all(color: Colors.white.withOpacity(0.1))),
       child: Icon(Iconsax.filter_edit,
           color: const Color(0xFF0ED2D2), size: 20.sp),
     );
@@ -225,12 +225,12 @@ class _AreanavState extends State<Areanav> {
     return Container(
       height: 48.h, // Slightly more compact
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(15.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -251,12 +251,12 @@ class _AreanavState extends State<Areanav> {
             decoration: InputDecoration(
               hintText: 'ابحث عن محطة...',
               hintStyle: TextStyle(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 fontSize: 12.sp,
                 fontFamily: Appfontstring.ChangaLight,
               ),
               prefixIcon: Icon(Icons.location_city,
-                  color: const Color(0xFF0ED2D2).withValues(alpha: 0.8),
+                  color: const Color(0xFF0ED2D2).withOpacity(0.8),
                   size: 18.sp),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(vertical: 12.h),
@@ -271,12 +271,12 @@ class _AreanavState extends State<Areanav> {
     final controller = Get.find<AreaNavController>();
     return Obx(() => Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: Colors.white.withOpacity(0.04),
             borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: Colors.white.withOpacity(0.08)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withOpacity(0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -323,7 +323,7 @@ class _AreanavState extends State<Areanav> {
       height: 25.h,
       width: 1,
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      color: Colors.white.withValues(alpha: 0.1),
+      color: Colors.white.withOpacity(0.1),
     );
   }
 
@@ -343,7 +343,7 @@ class _AreanavState extends State<Areanav> {
                   fontSize: 15.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
-                  fontFamily: Appfontstring.BebasNeue_Regular,
+                  fontFamily: Appfontstring.ChangaLight,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -354,7 +354,7 @@ class _AreanavState extends State<Areanav> {
             label,
             style: TextStyle(
               fontSize: 8.sp,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: Colors.white.withOpacity(0.4),
               fontFamily: Appfontstring.ChangaLight,
               fontWeight: FontWeight.w500,
             ),
@@ -413,15 +413,15 @@ class _AreanavState extends State<Areanav> {
         height: 145.h,
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Iconsax.buildings,
-                size: 36.sp, color: Colors.white.withValues(alpha: 0.15)),
+                size: 36.sp, color: Colors.white.withOpacity(0.15)),
             SizedBox(height: 8.h),
             Text(
               'لا توجد محطات',
@@ -438,10 +438,10 @@ class _AreanavState extends State<Areanav> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0ED2D2).withValues(alpha: 0.15),
+                  color: const Color(0xFF0ED2D2).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                      color: const Color(0xFF0ED2D2).withValues(alpha: 0.4)),
+                      color: const Color(0xFF0ED2D2).withOpacity(0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -475,15 +475,15 @@ class _AreanavState extends State<Areanav> {
         height: 145.h,
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Iconsax.search_status,
-                size: 40.sp, color: Colors.white.withValues(alpha: 0.15)),
+                size: 40.sp, color: Colors.white.withOpacity(0.15)),
             SizedBox(height: 12.h),
             Text(
               'لا يوجد نتائج للبحث',
@@ -551,13 +551,13 @@ class _AreanavState extends State<Areanav> {
                 duration: const Duration(milliseconds: 300),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (section['color'] as Color).withValues(alpha: 0.12)
-                      : Colors.white.withValues(alpha: 0.05),
+                      ? (section['color'] as Color).withOpacity(0.12)
+                      : Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
                     color: isSelected
-                        ? (section['color'] as Color).withValues(alpha: 0.4)
-                        : Colors.white.withValues(alpha: 0.06),
+                        ? (section['color'] as Color).withOpacity(0.4)
+                        : Colors.white.withOpacity(0.06),
                     width: 1,
                   ),
                 ),

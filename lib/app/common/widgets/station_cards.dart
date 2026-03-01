@@ -27,12 +27,12 @@ class VerticalStationCard extends StatelessWidget {
         width: 155.w,
         margin: EdgeInsets.symmetric(vertical: 4.h, horizontal: 4.w),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          border: Border.all(color: Colors.white.withOpacity(0.12)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 20,
               spreadRadius: -8,
               offset: const Offset(0, 10),
@@ -69,7 +69,7 @@ class VerticalStationCard extends StatelessWidget {
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.5),
+                                      Colors.black.withOpacity(0.5),
                                     ],
                                   ),
                                 ),
@@ -86,7 +86,7 @@ class VerticalStationCard extends StatelessWidget {
                                   color: (station.image.isNotEmpty
                                           ? const Color(0xFF10B981)
                                           : const Color(0xFFF59E0B))
-                                      .withValues(alpha: 0.85),
+                                      .withOpacity(0.85),
                                   borderRadius: BorderRadius.circular(10.r),
                                 ),
                                 child: Text(
@@ -153,7 +153,7 @@ class HeaderVerticalProduct extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           errorWidget: (context, url, error) => Container(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -171,7 +171,7 @@ class HeaderVerticalProduct extends StatelessWidget {
             ),
           ),
           placeholder: (context, url) => Container(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             child: Center(
                 child: CircularProgressIndicator(
               strokeWidth: 2.sp,
@@ -241,7 +241,7 @@ class TxtName extends StatelessWidget {
       style: TextStyle(
         fontSize: 12.sp,
         fontWeight: FontWeight.w700,
-        color: Colors.white.withValues(alpha: 0.95),
+        color: Colors.white.withOpacity(0.95),
         fontFamily: Appfontstring.ChangaLight,
         letterSpacing: 0.3,
       ),
@@ -270,7 +270,7 @@ class TxtDescription extends StatelessWidget {
             style: TextStyle(
               fontSize: 10.sp,
               fontFamily: Appfontstring.ChangaLight,
-              color: Colors.white.withValues(alpha: 0.55),
+              color: Colors.white.withOpacity(0.55),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
