@@ -231,7 +231,7 @@ class _HomeNavState extends State<HomeNav> {
     }
 
     return SizedBox(
-      height: 90.h,
+      height: 100.h,
       child: ListView.builder(
         shrinkWrap: false,
         physics: const BouncingScrollPhysics(),
@@ -664,6 +664,8 @@ class CategoryItem extends StatelessWidget {
           width: 65.w,
           child: Text(
             truncatedText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white70,
@@ -747,8 +749,8 @@ Widget buildGaugeSection(
       decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-              width: 1.5, color: Colors.white.withOpacity(0.12))),
+          border:
+              Border.all(width: 1.5, color: Colors.white.withOpacity(0.12))),
       child: MyGaugeWidget(
         label: 'M.W',
         minValuescale: minValuescale,
