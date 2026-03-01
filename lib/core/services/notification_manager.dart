@@ -182,7 +182,6 @@ class NotificationManager {
       id: callId,
       nameCaller: callerName,
       appName: 'Amiraly GoLive',
-      avatar: 'https://i.pravatar.cc/100',
       handle: 'فيديو مباشر',
       type: 1, // 0: Audio, 1: Video
       duration: 30000,
@@ -202,10 +201,9 @@ class NotificationManager {
       },
       android: const AndroidParams(
         isCustomNotification: true,
-        isShowLogo: false,
+        isShowLogo: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#071624',
-        backgroundUrl: 'https://i.pravatar.cc/500',
         actionColor: '#4CAF50',
         incomingCallNotificationChannelName: "Incoming Call",
         missedCallNotificationChannelName: "Missed Call",

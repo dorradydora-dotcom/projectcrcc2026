@@ -19,6 +19,7 @@ import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_con
 import 'package:amiraly/app/common/routes/app_routes.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
+import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 import 'package:amiraly/app/features/splash/splash_screen.dart';
 import 'package:amiraly/core/widgets/error_app.dart';
 
@@ -126,6 +127,7 @@ class AppBindings implements Bindings {
   void dependencies() {
     Get.put(AuthService(), permanent: true);
     Get.put(HeartbeatService(), permanent: true);
+    Get.put(GlobalCallService(), permanent: true);
     Get.lazyPut(() => StationLoadController());
     Get.lazyPut(() => FavoritesController());
     Get.lazyPut(() => CarouselSliderController());

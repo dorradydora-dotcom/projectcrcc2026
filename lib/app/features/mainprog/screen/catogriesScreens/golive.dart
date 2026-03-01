@@ -87,7 +87,7 @@ class CallNotificationService {
 
       final Map<String, dynamic> messagePayload = {
         "android": {
-          "priority": "high",
+          "priority": "HIGH",
           // We remove the high-level 'notification' block to make it a 'data-only' message.
           // This prevents the OS from showing a simple text notification and lets our
           // background handler trigger CallKit.
