@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/areanav.dart';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
+import 'package:flutter/services.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/main.dart' show ensureServicesInitialized;
 
@@ -271,7 +272,7 @@ class __HomePageContentState extends State<_HomePageContent>
     ).then((value) {
       if (value == true) {
         // Exit the app
-        Get.back();
+        SystemNavigator.pop();
       }
     });
   }

@@ -643,7 +643,7 @@ class GoLiveController extends GetxController {
         continue;
       }
     }
-    return 'محطة مجهولة';
+    return 'محطة ';
   }
 
   /*
@@ -1046,7 +1046,7 @@ class UsersPage extends StatelessWidget {
                                                               horizontal: 10.w),
                                                       child: Text(
                                                           user.stationName ??
-                                                              'مجهول',
+                                                              '',
                                                           style: TextStyle(
                                                               fontSize: 12.sp,
                                                               fontFamily:

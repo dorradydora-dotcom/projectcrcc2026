@@ -274,8 +274,8 @@ class ProjectsScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.yellow.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                            color: Colors.yellow.withOpacity(0.2)),
+                        border:
+                            Border.all(color: Colors.yellow.withOpacity(0.2)),
                       ),
                       child: Row(
                         children: [
@@ -556,7 +556,7 @@ class ProjectsScreen extends StatelessWidget {
                       ],
                     )),
                 Obx(() => DropdownButtonFormField<String>(
-                      initialValue: status.value,
+                      value: status.value,
                       dropdownColor: const Color(0xFF1E293B),
                       decoration: InputDecoration(
                         labelText: 'الحالة',

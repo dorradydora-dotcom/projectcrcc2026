@@ -185,6 +185,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
     return Padding(
       padding: EdgeInsets.only(bottom: 20.h, left: 10.w),
       child: FloatingActionButton(
+        mini: true,
         heroTag: 'load_pdf_fab',
         onPressed: () {
           controller.generateAndSharePDF(context);
@@ -375,8 +376,7 @@ class LoadDisplayWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.blueAccent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8.r),
-              border:
-                  Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+              border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
             ),
             child: Obx(() => RichText(
                   textDirection: TextDirection.rtl,

@@ -95,18 +95,18 @@ class _LoginScreenState extends State<LoginScreen>
               children: [
                 SizedBox(height: constraints.maxHeight * 0.05),
                 _buildHeaderText(),
-                SizedBox(height: 5.h),
+                SizedBox(height: 3.h),
                 _buildDivider(),
-                SizedBox(height: 8.h),
+                SizedBox(height: 4.h),
                 _buildCompanyTexts(),
                 SizedBox(height: constraints.maxHeight * 0.01),
-                SizedBox(height: 256.h),
+                SizedBox(height: 180.h), // Reduced from 256.h
                 _buildEmailField(),
-                SizedBox(height: 16.h),
+                SizedBox(height: 12.h), // Reduced from 16.h
                 _buildPasswordField(),
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h), // Reduced from 32.h
                 _buildLoginButton(constraints),
-                SizedBox(height: 192.h),
+                SizedBox(height: 140.h), // Reduced from 192.h
               ],
             ),
           ),

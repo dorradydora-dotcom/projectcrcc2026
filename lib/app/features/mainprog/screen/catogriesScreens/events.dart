@@ -126,16 +126,15 @@ class _EventsScreenState extends State<EventsScreen> {
                                   children: [
                                     Icon(Icons.event_available,
                                         size: (isTablet ? 40 : 32).sp,
-                                        color: Colors.white
-                                            .withOpacity(0.2)),
+                                        color: Colors.white.withOpacity(0.2)),
                                     SizedBox(height: 8.h),
                                     Text('لا يوجد أحداث حالياً',
                                         style: TextStyle(
                                             fontFamily:
                                                 Appfontstring.ChangaLight,
                                             fontSize: (isTablet ? 14 : 12).sp,
-                                            color: Colors.white
-                                                .withOpacity(0.5))),
+                                            color:
+                                                Colors.white.withOpacity(0.5))),
                                   ],
                                 ),
                               )
@@ -153,8 +152,8 @@ class _EventsScreenState extends State<EventsScreen> {
                     decoration: BoxDecoration(
                         color: const Color.fromARGB(191, 250, 211, 114),
                         borderRadius: BorderRadius.circular(4.r),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.1))),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.1))),
                     padding:
                         EdgeInsets.symmetric(vertical: 4.h, horizontal: 16.w),
                     child: Text(
@@ -173,8 +172,8 @@ class _EventsScreenState extends State<EventsScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
                       border: Border(
-                          top: BorderSide(
-                              color: Colors.white.withOpacity(0.1))),
+                          top:
+                              BorderSide(color: Colors.white.withOpacity(0.1))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -622,12 +621,10 @@ class _EventsScreenState extends State<EventsScreen> {
               color: const Color(0xFF64748B)),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide:
-                  BorderSide(color: Colors.black.withOpacity(0.08))),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide:
-                  BorderSide(color: Colors.black.withOpacity(0.08))),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08))),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
               borderSide:
@@ -655,7 +652,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp)),
               value: value,
               onChanged: onChanged,
-              activeThumbColor: Colors.blue,
+              activeColor: Colors.blue,
             )));
   }
 
@@ -682,8 +679,7 @@ class _EventsScreenState extends State<EventsScreen> {
             decoration: BoxDecoration(
                 color: Colors.purple.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(5.r),
-                border:
-                    Border.all(color: Colors.purple.withOpacity(0.2))),
+                border: Border.all(color: Colors.purple.withOpacity(0.2))),
             child: Row(
               children: [
                 Icon(Icons.access_time, size: 16.sp, color: Colors.purple),

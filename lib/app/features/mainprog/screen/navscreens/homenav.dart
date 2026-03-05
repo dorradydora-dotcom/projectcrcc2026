@@ -140,7 +140,7 @@ class _HomeNavState extends State<HomeNav> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  margin: EdgeInsets.only(right: 1.w),
+                  margin: EdgeInsets.only(right: 15.w), // Increased from 1.w
                   child: _buildGreetingRow(),
                 ),
                 SizedBox(height: 8.h),
