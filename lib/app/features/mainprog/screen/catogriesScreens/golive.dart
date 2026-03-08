@@ -127,6 +127,36 @@ class CallNotificationService {
       return false;
     }
   }
+
+  static Future<bool> sendCancelNotification({
+    required String deviceToken,
+    required String callId,
+  }) async {
+    try {
+      final String accessToken = await getAccessToken();
+      final Map<String, dynamic> messagePayload = {
+        "android": {"priority": "HIGH"},
+        "data": {
+          "route": "call",
+          "call_id": callId,
+          "status": "ended",
+        },
+        "token": deviceToken,
+      };
+
+      final http.Response response = await http.post(
+        Uri.parse(fcmEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({"message": messagePayload}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 class GlobalCallService extends GetxService {
@@ -301,8 +331,21 @@ class GoLiveController extends GetxController {
       if (data['route'] == 'call' && data['call_id'] != null) {
         currentCallId.value = data['call_id'];
         if (data['accepted'] == true) {
-          // If already accepted via CallKit, just join
+          // Manually set incoming call data so respondToCall works
+          incomingCall.value = {
+            'id': data['call_id'],
+            'caller_id': data['caller_id'],
+            'channel_name': data['channel_name'],
+            'status': 'ringing',
+          };
+          // Immediately respond and navigate
           respondToCall(data['call_id'], true);
+          Get.to(
+            () => VideoCallPage(
+              controller: this,
+              channelName: data['channel_name'],
+            ),
+          );
         } else {
           // Pre-fill incoming call to show the overlay
           incomingCall.value = {
@@ -393,84 +436,106 @@ class GoLiveController extends GetxController {
 
   Future<void> initializeAgora() async {
     try {
-      final statuses =
-          await [Permission.microphone, Permission.camera].request();
-
-      if (statuses[Permission.microphone] != PermissionStatus.granted ||
-          statuses[Permission.camera] != PermissionStatus.granted) {
-        throw 'يجب منح صلاحيات الميكروفون والكاميرا لبدء البث';
+      // 1. Request permissions first
+      final status = await [Permission.camera, Permission.microphone].request();
+      if (status[Permission.camera] != PermissionStatus.granted ||
+          status[Permission.microphone] != PermissionStatus.granted) {
+        debugPrint("!!! Permissions Denied: $status !!!");
+        throw 'يجب منح صلاحيات الكاميرا والميكروفون لبدء المكالمة';
       }
 
-      if (_appId.isEmpty) {
-        throw 'Agora App ID is missing. Please check your .env file.';
+      if (_engine == null) {
+        debugPrint("Creating new Agora engine...");
+        _engine = createAgoraRtcEngine();
+        await _engine!.initialize(RtcEngineContext(
+          appId: _appId,
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        ));
+
+        _engine!.registerEventHandler(
+          RtcEngineEventHandler(
+            onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+              debugPrint("local user ${connection.localUid} joined");
+              localUserJoined.value = true;
+            },
+            onUserJoined: (RtcConnection connection, int uid, int elapsed) {
+              debugPrint("remote user $uid joined");
+              remoteUid.value = uid;
+              remoteViewController.value = VideoViewController.remote(
+                rtcEngine: _engine!,
+                canvas: VideoCanvas(uid: uid),
+                connection: connection,
+              );
+              stopRinging();
+              playConnect();
+            },
+            onUserOffline: (RtcConnection connection, int uid,
+                UserOfflineReasonType reason) {
+              debugPrint("remote user $uid left channel");
+              remoteUid.value = null;
+              remoteViewController.value = null;
+            },
+            onError: (ErrorCodeType err, String msg) {
+              debugPrint('Agora Error: $err, $msg');
+            },
+          ),
+        );
       }
 
-      _engine = createAgoraRtcEngine();
-      await _engine!.initialize(RtcEngineContext(
-        appId: _appId,
-        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-      ));
-
-      await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-      _engine!.registerEventHandler(
-        RtcEngineEventHandler(
-          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-            debugPrint("local user ${connection.localUid} joined");
-            localUserJoined.value = true;
-          },
-          onUserJoined: (RtcConnection connection, int uid, int elapsed) {
-            debugPrint("remote user $uid joined");
-            remoteUid.value = uid;
-
-            // Initialize persistent remote controller
-            remoteViewController.value = VideoViewController.remote(
-              rtcEngine: _engine!,
-              canvas: VideoCanvas(uid: uid),
-              connection: connection,
-            );
-
-            stopRinging();
-            playConnect();
-          },
-          onUserOffline: (RtcConnection connection, int uid,
-              UserOfflineReasonType reason) {
-            debugPrint("remote user $uid left channel");
-            remoteUid.value = null;
-            remoteViewController.value = null;
-          },
-          onError: (ErrorCodeType err, String msg) {
-            debugPrint('Agora Error: $err, $msg');
-          },
-        ),
-      );
-
+      // 2. Configure video/audio
       await _engine!.enableVideo();
       await _engine!.enableLocalVideo(true);
-      await _engine!.startPreview();
+      await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
-      await _engine!
-          .setLocalVideoMirrorMode(VideoMirrorModeType.videoMirrorModeEnabled);
-
-      // Set high quality video configuration
+      // --- Optimization for Noise/Quality ---
+      // 1. Explicitly set video encoder configuration
       await _engine!.setVideoEncoderConfiguration(
         const VideoEncoderConfiguration(
           dimensions: VideoDimensions(width: 640, height: 480),
           frameRate: 15,
-          bitrate: 800,
+          bitrate: 1000,
           orientationMode: OrientationMode.orientationModeAdaptive,
+          degradationPreference: DegradationPreference.maintainQuality,
         ),
       );
 
+      // 4. Enable Color Enhancement
+      await _engine!.setColorEnhanceOptions(
+        enabled: true,
+        options: const ColorEnhanceOptions(
+          strengthLevel: 0.5,
+          skinProtectLevel: 0.5,
+        ),
+      );
+
+      // 5. Set Camera Capturer Configuration to match encoder
+      await _engine!.setCameraCapturerConfiguration(
+        const CameraCapturerConfiguration(
+          cameraDirection: CameraDirection.cameraRear,
+          format: VideoFormat(width: 640, height: 480, fps: 15),
+        ),
+      );
+      // --------------------------------------
+
+      // Stop preview if already running to avoid "stale" preview locks
+      try {
+        await _engine!.stopPreview();
+      } catch (_) {}
+
+      // 6. Setup local view controller with SurfaceView (Hybrid Composition)
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
         canvas: const VideoCanvas(
           uid: 0,
-          renderMode: RenderModeType.renderModeFit,
+          renderMode: RenderModeType.renderModeHidden,
         ),
+        useAndroidSurfaceView: true, // Use SurfaceView for better stability
       );
 
-      debugPrint("Agora Quality Config: Default Auto Configured.");
+      // 4. Start preview
+      await _engine!.startPreview();
+      debugPrint(
+          "!!! Agora preview started successfully (Hybrid Composition) !!!");
     } catch (e) {
       debugPrint('Error initializing Agora: $e');
       rethrow;
@@ -478,51 +543,16 @@ class GoLiveController extends GetxController {
   }
 
   Future<String> _fetchSecureToken(String channelName) async {
-    // IMPORTANT: For production, you MUST use a token server to generate
-    // secure tokens. Agora tokens are required by default for new projects.
-    // To test WITHOUT tokens during development:
-    // 1. Go to Agora Console (console.agora.io)
-    // 2. Select your Project -> Features -> Primary Certificate -> "No certificate" or "Disable".
-    // 3. This will allow joining channels with an empty string ('') as token.
-
-    // If you have a token server, implement the fetch logic here:
-    /*
-    final response = await http.get(Uri.parse('YOUR_TOKEN_SERVER_URL/token?channel=$channelName'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)['token'];
-    }
-    */
     return '';
   }
 
   Future<void> joinChannel(String channelName) async {
     try {
-      if (_engine == null) {
-        await initializeAgora();
-      } else {
-        await _engine!.enableVideo();
-        await _engine!.enableLocalVideo(true);
-        await _engine!.startPreview();
+      await initializeAgora();
 
-        localViewController.value = VideoViewController(
-          rtcEngine: _engine!,
-          canvas: const VideoCanvas(
-            uid: 0,
-            renderMode: RenderModeType.renderModeFit,
-          ),
-        );
-      }
-
-      // Re-ensure role for stability
-      await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-      debugPrint('Fetching token for channel: $channelName');
-      final token = await _fetchSecureToken(channelName);
-
-      debugPrint(
-          'Joining channel: $channelName with token length: ${token.length}');
+      debugPrint('Joining channel: $channelName');
       await _engine!.joinChannel(
-        token: token,
+        token: await _fetchSecureToken(channelName),
         channelId: channelName,
         uid: 0,
         options: const ChannelMediaOptions(
@@ -738,6 +768,10 @@ class GoLiveController extends GetxController {
         final call = incomingCall.value;
         if (call != null) {
           await joinChannel(call['channel_name']);
+        } else if (Get.arguments is Map &&
+            Get.arguments['channel_name'] != null) {
+          // Fallback to arguments if incomingCall is null (e.g. cold start)
+          await joinChannel(Get.arguments['channel_name']);
         }
       } else {
         stopRinging();
@@ -755,6 +789,24 @@ class GoLiveController extends GetxController {
     _timeoutTimer?.cancel();
     if (currentCallId.value != null) {
       try {
+        // Find if we were the caller and notify receiver to stop ringing
+        final callRecord = await Supabase.instance.client
+            .from(AppConstants.tableCallsSignaling)
+            .select('caller_id, receiver_id')
+            .eq('id', currentCallId.value!)
+            .maybeSingle();
+
+        if (callRecord != null && callRecord['caller_id'] == currentUserId) {
+          final receiverToken =
+              await _getReceiverToken(callRecord['receiver_id']);
+          if (receiverToken != null) {
+            await CallNotificationService.sendCancelNotification(
+              deviceToken: receiverToken,
+              callId: currentCallId.value!,
+            );
+          }
+        }
+
         await Supabase.instance.client
             .from(AppConstants.tableCallsSignaling)
             .update({'status': 'ended'}).eq('id', currentCallId.value!);
@@ -766,6 +818,8 @@ class GoLiveController extends GetxController {
     stopRinging();
     playHangup();
     await leaveChannel();
+    localViewController.value = null; // Essential cleanup
+    remoteViewController.value = null; // Essential cleanup
     currentCallId.value = null;
     incomingCall.value = null;
     debugPrint('Call Ended Cleanly');
@@ -1379,6 +1433,8 @@ class VideoCallPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('Building VideoCallPage for channel: $channelName');
+    debugPrint(
+        '!!! VideoCallPage localViewController: ${controller.localViewController.value != null} !!!');
     return Scaffold(
       backgroundColor: Colors.black,
       body: PopScope(
@@ -1471,6 +1527,8 @@ class VideoCallPage extends StatelessWidget {
                           color: Colors.white.withOpacity(0.3), width: 2),
                     ),
                     child: AgoraVideoView(
+                      key: const ValueKey(
+                          'local_preview_key'), // Stable key to prevent native flickering
                       controller: controller.localViewController.value!,
                     ),
                   ),

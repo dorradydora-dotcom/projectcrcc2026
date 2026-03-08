@@ -13,6 +13,23 @@
 -keepattributes *Annotation*
 -keepattributes Signature
 -keepattributes EnclosingMethod
+
+# Agora SDK
+-keep class io.agora.** { *; }
+-keep class io.agora.rtc2.** { *; }
+-keep class io.agora.rtc.** { *; }
+-dontwarn io.agora.**
+
+# Flutter CallKit
+-keep class com.hiennv.flutter_callkit_incoming.** { *; }
+-dontwarn com.hiennv.flutter_callkit_incoming.**
+
+# General
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keep class * implements java.io.Serializable { *; }
+
 -dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallException
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallManager

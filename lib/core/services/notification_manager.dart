@@ -9,11 +9,13 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:uuid/uuid.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
+    debugPrint('🔥 [Background Message] Received: ${message.messageId}');
+    debugPrint('🔥 [Background Message] Data: ${message.data}');
+
     await Firebase.initializeApp();
     await NotificationManager().initialize();
 
@@ -24,6 +26,18 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     final String? route = message.data['route'];
 
     if (route == 'call') {
+      debugPrint('🔥 [Background Message] Call route detected');
+      final status = message.data['status'];
+      if (status == 'ended' || status == 'rejected') {
+        final callId = message.data['call_id'];
+        if (callId != null) {
+          await FlutterCallkitIncoming.endCall(callId);
+        } else {
+          await FlutterCallkitIncoming.endAllCalls();
+        }
+        return;
+      }
+      debugPrint('🔥 [Background Message] Showing CallKit');
       await NotificationManager().showCallKit(message.data);
       return;
     }
@@ -33,6 +47,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           route: route, data: message.data);
     }
   } catch (e, stackTrace) {
+    debugPrint('🔥 [Background Message] Error: $e');
     AppLogger.logError('Background message handler failed', e, stackTrace);
   }
 }
@@ -174,7 +189,11 @@ class NotificationManager {
   }
 
   Future<void> showCallKit(Map<String, dynamic> data) async {
-    final callId = data['call_id'] ?? const Uuid().v4();
+    final String? callId = data['call_id'];
+    if (callId == null) {
+      debugPrint('Cannot show CallKit: missing call_id in data');
+      return;
+    }
     final callerName = data['caller_name'] ?? 'محطة غير معروفة';
     final channelName = data['channel_name'] ?? 'g-live';
 

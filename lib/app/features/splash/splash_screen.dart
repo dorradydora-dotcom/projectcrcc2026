@@ -94,9 +94,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    // استخدام انتقال Fade بمدة طويلة لجعل العملية تبدو كأنها "تلاشي" ناعم جداً
-    Get.offAll(() => const AuthWrapper(),
-        transition: Transition.fade, duration: const Duration(seconds: 2));
+    // If we have call arguments, we might be already navigating or need to pass them
+    final args = Get.arguments;
+    if (args is Map && args['route'] == 'call') {
+      debugPrint(
+          'SplashScreen: Detected call arguments, using Get.to to preserve flow');
+      Get.to(() => const AuthWrapper(),
+          arguments: args,
+          transition: Transition.fade,
+          duration: const Duration(seconds: 2));
+    } else {
+      Get.offAll(() => const AuthWrapper(),
+          transition: Transition.fade, duration: const Duration(seconds: 2));
+    }
   }
 
   @override
