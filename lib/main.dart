@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:device_preview/device_preview.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,12 +38,7 @@ void main() async {
     // تسجيل معالج رسائل الخلفية
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    runApp(
-      DevicePreview(
-        enabled: false,
-        builder: (context) => const MyApp(),
-      ),
-    );
+    runApp(const MyApp());
 
     // تهيئة WebView في الخلفية (للتطوير فقط)
     if (!kReleaseMode) {
@@ -125,12 +120,12 @@ Future<void> ensureServicesInitialized() async {
 class AppBindings implements Bindings {
   @override
   void dependencies() {
-    Get.put(AuthService(), permanent: true);
-    Get.put(HeartbeatService(), permanent: true);
-    Get.put(GlobalCallService(), permanent: true);
-    Get.lazyPut(() => StationLoadController());
-    Get.lazyPut(() => FavoritesController());
-    Get.lazyPut(() => CarouselSliderController());
+    Get.lazyPut(() => AuthService(), fenix: true);
+    Get.lazyPut(() => HeartbeatService(), fenix: true);
+    Get.lazyPut(() => GlobalCallService(), fenix: true);
+    Get.lazyPut(() => StationLoadController(), fenix: true);
+    Get.lazyPut(() => FavoritesController(), fenix: true);
+    Get.lazyPut(() => CarouselSliderController(), fenix: true);
   }
 }
 
@@ -150,8 +145,6 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return GetMaterialApp(
           useInheritedMediaQuery: true,
-          locale: DevicePreview.locale(context),
-          builder: DevicePreview.appBuilder,
           debugShowCheckedModeBanner: false,
           initialBinding: AppBindings(),
           title: 'CRCC App',

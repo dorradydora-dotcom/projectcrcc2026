@@ -178,8 +178,7 @@ class Mapscreen extends StatelessWidget {
         // height removed to fill Expanded space
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20.r),
-          border:
-              Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+          border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
@@ -205,6 +204,7 @@ class Mapscreen extends StatelessWidget {
                   initialSettings: InAppWebViewSettings(
                     javaScriptEnabled: true,
                     cacheEnabled: true,
+                    clearCache: true,
                     allowsBackForwardNavigationGestures: true,
                     useShouldOverrideUrlLoading: true,
                     transparentBackground: true,

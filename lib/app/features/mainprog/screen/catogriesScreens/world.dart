@@ -69,6 +69,7 @@ class _WorldScreenState extends State<WorldScreen>
           allowUniversalAccessFromFileURLs: true,
           useHybridComposition: true,
           allowsInlineMediaPlayback: true,
+          clearCache: true,
         ),
         onWebViewCreated: controller.onWebViewCreated,
         onLoadStop: (ctrl, url) => controller.onLoadStop(),
@@ -121,7 +122,7 @@ class _WorldScreenState extends State<WorldScreen>
               ),
               SizedBox(height: 24.h),
               Text(
-                'جاري تحميل خريطة الشبكة...',
+                'جاري تحميل خريطة شبكات العالم...',
                 style: TextStyle(
                   color: Colors.white,
                   fontFamily: Appfontstring.ChangaLight,
@@ -169,8 +170,7 @@ class _WorldScreenState extends State<WorldScreen>
                     shape: BoxShape.circle,
                     color: Colors.redAccent.withOpacity(0.1),
                     border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.2),
-                        width: 2),
+                        color: Colors.redAccent.withOpacity(0.2), width: 2),
                   ),
                   child: Icon(Icons.wifi_off_rounded,
                       size: 60.sp, color: Colors.redAccent),

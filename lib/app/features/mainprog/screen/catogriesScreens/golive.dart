@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -15,8 +14,6 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:amiraly/app/common/models/appmodels.dart' hide Event;
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
@@ -25,55 +22,6 @@ import 'package:amiraly/app/util/validators/validator_helper.dart';
 // --- Services Consolidated Here ---
 
 class CallNotificationService {
-  static Future<Map<String, dynamic>> getServiceAccountJson() async {
-    final String? jsonString = dotenv.env['SERVICE_ACCOUNT_JSON'];
-    if (jsonString == null || jsonString.isEmpty) {
-      throw Exception('SERVICE_ACCOUNT_JSON not found in .env');
-    }
-    try {
-      return jsonDecode(jsonString);
-    } catch (e, stackTrace) {
-      AppLogger.logError(
-          'Failed to parse SERVICE_ACCOUNT_JSON for Call', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  static Future<String> getAccessToken() async {
-    try {
-      final Map<String, dynamic> serviceAccountJson =
-          await getServiceAccountJson();
-      final List<String> scopes = [
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/firebase.database",
-        "https://www.googleapis.com/auth/firebase.messaging",
-      ];
-
-      final http.Client client = await auth.clientViaServiceAccount(
-        auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
-        scopes,
-      );
-
-      final auth.AccessCredentials credentials =
-          await auth.obtainAccessCredentialsViaServiceAccount(
-        auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
-        scopes,
-        client,
-      );
-
-      client.close();
-      return credentials.accessToken.data;
-    } catch (e, stackTrace) {
-      AppLogger.logError('Failed to get access token for Call', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  static String get fcmProjectId =>
-      dotenv.env['FCM_PROJECT_ID'] ?? 'crccproject-98fb0';
-  static String get fcmEndpoint =>
-      'https://fcm.googleapis.com/v1/projects/$fcmProjectId/messages:send';
-
   static Future<bool> sendCallNotification({
     required String deviceToken,
     required String title,
@@ -83,47 +31,29 @@ class CallNotificationService {
     required String channelName,
   }) async {
     try {
-      final String accessToken = await getAccessToken();
-
-      final Map<String, dynamic> messagePayload = {
-        "android": {
-          "priority": "HIGH",
-          // We remove the high-level 'notification' block to make it a 'data-only' message.
-          // This prevents the OS from showing a simple text notification and lets our
-          // background handler trigger CallKit.
+      final response = await Supabase.instance.client.functions.invoke(
+        'send-fcm',
+        body: {
+          'targetToken': deviceToken,
+          'title': title,
+          'body': body,
+          'payloadType': 'call',
+          'route': 'call',
+          'callData': {
+            'callId': callId,
+            'callerName': callerName,
+            'channelName': channelName,
+            'status': 'ringing',
+          }
         },
-        "data": {
-          "title": title,
-          "body": body,
-          "route": "call",
-          "call_id": callId,
-          "caller_name": callerName,
-          "channel_name": channelName,
-          "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          "status": "ringing"
-        },
-        "token": deviceToken,
-      };
-
-      final http.Response response = await http.post(
-        Uri.parse(fcmEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode({"message": messagePayload}),
       );
-
-      if (response.statusCode == 200) {
-        AppLogger.logSuccess('Call notification sent to token');
+      if (response.status == 200) {
+        AppLogger.logSuccess('Call notification sent via Edge Function');
         return true;
-      } else {
-        AppLogger.logError('Failed to send call notification',
-            'Status: ${response.statusCode}');
-        return false;
       }
+      return false;
     } catch (e, stackTrace) {
-      AppLogger.logError('Error sending call notification', e, stackTrace);
+      AppLogger.logError('Error invoking send-fcm for call', e, stackTrace);
       return false;
     }
   }
@@ -133,26 +63,19 @@ class CallNotificationService {
     required String callId,
   }) async {
     try {
-      final String accessToken = await getAccessToken();
-      final Map<String, dynamic> messagePayload = {
-        "android": {"priority": "HIGH"},
-        "data": {
-          "route": "call",
-          "call_id": callId,
-          "status": "ended",
+      final response = await Supabase.instance.client.functions.invoke(
+        'send-fcm',
+        body: {
+          'targetToken': deviceToken,
+          'payloadType': 'call',
+          'route': 'call',
+          'callData': {
+            'callId': callId,
+            'status': 'ended',
+          }
         },
-        "token": deviceToken,
-      };
-
-      final http.Response response = await http.post(
-        Uri.parse(fcmEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode({"message": messagePayload}),
       );
-      return response.statusCode == 200;
+      return response.status == 200;
     } catch (e) {
       return false;
     }
