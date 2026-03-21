@@ -116,8 +116,8 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.1)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.1)),
                         ),
                         child: Row(
                           children: [
@@ -228,8 +228,8 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                 width: 24.w,
                 height: 24.w,
                 decoration: BoxDecoration(
-                  color: (isOut ? Colors.redAccent : Colors.blue)
-                      .withOpacity(0.1),
+                  color:
+                      (isOut ? Colors.redAccent : Colors.blue).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -523,7 +523,7 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
       final ttf = pw.Font.ttf(fontData);
 
       final boldFontData =
-          await rootBundle.load("lib/assets/fonts/Changa-Bold.ttf");
+          await rootBundle.load("lib/assets/fonts/Changa-Light.ttf");
       final boldTtf = pw.Font.ttf(boldFontData);
 
       pdf.addPage(
@@ -560,11 +560,11 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                       ),
                       ..._cachedData.map((e) => pw.TableRow(
                             children: [
-                              _buildPdfCell(e['status'] ?? '-', ttf),
+                              _buildPdfCell(e['status']?.toString() ?? '-', ttf),
                               _buildPdfCell(
                                   e['capacity_mvar']?.toString() ?? '-', ttf),
-                              _buildPdfCell(e['voltage_level'] ?? '-', ttf),
-                              _buildPdfCell(e['station_name'] ?? '-', ttf),
+                              _buildPdfCell(e['voltage_level']?.toString() ?? '-', ttf),
+                              _buildPdfCell(e['station_name']?.toString() ?? '-', ttf),
                             ],
                           )),
                     ],

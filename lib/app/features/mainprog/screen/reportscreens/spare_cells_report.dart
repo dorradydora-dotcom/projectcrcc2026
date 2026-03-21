@@ -120,8 +120,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.1)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.1)),
                         ),
                         child: Row(
                           children: [
@@ -520,7 +520,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
       final ttf = pw.Font.ttf(fontData);
 
       final boldFontData =
-          await rootBundle.load("lib/assets/fonts/Changa-Bold.ttf");
+          await rootBundle.load("lib/assets/fonts/Changa-Light.ttf");
       final boldTtf = pw.Font.ttf(boldFontData);
 
       pdf.addPage(
@@ -561,8 +561,10 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                               _buildPdfCell(e['status'] ?? '-', ttf),
                               _buildPdfCell(
                                   e['cell_number']?.toString() ?? '-', ttf),
-                              _buildPdfCell(e['voltage_level'] ?? '-', ttf),
-                              _buildPdfCell(e['station_name'] ?? '-', ttf),
+                              _buildPdfCell(
+                                  e['voltage_level']?.toString() ?? '-', ttf),
+                              _buildPdfCell(
+                                  e['station_name']?.toString() ?? '-', ttf),
                             ],
                           )),
                     ],
