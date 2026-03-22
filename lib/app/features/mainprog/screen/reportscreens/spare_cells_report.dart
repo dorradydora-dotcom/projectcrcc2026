@@ -10,6 +10,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:get/get.dart';
+import 'package:amiraly/app/util/helpers/pdf_helper.dart';
 
 class SpareCellsReportScreen extends StatefulWidget {
   const SpareCellsReportScreen({super.key});
@@ -341,7 +342,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
       final response = await _supabase
           .from(AppConstants.tableSpareCells)
           .select()
-          .order('id', ascending: true);
+          .order('id', ascending: true)
+          .limit(AppConstants.defaultFetchLimit);
       final data = List<Map<String, dynamic>>.from(response);
 
       if (mounted) {
@@ -359,13 +361,13 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
     }
   }
 
-  void _showAddDialog() {
+  void _showAddDialog() async {
     final stationController = TextEditingController();
     final voltageController = TextEditingController();
     final cellController = TextEditingController();
     final statusController = TextEditingController();
 
-    Get.dialog(
+    await Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF163C5E),
         title: const Text('إضافة خلية احتياطية',
@@ -405,9 +407,15 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
         ],
       ),
     );
+
+    // تفريغ الذاكرة بعد إغلاق النافذة
+    stationController.dispose();
+    voltageController.dispose();
+    cellController.dispose();
+    statusController.dispose();
   }
 
-  void _showEditDialog(Map<String, dynamic> item) {
+  void _showEditDialog(Map<String, dynamic> item) async {
     final stationController =
         TextEditingController(text: item['station_name']?.toString());
     final voltageController =
@@ -417,7 +425,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
     final statusController =
         TextEditingController(text: item['status']?.toString());
 
-    Get.dialog(
+    await Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF163C5E),
         title: const Text('تعديل البيانات',
@@ -455,6 +463,12 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
         ],
       ),
     );
+
+    // تفريغ الذاكرة بعد إغلاق النافذة
+    stationController.dispose();
+    voltageController.dispose();
+    cellController.dispose();
+    statusController.dispose();
   }
 
   void _showDeleteConfirm(Map<String, dynamic> item) {
@@ -535,7 +549,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                   pw.Header(
                     level: 0,
                     child: pw.Center(
-                      child: pw.Text('تقرير الخلايا الاحتياطية',
+                      child: pw.Text(PdfHelper.prepareArabic('تقرير الخلايا الاحتياطية'),
                           style: pw.TextStyle(fontSize: 24, font: boldTtf)),
                     ),
                   ),
@@ -549,22 +563,22 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                         decoration:
                             const pw.BoxDecoration(color: PdfColors.grey300),
                         children: [
-                          _buildPdfCell('الحالة', boldTtf, isHeader: true),
-                          _buildPdfCell('رقم الخلية', boldTtf, isHeader: true),
-                          _buildPdfCell('الجهد', boldTtf, isHeader: true),
-                          _buildPdfCell('المحطة', boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('الحالة'), boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('رقم الخلية'), boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('الجهد'), boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('المحطة'), boldTtf, isHeader: true),
                         ],
                       ),
                       // Data Rows
                       ..._cachedData.map((e) => pw.TableRow(
                             children: [
-                              _buildPdfCell(e['status'] ?? '-', ttf),
+                              _buildPdfCell(PdfHelper.prepareArabic(e['status'] ?? '-'), ttf),
                               _buildPdfCell(
                                   e['cell_number']?.toString() ?? '-', ttf),
                               _buildPdfCell(
                                   e['voltage_level']?.toString() ?? '-', ttf),
                               _buildPdfCell(
-                                  e['station_name']?.toString() ?? '-', ttf),
+                                  PdfHelper.prepareArabic(e['station_name']?.toString() ?? '-'), ttf),
                             ],
                           )),
                     ],

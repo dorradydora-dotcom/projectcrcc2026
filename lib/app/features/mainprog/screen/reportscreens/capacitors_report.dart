@@ -10,6 +10,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:get/get.dart';
+import 'package:amiraly/app/util/helpers/pdf_helper.dart';
 
 class CapacitorsReportScreen extends StatefulWidget {
   const CapacitorsReportScreen({super.key});
@@ -339,6 +340,7 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
       final response = await _supabase
           .from(AppConstants.tableCapacitors)
           .select()
+          .limit(AppConstants.defaultFetchLimit)
           .order('id', ascending: true);
       final data = List<Map<String, dynamic>>.from(response);
 
@@ -358,13 +360,13 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
     }
   }
 
-  void _showAddDialog() {
+  Future<void> _showAddDialog() async {
     final stationController = TextEditingController();
     final voltageController = TextEditingController();
     final capacityController = TextEditingController();
     final statusController = TextEditingController();
 
-    Get.dialog(
+    await Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF163C5E),
         title: Text('إضافة مكثف جديد',
@@ -408,9 +410,14 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
         ],
       ),
     );
+
+    stationController.dispose();
+    voltageController.dispose();
+    capacityController.dispose();
+    statusController.dispose();
   }
 
-  void _showEditDialog(Map<String, dynamic> item) {
+  Future<void> _showEditDialog(Map<String, dynamic> item) async {
     final stationController =
         TextEditingController(text: item['station_name']?.toString());
     final voltageController =
@@ -420,7 +427,7 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
     final statusController =
         TextEditingController(text: item['status']?.toString());
 
-    Get.dialog(
+    await Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF163C5E),
         title: Text('تعديل بيانات المكثف',
@@ -462,6 +469,11 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
         ],
       ),
     );
+
+    stationController.dispose();
+    voltageController.dispose();
+    capacityController.dispose();
+    statusController.dispose();
   }
 
   void _showDeleteConfirm(Map<String, dynamic> item) {
@@ -538,7 +550,7 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                   pw.Header(
                     level: 0,
                     child: pw.Center(
-                      child: pw.Text('تقرير المكثفات',
+                      child: pw.Text(PdfHelper.prepareArabic('تقرير المكثفات'),
                           style: pw.TextStyle(fontSize: 24, font: boldTtf)),
                     ),
                   ),
@@ -551,20 +563,20 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                         decoration:
                             const pw.BoxDecoration(color: PdfColors.grey300),
                         children: [
-                          _buildPdfCell('الحالة', boldTtf, isHeader: true),
-                          _buildPdfCell('السعة (MVAR)', boldTtf,
+                          _buildPdfCell(PdfHelper.prepareArabic('الحالة'), boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('السعة (MVAR)'), boldTtf,
                               isHeader: true),
-                          _buildPdfCell('الجهد', boldTtf, isHeader: true),
-                          _buildPdfCell('المحطة', boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('الجهد'), boldTtf, isHeader: true),
+                          _buildPdfCell(PdfHelper.prepareArabic('المحطة'), boldTtf, isHeader: true),
                         ],
                       ),
                       ..._cachedData.map((e) => pw.TableRow(
                             children: [
-                              _buildPdfCell(e['status']?.toString() ?? '-', ttf),
+                              _buildPdfCell(PdfHelper.prepareArabic(e['status']?.toString() ?? '-'), ttf),
                               _buildPdfCell(
                                   e['capacity_mvar']?.toString() ?? '-', ttf),
                               _buildPdfCell(e['voltage_level']?.toString() ?? '-', ttf),
-                              _buildPdfCell(e['station_name']?.toString() ?? '-', ttf),
+                              _buildPdfCell(PdfHelper.prepareArabic(e['station_name']?.toString() ?? '-'), ttf),
                             ],
                           )),
                     ],

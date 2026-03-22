@@ -9,6 +9,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:amiraly/core/services/heartbeat_service.dart';
+import 'package:amiraly/app/util/helpers/pdf_helper.dart';
 
 class LoadnavController extends GetxController {
   final StationLoadController _stationController =
@@ -117,7 +118,7 @@ class LoadnavController extends GetxController {
         'نوفمبر',
         'ديسمبر'
       ];
-      final dateStr = "${now.day} ${arabicMonths[now.month - 1]} ${now.year}";
+      final dateStr = PdfHelper.prepareArabic("${now.day} ${arabicMonths[now.month - 1]} ${now.year}");
       final timeStr =
           "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
 
@@ -215,13 +216,12 @@ class LoadnavController extends GetxController {
                     ),
                     pw.SizedBox(height: 20),
                     // Title
-                    pw.Text('تقرير أحمال شبكة القاهرة ',
+                    pw.Text(PdfHelper.prepareArabic('تقرير أحمال شبكة القاهرة '),
                         style: pw.TextStyle(
                             font: ttf,
                             fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.white),
-                        textDirection: pw.TextDirection.rtl),
+                            color: PdfColors.white)),
                     pw.SizedBox(height: 6),
                     pw.Container(
                       width: 60,
@@ -260,13 +260,12 @@ class LoadnavController extends GetxController {
                           pw.Row(
                             mainAxisAlignment: pw.MainAxisAlignment.center,
                             children: [
-                              pw.Text('الحمل الكلي للشبكة',
+                              pw.Text(PdfHelper.prepareArabic('الحمل الكلي للشبكة'),
                                   style: pw.TextStyle(
                                       font: ttf,
                                       fontSize: 14,
                                       fontWeight: pw.FontWeight.bold,
-                                      color: textDark),
-                                  textDirection: pw.TextDirection.rtl),
+                                      color: textDark)),
                             ],
                           ),
                           pw.SizedBox(height: 16),
@@ -299,12 +298,11 @@ class LoadnavController extends GetxController {
                                   color: PdfColor.fromInt(0xFFBBF7D0)),
                             ),
                             child: pw.Text(
-                                'أقصى حمل: ${maxLoadInLastHour.value.toStringAsFixed(0)} MW',
+                                PdfHelper.prepareArabic('أقصى حمل: ${maxLoadInLastHour.value.toStringAsFixed(0)} MW'),
                                 style: pw.TextStyle(
                                     font: ttf,
                                     fontSize: 11,
-                                    color: successGreen),
-                                textDirection: pw.TextDirection.rtl),
+                                    color: successGreen)),
                           ),
                         ],
                       ),
@@ -333,12 +331,11 @@ class LoadnavController extends GetxController {
                                       font: digitalTtf,
                                       fontSize: 28,
                                       color: primaryDark)),
-                              pw.Text('محطة',
+                              pw.Text(PdfHelper.prepareArabic('محطة'),
                                   style: pw.TextStyle(
                                       font: ttf,
                                       fontSize: 10,
-                                      color: textMuted),
-                                  textDirection: pw.TextDirection.rtl),
+                                      color: textMuted)),
                             ],
                           ),
                         ),
@@ -364,12 +361,11 @@ class LoadnavController extends GetxController {
                                       font: digitalTtf,
                                       fontSize: 28,
                                       color: warningOrange)),
-                              pw.Text('متوسط الحمل',
+                              pw.Text(PdfHelper.prepareArabic('متوسط الحمل'),
                                   style: pw.TextStyle(
                                       font: ttf,
                                       fontSize: 10,
-                                      color: textMuted),
-                                  textDirection: pw.TextDirection.rtl),
+                                      color: textMuted)),
                             ],
                           ),
                         ),
@@ -401,13 +397,12 @@ class LoadnavController extends GetxController {
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.center,
                   children: [
-                    pw.Text('تفاصيل أحمال المحطات',
+                    pw.Text(PdfHelper.prepareArabic('تفاصيل أحمال المحطات'),
                         style: pw.TextStyle(
                             font: ttf,
                             fontSize: 14,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.white),
-                        textDirection: pw.TextDirection.rtl),
+                            color: PdfColors.white)),
                   ],
                 ),
               ),
@@ -444,7 +439,7 @@ class LoadnavController extends GetxController {
                     }
 
                     return pw.Container(
-                      width: (PdfPageFormat.a4.availableWidth - 48 - 16) / 5,
+                      width: (PdfPageFormat.a4.availableWidth - 48 - 12) / 4,
                       padding: const pw.EdgeInsets.all(8),
                       decoration: pw.BoxDecoration(
                         color: PdfColor.fromInt(0xFFF8FAFC),
@@ -476,15 +471,14 @@ class LoadnavController extends GetxController {
                               ),
                               pw.SizedBox(width: 8),
                               pw.Expanded(
-                                child: pw.Text(station.stationName,
+                                child: pw.Text(PdfHelper.prepareArabic(station.stationName),
                                     style: pw.TextStyle(
                                         font: ttf,
                                         fontSize: 8,
                                         fontWeight: pw.FontWeight.bold,
                                         color: textDark),
-                                    maxLines: 1,
-                                    overflow: pw.TextOverflow.clip,
-                                    textDirection: pw.TextDirection.rtl),
+                                    maxLines: 2,
+                                    overflow: pw.TextOverflow.visible),
                               ),
                             ],
                           ),
@@ -519,8 +513,8 @@ class LoadnavController extends GetxController {
                                 pw.Container(
                                   width: ((PdfPageFormat.a4.availableWidth -
                                                   48 -
-                                                  16) /
-                                              5 -
+                                                  12) /
+                                              4 -
                                           16) *
                                       (loadPercent / 100),
                                   height: 4,
@@ -556,10 +550,9 @@ class LoadnavController extends GetxController {
                     pw.Text('v1.0',
                         style: pw.TextStyle(
                             font: ttf, fontSize: 9, color: textMuted)),
-                    pw.Text('تم إنشاء هذا التقرير آلياً بواسطة  التحكم',
+                    pw.Text(PdfHelper.prepareArabic('تم إنشاء هذا التقرير آلياً بواسطة  التحكم'),
                         style: pw.TextStyle(
-                            font: ttf, fontSize: 9, color: textMuted),
-                        textDirection: pw.TextDirection.rtl),
+                            font: ttf, fontSize: 9, color: textMuted)),
                     pw.Text('📄', style: const pw.TextStyle(fontSize: 12)),
                   ],
                 ),

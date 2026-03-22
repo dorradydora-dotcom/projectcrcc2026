@@ -43,6 +43,7 @@ class EventsController extends GetxController {
       final response = await _supabase
           .from(AppConstants.tableEvents)
           .select()
+          .limit(AppConstants.defaultFetchLimit)
           .order('date', ascending: true);
 
       events.value = (response as List<dynamic>)

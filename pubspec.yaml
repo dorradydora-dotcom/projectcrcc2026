@@ -44,6 +44,7 @@ dependencies:
   cached_network_image: ^3.4.1
   pdf: ^3.10.8
   printing: ^5.11.1
+  bidi: ^2.0.13
   share_plus: ^10.1.4
   path: ^1.9.0
   iconsax: ^0.0.8

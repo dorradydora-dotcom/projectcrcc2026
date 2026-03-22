@@ -462,8 +462,8 @@ class ProjectsScreen extends StatelessWidget {
     );
   }
 
-  void _showProjectDialog(BuildContext context, ProjectsController controller,
-      {ProjectModel? project}) {
+  Future<void> _showProjectDialog(BuildContext context, ProjectsController controller,
+      {ProjectModel? project}) async {
     final nameController = TextEditingController(text: project?.name);
     final descriptionController =
         TextEditingController(text: project?.description);
@@ -487,7 +487,7 @@ class ProjectsScreen extends StatelessWidget {
         allowedStatuses.contains(initialStatus) ? initialStatus : 'planned';
     final status = validatedStatus.obs;
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
@@ -614,6 +614,16 @@ class ProjectsScreen extends StatelessWidget {
         ),
       ),
     );
+
+    nameController.dispose();
+    descriptionController.dispose();
+    notesController.dispose();
+    stationController.dispose();
+    voltageController.dispose();
+    managerController.dispose();
+    contractorController.dispose();
+    totalCostController.dispose();
+    spentCostController.dispose();
   }
 
   Widget _buildDialogField(

@@ -246,7 +246,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               AppBarText.signOutTitle,
               style: TextStyle(
                   fontFamily: Appfontstring.digital,
-                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
+                  fontFamilyFallback: [Appfontstring.ChangaLight]),
               textAlign: TextAlign.right,
             ),
             content: const Text(

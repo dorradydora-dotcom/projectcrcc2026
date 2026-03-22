@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:amiraly/app/util/helpers/pdf_helper.dart';
 
 class TransformerReportScreen extends StatefulWidget {
   const TransformerReportScreen({super.key});
@@ -448,14 +449,15 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
     final response = await _supabase
         .from(AppConstants.tableStation)
         .select('station_name, total_capacity_mva')
+        .limit(AppConstants.defaultFetchLimit)
         .order('station_name', ascending: true);
     return List<Map<String, dynamic>>.from(response);
   }
 
-  void _showEditDialog(String stationName, double currentCapacity) {
+  Future<void> _showEditDialog(String stationName, double currentCapacity) async {
     final TextEditingController controller =
         TextEditingController(text: currentCapacity.toStringAsFixed(0));
-    Get.dialog(
+    await Get.dialog(
       AlertDialog(
         backgroundColor: const Color(0xFF163C5E),
         title: Text('تعديل سعة محطة $stationName',
@@ -493,6 +495,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
         ],
       ),
     );
+    controller.dispose();
   }
 
   Future<void> _updateCapacity(String stationName, double newCapacity) async {
@@ -547,7 +550,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
       }).toList();
 
       final now = DateTime.now();
-      final dateStr = "${now.day}/${now.month}/${now.year}";
+      final dateStr = PdfHelper.prepareArabic("${now.day}/${now.month}/${now.year}");
 
       final primaryBlue = PdfColor.fromInt(0xFF163C5E);
       final accentGold = PdfColor.fromInt(0xFFD4AF37);
@@ -582,7 +585,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text('تقرير نسب تحميل المحطات',
+                          pw.Text(PdfHelper.prepareArabic('تقرير نسب تحميل المحطات'),
                               style: pw.TextStyle(
                                   font: ttf,
                                   fontSize: 22,
@@ -609,7 +612,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
             alignment: pw.Alignment.centerRight,
             margin: const pw.EdgeInsets.only(top: 10),
             child: pw.Text(
-              'صفحة ${context.pageNumber} من ${context.pagesCount}',
+              PdfHelper.prepareArabic('صفحة ${context.pageNumber} من ${context.pagesCount}'),
               style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
             ),
           ),
@@ -631,10 +634,10 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                   pw.TableRow(
                     decoration: pw.BoxDecoration(color: primaryBlue),
                     children: [
-                      _buildHeaderCell('النسبة', ttf, color: PdfColors.white),
-                      _buildHeaderCell('السعة', ttf, color: PdfColors.white),
-                      _buildHeaderCell('الحمل', ttf, color: PdfColors.white),
-                      _buildHeaderCell('المحطة', ttf, color: PdfColors.white),
+                      _buildHeaderCell(PdfHelper.prepareArabic('النسبة'), ttf, color: PdfColors.white),
+                      _buildHeaderCell(PdfHelper.prepareArabic('السعة'), ttf, color: PdfColors.white),
+                      _buildHeaderCell(PdfHelper.prepareArabic('الحمل'), ttf, color: PdfColors.white),
+                      _buildHeaderCell(PdfHelper.prepareArabic('المحطة'), ttf, color: PdfColors.white),
                     ],
                   ),
                   // Data Rows
@@ -670,7 +673,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                             color: ratioColor, isBold: true),
                         _buildDataCell(capacity.toStringAsFixed(0), ttf),
                         _buildDataCell(load.toStringAsFixed(1), ttf),
-                        _buildDataCell(name, ttf,
+                        _buildDataCell(PdfHelper.prepareArabic(name), ttf,
                             align: pw.Alignment.centerRight),
                       ],
                     );

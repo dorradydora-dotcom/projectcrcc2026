@@ -15,7 +15,49 @@ class ZoneController extends GetxController {
 
   Future<void> fetchAllZonePhotos() async {
     const zones = ['north', 'east', 'south', 'west'];
-    await Future.wait(zones.map((zone) => fetchZonePhoto(zone)));
+    final zonesToFetch = zones.where((z) => !(zonePhotos.containsKey(z) && zonePhotos[z]!.isNotEmpty)).toList();
+    
+    if (zonesToFetch.isEmpty) return;
+
+    try {
+      Future.microtask(() {
+        for (var z in zonesToFetch) {
+          isLoading[z] = true;
+          zoneErrors[z] = null;
+        }
+      });
+
+      final supabase = Supabase.instance.client;
+      final response = await supabase
+          .from(AppConstants.tableZone)
+          .select('name, image_url')
+          .inFilter('name', zonesToFetch);
+
+      for (var row in response) {
+        final zoneName = row['name'] as String;
+        final String photoUrl = row['image_url'] as String? ?? '';
+        
+        if (photoUrl.isEmpty) {
+          zoneErrors[zoneName] = 'No photo available';
+        } else {
+          zonePhotos[zoneName] = photoUrl;
+        }
+      }
+
+      for (var z in zonesToFetch) {
+        if (!zonePhotos.containsKey(z) && zoneErrors[z] == null) {
+          zoneErrors[z] = 'No $z zone found';
+        }
+      }
+    } catch (e) {
+      for (var z in zonesToFetch) {
+        zoneErrors[z] = 'Error: $e';
+      }
+    } finally {
+      for (var z in zonesToFetch) {
+        isLoading[z] = false;
+      }
+    }
   }
 
   Future<void> fetchZonePhoto(String zoneName) async {
@@ -24,8 +66,6 @@ class ZoneController extends GetxController {
     }
 
     try {
-      // Use microtask to avoid "setState() or markNeedsBuild() called during build"
-      // when multiple screens are initializing in the same frame (e.g. TabBarView)
       Future.microtask(() {
         isLoading[zoneName] = true;
         zoneErrors[zoneName] = null;
