@@ -253,7 +253,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               AppBarText.signOutMessage,
               style: TextStyle(
                   fontFamily: Appfontstring.digital,
-                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
+                  fontFamilyFallback: [Appfontstring.ChangaLight]),
               textAlign: TextAlign.right,
             ),
             actions: [
@@ -317,7 +317,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               textDirection: TextDirection.rtl,
               style: TextStyle(
                   fontFamily: Appfontstring.digital,
-                  fontFamilyFallback: const [Appfontstring.ChangaLight]),
+                  fontFamilyFallback: [Appfontstring.ChangaLight]),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),

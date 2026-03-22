@@ -216,8 +216,9 @@ class ArabicReshaper {
             }
           }
 
-          if (forms[ligatureForm].isEmpty)
+          if (forms[ligatureForm].isEmpty) {
             continue; // Ligature doesn't support this form
+          }
 
           // Perform Replacement
           // 1. Replace the FIRST char of the sequence with the Ligature Char

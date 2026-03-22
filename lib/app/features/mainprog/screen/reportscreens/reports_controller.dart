@@ -4,8 +4,9 @@ import 'package:get/get.dart';
 class ReportsController extends GetxController {
   static const Map<String, String> _offers = {
     'المكثفات': 'Description for Report 1',
-    'الخلايا الاحطياتية بالمحطات': 'Description for Report 2',
+    'الخلايا الاحطياطية بالمحطات': 'Description for Report 2',
     'نسب تحميل المحطات': 'Description for Report 3',
+    'اعطال الشبكة': 'سجل تفصيلي لأعطال الشبكة والمحطات',
   };
 
   final RxList<Report> reports = <Report>[].obs;

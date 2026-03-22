@@ -3,11 +3,12 @@ import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/capacitors_report.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/spare_cells_report.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/transformer_ratio_report.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/network_faults_report.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'reports_controller.dart';
+import '../reportscreens/reports_controller.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -225,6 +226,8 @@ class OfferCard extends StatelessWidget {
                     Get.to(() => const SpareCellsReportScreen());
                   } else if (report.name == 'نسب تحميل المحطات') {
                     Get.to(() => const TransformerReportScreen());
+                  } else if (report.name == 'اعطال الشبكة') {
+                    Get.to(() => NetworkFaultsReportScreen());
                   }
                 },
                 style: ElevatedButton.styleFrom(

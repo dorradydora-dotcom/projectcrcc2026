@@ -40,6 +40,7 @@ class AppConstants {
   static const String tableAnnouncingImages = 'announcing_images';
   static const String tableWorldTable = 'world_table';
   static const String tableZone = 'zone';
+  static const String tableNetworkFaults = 'network_faults';
 
   // Routes
   static const String routeService = 'serviceScreen';
