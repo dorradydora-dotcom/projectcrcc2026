@@ -262,13 +262,28 @@ class Event {
 }
 
 class Report {
-  final String name, description, date;
+  final String name, description, date, type;
+  final bool isActive;
 
   const Report({
     required this.name,
     required this.description,
     required this.date,
+    required this.type,
+    this.isActive = true,
   });
+
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      name: json['name'] as String? ?? 'تقرير بدون اسم',
+      description: json['description'] as String? ?? '',
+      date: json['created_at'] != null
+          ? json['created_at'].toString().substring(0, 10)
+          : DateTime.now().toString().substring(0, 10),
+      type: json['type'] as String? ?? 'generic',
+      isActive: json['is_active'] as bool? ?? true,
+    );
+  }
 }
 
 class ProjectModel {

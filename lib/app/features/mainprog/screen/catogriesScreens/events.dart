@@ -1,6 +1,8 @@
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -110,10 +112,9 @@ class _EventsScreenState extends State<EventsScreen> {
                   Expanded(
                     child: Obx(() {
                       if (controller.isLoading.value) {
-                        return Center(
-                            child: CircularProgressIndicator(
-                                color: const Color(0xFF03DAC6),
-                                strokeWidth: 2.w));
+                        return const Center(
+                            child: ElectricLoadingIndicator(
+                                color: Color(0xFF03DAC6)));
                       }
                       return RefreshIndicator(
                         color: const Color(0xFF03DAC6),
@@ -652,7 +653,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp)),
               value: value,
               onChanged: onChanged,
-              activeThumbColor: Colors.blue,
+              activeColor: Colors.blue,
             )));
   }
 

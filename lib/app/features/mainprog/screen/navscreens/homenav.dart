@@ -12,6 +12,8 @@ import 'dart:ui';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/homenav_controller.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:amiraly/app/common/widgets/news_ticker.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class HomeNav extends StatefulWidget {
   const HomeNav({super.key});
@@ -64,10 +66,7 @@ class _HomeNavState extends State<HomeNav> {
           child: Obx(() {
             if (_controller.isLoading.value) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.blueAccent,
-                  strokeWidth: 2,
-                ),
+                child: ElectricLoadingIndicator(size: 35),
               );
             }
             return CustomScrollView(
@@ -371,8 +370,7 @@ class _HomeNavState extends State<HomeNav> {
                                 ),
                               ),
                               placeholder: (context, url) => const Center(
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: ElectricLoadingIndicator(size: 25),
                               ),
                             ),
                           ),
@@ -507,11 +505,11 @@ class _HomeNavState extends State<HomeNav> {
                       Text(
                           isCurrent
                               ? '${weather.maxTemp}°'
-                              : '${weather.minTemp}° / ${weather.maxTemp}°',
+                              : '${weather.maxTemp}° / ${weather.minTemp}°',
                           style: TextStyle(
-                            fontSize: 10.sp,
+                            fontSize: isCurrent ? 17.sp : 12.sp,
                             fontFamily: Appfontstring.digital,
-                            color: Colors.blue,
+                            color: Colors.white,
                           ))
                     ]))));
   }
@@ -654,7 +652,7 @@ class CategoryItem extends StatelessWidget {
                 ),
               ),
               placeholder: (context, url) => const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: ElectricLoadingIndicator(size: 25),
               ),
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/indicators_controller.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,9 +38,8 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
+                    const ElectricLoadingIndicator(
+                      color: Colors.orangeAccent,
                     ),
                     SizedBox(height: 16.h),
                     Text(
@@ -124,7 +125,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                         _buildPieChartContainer(isSmallScreen),
                         SizedBox(height: 16.h),
                         _buildPieChartLegend(isSmallScreen),
-                        SizedBox(height: 80.h), // Bottom padding
+                        SizedBox(height: 80.h)
                       ],
                     ),
                   ),
@@ -371,8 +372,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                     ),
                     borderData: FlBorderData(
                       show: true,
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     minX: 0,
                     maxX: 23,
@@ -470,26 +470,26 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       final chartHeight = isSmallScreen ? 220.h : 300.h;
 
       final double stationsPct =
-          (controller.sumStations.value / controller.totalDynamic.value) *
+          (controller.sumStations.value.abs() / controller.totalDynamic.value) *
               100.0;
-      final double generationPct =
-          (controller.sumGeneration.value / controller.totalDynamic.value) *
-              100.0;
-      final double exchangesPct =
-          (controller.sumExchanges.value / controller.totalDynamic.value) *
-              100.0;
+      final double generationPct = (controller.sumGeneration.value.abs() /
+              controller.totalDynamic.value) *
+          100.0;
+      final double exchangesPct = (controller.sumExchanges.value.abs() /
+              controller.totalDynamic.value) *
+          100.0;
 
-      return Container(
-        height: chartHeight,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: AspectRatio(
-            aspectRatio: 1.2,
+      return Center(
+        child: Container(
+          height: chartHeight,
+          width: chartHeight * 1.2, // Maintain aspect ratio within centered box
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
             child: PieChart(
               PieChartData(
                 pieTouchData: PieTouchData(
@@ -553,8 +553,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
         badgeWidget: Container(
           padding: EdgeInsets.all(isSmallScreen ? 6.w : 8.w),
           decoration: BoxDecoration(
-            color:
-                AppConstants.indicatorstationColors[i].withOpacity(0.85),
+            color: AppConstants.indicatorstationColors[i].withOpacity(0.85),
             borderRadius: BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
@@ -622,23 +621,44 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
       ];
 
       return Container(
-        padding: EdgeInsets.all(12.w),
+        width: double.infinity,
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
-        child: Wrap(
-          spacing: 16.0.w,
-          runSpacing: 8.0.h,
-          alignment: WrapAlignment.start,
+        child: Column(
           children: List.generate(pieLabels.length, (index) {
-            return Indicator(
-              color: AppConstants.indicatorstationColors[index],
-              text:
-                  '${pieLabels[index]}: ${pcts[index].toStringAsFixed(1)}% (${sums[index].toStringAsFixed(0)} م.و)',
-              isSquare: true,
-              size: isSmallScreen ? 10 : 12,
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.h),
+              child: Indicator(
+                color: AppConstants.indicatorstationColors[index],
+                isSquare: true,
+                size: isSmallScreen ? 12 : 14,
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontFamily: Appfontstring.ChangaLight,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: [
+                      TextSpan(text: '${pieLabels[index]}: '),
+                      TextSpan(
+                        text: '${pcts[index].toStringAsFixed(1)}%',
+                        style: const TextStyle(
+                          color: Colors.yellow,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                          text: ' (${sums[index].toStringAsFixed(0)} م.و)'),
+                    ],
+                  ),
+                ),
+              ),
             );
           }),
         ),
@@ -649,7 +669,8 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
 
 class Indicator extends StatelessWidget {
   final Color color;
-  final String text;
+  final String? text;
+  final Widget? child;
   final bool isSquare;
   final double size;
   final Color textColor;
@@ -657,11 +678,12 @@ class Indicator extends StatelessWidget {
   const Indicator({
     super.key,
     required this.color,
-    required this.text,
+    this.text,
+    this.child,
     this.isSquare = false,
     this.size = 16,
     this.textColor = Colors.white70,
-  });
+  }) : assert(text != null || child != null);
 
   @override
   Widget build(BuildContext context) {
@@ -674,8 +696,7 @@ class Indicator extends StatelessWidget {
           decoration: BoxDecoration(
             shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
             color: color,
-            border: Border.all(
-                color: Colors.white.withOpacity(0.5), width: 1),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -687,15 +708,16 @@ class Indicator extends StatelessWidget {
         ),
         SizedBox(width: 8.w),
         Flexible(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontFamily: Appfontstring.ChangaLight,
-              color: textColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          child: child ??
+              Text(
+                text!,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
         ),
       ],
     );
@@ -919,7 +941,7 @@ class HourlyMaxLoadTable extends GetView<IndicatorsController> {
       if (controller.isLoadingHourly.value &&
           controller.hourlyMaxLoadsToday.isEmpty) {
         return Center(
-            child: CircularProgressIndicator(color: Colors.orangeAccent));
+            child: const ElectricLoadingIndicator(color: Colors.orangeAccent));
       }
       if (controller.hourlyError.value != null &&
           controller.hourlyMaxLoadsToday.isEmpty) {
@@ -1034,8 +1056,7 @@ class HourlyMaxLoadTable extends GetView<IndicatorsController> {
       color: color,
       barWidth: 2,
       dotData: FlDotData(show: false),
-      belowBarData:
-          BarAreaData(show: true, color: color.withOpacity(0.1)),
+      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)),
     );
   }
 }

@@ -1,13 +1,9 @@
 import 'package:amiraly/app/common/models/appmodels.dart';
+import 'package:amiraly/core/services/supabase_service.dart';
 import 'package:get/get.dart';
 
 class ReportsController extends GetxController {
-  static const Map<String, String> _offers = {
-    'المكثفات': 'Description for Report 1',
-    'الخلايا الاحطياطية بالمحطات': 'Description for Report 2',
-    'نسب تحميل المحطات': 'Description for Report 3',
-    'اعطال الشبكة': 'سجل تفصيلي لأعطال الشبكة والمحطات',
-  };
+  final SupabaseService _supabaseService = Get.find<SupabaseService>();
 
   final RxList<Report> reports = <Report>[].obs;
   final RxBool isLoading = false.obs;
@@ -18,18 +14,18 @@ class ReportsController extends GetxController {
     fetchReports();
   }
 
-  Future<void> fetchReports() async {
-    isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 1));
-    reports.value = _offers.entries
-        .map(
-          (e) => Report(
-            name: e.key,
-            description: e.value,
-            date: DateTime.now().toString().substring(0, 10),
-          ),
-        )
-        .toList();
-    isLoading.value = false;
+  Future<void> fetchReports({bool forceRefresh = false}) async {
+    try {
+      isLoading.value = true;
+      if (forceRefresh) {
+        _supabaseService.clearCacheKey('reports_config');
+      }
+      final fetchedReports = await _supabaseService.fetchReportsConfig();
+      reports.assignAll(fetchedReports);
+    } catch (e) {
+      Get.snackbar('خطأ', 'فشل في تحميل قائمة التقارير');
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

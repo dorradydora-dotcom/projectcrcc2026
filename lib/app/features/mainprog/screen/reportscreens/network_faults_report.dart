@@ -5,6 +5,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'network_faults_controller.dart';
 
 class NetworkFaultsReportScreen extends StatelessWidget {
@@ -30,11 +32,8 @@ class NetworkFaultsReportScreen extends StatelessWidget {
                   mini: true,
                   heroTag: 'pdfFAB_NetFaults',
                   child: controller.isGeneratingPdf.value
-                      ? SizedBox(
-                          width: 18.w,
-                          height: 18.w,
-                          child: const CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                      ? const ElectricLoadingIndicator(
+                          color: Colors.white, size: 18)
                       : const Icon(Icons.picture_as_pdf,
                           color: Colors.lightGreenAccent),
                 ),

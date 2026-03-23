@@ -11,6 +11,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:get/get.dart';
 import 'package:amiraly/app/util/helpers/pdf_helper.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class CapacitorsReportScreen extends StatefulWidget {
   const CapacitorsReportScreen({super.key});
@@ -66,11 +68,8 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
               mini: true,
               heroTag: 'pdfFAB_Cap',
               child: _isGeneratingPdf
-                  ? SizedBox(
-                      width: 18.w,
-                      height: 18.w,
-                      child: const CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
+                  ? const ElectricLoadingIndicator(
+                      color: Colors.white, size: 18)
                   : const Icon(Icons.picture_as_pdf,
                       color: Colors.lightGreenAccent),
             ),

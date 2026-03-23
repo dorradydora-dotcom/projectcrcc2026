@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:shimmer/shimmer.dart';
 import 'package:amiraly/core/services/heartbeat_service.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 // ============================================================================
 // TOTAL LOAD CARD - MATCHING STATIONLOADNAV DESIGN
@@ -510,10 +512,7 @@ class _StationDialogState extends State<StationDialog> {
                 },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
           child: _loading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2))
+              ? const ElectricLoadingIndicator(size: 20)
               : const Text('حفظ'),
         ),
       ],

@@ -11,6 +11,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:get/get.dart';
 import 'package:amiraly/app/util/helpers/pdf_helper.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class SpareCellsReportScreen extends StatefulWidget {
   const SpareCellsReportScreen({super.key});
@@ -70,11 +72,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
               mini: true,
               heroTag: 'pdfFAB',
               child: _isGeneratingPdf
-                  ? SizedBox(
-                      width: 18.w,
-                      height: 18.w,
-                      child: const CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
+                  ? const ElectricLoadingIndicator(
+                      color: Colors.white, size: 18)
                   : const Icon(Icons.picture_as_pdf,
                       color: Colors.lightGreenAccent),
             ),

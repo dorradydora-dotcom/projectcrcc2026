@@ -41,6 +41,7 @@ class AppConstants {
   static const String tableWorldTable = 'world_table';
   static const String tableZone = 'zone';
   static const String tableNetworkFaults = 'network_faults';
+  static const String tableReportsConfig = 'reports_config';
 
   // Routes
   static const String routeService = 'serviceScreen';

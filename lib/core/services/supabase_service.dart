@@ -187,6 +187,39 @@ class SupabaseService {
     }
   }
 
+  Future<List<Report>> fetchReportsConfig() async {
+    const cacheKey = 'reports_config';
+
+    if (_cache.containsKey(cacheKey)) {
+      final cached = _cache[cacheKey]!;
+      if (!cached.isExpired) {
+        return cached.data as List<Report>;
+      }
+    }
+
+    try {
+      final response = await _client
+          .from(AppConstants.tableReportsConfig)
+          .select()
+          .eq('is_active', true)
+          .order('name', ascending: true)
+          .timeout(AppConstants.timeoutDuration);
+
+      final reports = (response as List<dynamic>)
+          .map((json) => Report.fromJson(json))
+          .toList();
+
+      _cache[cacheKey] = CachedData(data: reports, timestamp: DateTime.now());
+      return reports;
+    } catch (e, stackTrace) {
+      AppLogger.logError('Failed to fetch reports config', e, stackTrace);
+      if (_cache.containsKey(cacheKey)) {
+        return _cache[cacheKey]!.data as List<Report>;
+      }
+      return [];
+    }
+  }
+
   Future<void> clearCache() async {
     _cache.clear();
     AppLogger.logInfo('🗑️ Cache cleared');

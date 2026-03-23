@@ -7,6 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:iconsax/iconsax.dart';
 
 class VerticalStationCard extends StatelessWidget {
@@ -172,11 +174,8 @@ class HeaderVerticalProduct extends StatelessWidget {
           ),
           placeholder: (context, url) => Container(
             color: Colors.white.withOpacity(0.05),
-            child: Center(
-                child: CircularProgressIndicator(
-              strokeWidth: 2.sp,
-              color: Colors.white24,
-            )),
+            child: const Center(
+                child: ElectricLoadingIndicator(size: 20, color: Colors.white24)),
           ),
         ),
       ),

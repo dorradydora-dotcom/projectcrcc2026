@@ -8,7 +8,9 @@ import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
 import '../reportscreens/reports_controller.dart';
+
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -89,34 +91,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
               Expanded(
                 child: Obx(() {
                   if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: ElectricLoadingIndicator());
                   }
 
-                  // Assuming 'isOffline' is a new observable variable in the controller
-                  // and the user intended to add this check.
-                  // The original code already had curly braces for its if statements.
-                  // This change incorporates the new if statement from the user's snippet.
                   if (controller.reports.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'لا يوجد تقارير حالياً',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: Appfontstring.ChangaLight,
-                        ),
+                    return RefreshIndicator(
+                      onRefresh: () => controller.fetchReports(forceRefresh: true),
+                      color: const Color(0xFFFBBC05),
+                      child: ListView(
+                        children: [
+                          SizedBox(height: 120.h),
+                          Center(
+                            child: Text(
+                              'لا يوجد تقارير حالياً\nاسحب لأسفل للتحديث',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontFamily: Appfontstring.ChangaLight,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
 
-                  return ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    itemCount: controller.reports.length,
-                    itemBuilder: (context, index) {
-                      return OfferCard(
-                        report: controller.reports[index],
-                        index: index,
-                      );
-                    },
+                  return RefreshIndicator(
+                    onRefresh: () => controller.fetchReports(forceRefresh: true),
+                    color: const Color(0xFFFBBC05),
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      itemCount: controller.reports.length,
+                      itemBuilder: (context, index) {
+                        return OfferCard(
+                          report: controller.reports[index],
+                          index: index,
+                        );
+                      },
+                    ),
                   );
                 }),
               ),
@@ -220,14 +233,21 @@ class OfferCard extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (report.name == 'المكثفات') {
-                    Get.to(() => const CapacitorsReportScreen());
-                  } else if (report.name == 'الخلايا الاحطياتية بالمحطات') {
-                    Get.to(() => const SpareCellsReportScreen());
-                  } else if (report.name == 'نسب تحميل المحطات') {
-                    Get.to(() => const TransformerReportScreen());
-                  } else if (report.name == 'اعطال الشبكة') {
-                    Get.to(() => NetworkFaultsReportScreen());
+                  switch (report.type) {
+                    case 'capacitors':
+                      Get.to(() => const CapacitorsReportScreen());
+                      break;
+                    case 'spare_cells':
+                      Get.to(() => const SpareCellsReportScreen());
+                      break;
+                    case 'load_ratios':
+                      Get.to(() => const TransformerReportScreen());
+                      break;
+                    case 'network_faults':
+                      Get.to(() => NetworkFaultsReportScreen());
+                      break;
+                    default:
+                      Get.snackbar('تنبيه', 'هذا التقرير غير متاح حالياً');
                   }
                 },
                 style: ElevatedButton.styleFrom(

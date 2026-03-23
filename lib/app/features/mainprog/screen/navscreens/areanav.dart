@@ -12,6 +12,8 @@ import 'dart:ui';
 import 'package:amiraly/app/features/mainprog/screen/navscreens/areanav_controller.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:amiraly/app/common/widgets/station_cards.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class Areanav extends StatefulWidget {
   const Areanav({super.key});
@@ -368,8 +370,8 @@ class _AreanavState extends State<Areanav> {
     return Obx(() {
       if (_controller.isLoading.value) {
         return Center(
-            child: CircularProgressIndicator(
-                strokeWidth: 2.sp, color: Colors.white70));
+            child: ElectricLoadingIndicator(
+                size: 20.sp, color: Colors.white70));
       }
 
       final filteredList = _controller.filteredStations;

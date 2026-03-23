@@ -12,6 +12,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:amiraly/app/util/helpers/pdf_helper.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class TransformerReportScreen extends StatefulWidget {
   const TransformerReportScreen({super.key});
@@ -90,13 +92,9 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
               backgroundColor:
                   _isGeneratingPdf ? Colors.grey : Colors.redAccent,
               child: _isGeneratingPdf
-                  ? SizedBox(
-                      width: 15.w,
-                      height: 15.w,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
+                  ? const ElectricLoadingIndicator(
+                      color: Colors.white,
+                      size: 15,
                     )
                   : const Icon(Icons.picture_as_pdf, color: Colors.white),
             ),

@@ -3,7 +3,9 @@ import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/projects_controller.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' as intl;
 
@@ -36,7 +38,7 @@ class ProjectsScreen extends StatelessWidget {
           child: Obx(() {
             if (controller.isLoading.value) {
               return const Center(
-                  child: CircularProgressIndicator(color: Colors.white));
+                  child: ElectricLoadingIndicator(color: Colors.white));
             }
 
             if (!controller.hasAccess.value) {
@@ -556,7 +558,7 @@ class ProjectsScreen extends StatelessWidget {
                       ],
                     )),
                 Obx(() => DropdownButtonFormField<String>(
-                      initialValue: status.value,
+                      value: status.value,
                       dropdownColor: const Color(0xFF1E293B),
                       decoration: InputDecoration(
                         labelText: 'الحالة',

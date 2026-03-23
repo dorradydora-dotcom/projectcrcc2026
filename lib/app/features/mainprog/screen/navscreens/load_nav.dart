@@ -5,6 +5,8 @@ import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:get/get.dart';
 
 class LoadnavScreen extends StatefulWidget {
@@ -195,8 +197,8 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(
-                    color: Colors.black, strokeWidth: 2),
+                child: ElectricLoadingIndicator(
+                    color: Colors.black, size: 24),
               )
             : const Icon(Icons.picture_as_pdf, color: Colors.black)),
       ),

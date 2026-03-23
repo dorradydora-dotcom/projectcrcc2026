@@ -5,6 +5,8 @@ import 'package:amiraly/core/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onRefresh;
@@ -173,11 +175,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           child: SizedBox(
             width: 8.w,
             height: 8.h,
-            child: const CircularProgressIndicator(
-              strokeWidth: 1.5,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                  Color.fromARGB(116, 178, 223, 155)),
-            ),
+            child: const ElectricLoadingIndicator(size: 10),
           ),
         ),
       );
@@ -340,7 +338,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
         child: AlertDialog(
           content: Row(
             children: [
-              CircularProgressIndicator(),
+              ElectricLoadingIndicator(size: 30),
+
               SizedBox(width: 20),
               Expanded(
                 child: Text(

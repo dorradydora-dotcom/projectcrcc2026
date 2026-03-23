@@ -10,6 +10,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:amiraly/core/services/heartbeat_service.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 const double _maxStationLoad = 700.0;
 
@@ -1173,15 +1175,7 @@ class StationDialogState extends State<StationDialog> {
                   ),
                 ),
                 child: _isUpdating
-                    ? SizedBox(
-                        width: 20.w,
-                        height: 20.h,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
+                    ? const ElectricLoadingIndicator(size: 20, color: Colors.white)
                     : Text(
                         'تحديث',
                         style: TextStyle(

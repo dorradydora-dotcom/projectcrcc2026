@@ -89,6 +89,7 @@ class IndicatorsController extends GetxController
       isLoadingStations.value = true;
       animationController.reset();
 
+      // Use hourly data for the line charts (remains as is)
       final hourlyLoads =
           await _supabaseServiceHourly.fetchStationHourlyLoads();
 
@@ -97,41 +98,15 @@ class IndicatorsController extends GetxController
       final List<List<double>> newStationLoads =
           hourlyLoads.map((e) => e.loads).toList();
 
-      double newSumStations = 0.0;
-      double newSumGeneration = 0.0;
-      double newSumExchanges = 0.0;
-
-      final List<String> exchangeStations = IndicatorConstants.exchangeStations;
-      final String generationStation = IndicatorConstants.generationStation;
-
-      for (int i = 0; i < newStations.length; i++) {
-        final String stationName = newStations[i];
-        final List<double> loads = newStationLoads[i];
-        final double stationSum =
-            loads.fold(0.0, (double a, double b) => a + b);
-
-        if (stationName == generationStation) {
-          newSumGeneration += stationSum;
-        } else if (exchangeStations.contains(stationName)) {
-          newSumExchanges += stationSum;
-        } else {
-          newSumStations += stationSum;
-        }
-      }
-
-      final double newTotalDynamic =
-          newSumStations + newSumGeneration + newSumExchanges;
-
       stations.assignAll(newStations);
       stationLoads.assignAll(newStationLoads);
+
       if (newStations.isNotEmpty && selectedStations.isEmpty) {
         selectedStations.add(0);
       }
-      sumStations.value = newSumStations;
-      sumGeneration.value = newSumGeneration;
-      sumExchanges.value = newSumExchanges;
-      totalDynamic.value = newTotalDynamic;
-      hasPieData.value = newTotalDynamic > 0.0;
+
+      // Calculate initial pie ratios from real-time data if available
+      _calculateRealTimeRatios();
 
       isLoadingStations.value = false;
       animationController.forward();
@@ -148,6 +123,48 @@ class IndicatorsController extends GetxController
       animationController.forward();
       debugPrint("Error fetching station data: $e");
     }
+  }
+
+  void _calculateRealTimeRatios() {
+    if (!Get.isRegistered<StationLoadController>()) return;
+
+    final stationController = Get.find<StationLoadController>();
+    final allStations = stationController.stationLoads;
+
+    double newSumStations = 0.0;
+    double newSumGeneration = 0.0;
+    double newSumExchanges = 0.0;
+
+    final List<String> exchangeStations = IndicatorConstants.exchangeStations;
+    final String generationStation = IndicatorConstants.generationStation;
+
+    for (var station in allStations) {
+      final String name = station.stationName;
+      final bool isPositive = station.isPositive;
+      final double signedLoad = isPositive ? station.load : -station.load;
+
+      if (name == generationStation) {
+        newSumGeneration += signedLoad;
+      } else if (exchangeStations.contains(name)) {
+        newSumExchanges += signedLoad;
+      } else {
+        newSumStations += signedLoad;
+      }
+    }
+
+    // Pie chart needs positive values, so we use the absolute net sum per category
+    final double absSumStations = newSumStations.abs();
+    final double absSumGeneration = newSumGeneration.abs();
+    final double absSumExchanges = newSumExchanges.abs();
+
+    final double newTotalDynamic =
+        absSumStations + absSumGeneration + absSumExchanges;
+
+    sumStations.value = newSumStations;
+    sumGeneration.value = newSumGeneration;
+    sumExchanges.value = newSumExchanges;
+    totalDynamic.value = newTotalDynamic;
+    hasPieData.value = newTotalDynamic > 0.0;
   }
 
   void toggleStationSelection(int index, bool selected) {
@@ -192,7 +209,7 @@ class IndicatorsController extends GetxController
     _fetchFranceData();
     _fetchSaudiData();
 
-    // Sync Cairo load with StationLoadController
+    // Sync Cairo load and pie chart totals with StationLoadController
     if (Get.isRegistered<StationLoadController>()) {
       final stationController = Get.find<StationLoadController>();
       intlLoads['القاهرة'] = stationController.totalLoad;
@@ -200,13 +217,15 @@ class IndicatorsController extends GetxController
       // Update whenever station loads change
       ever(stationController.stationLoads, (_) {
         intlLoads['القاهرة'] = stationController.totalLoad;
+        _calculateRealTimeRatios();
       });
     } else {
-      // Fallback if controller not found (though it should be)
+      // Fallback if controller not found
       final stationController = Get.put(StationLoadController());
       intlLoads['القاهرة'] = stationController.totalLoad;
       ever(stationController.stationLoads, (_) {
         intlLoads['القاهرة'] = stationController.totalLoad;
+        _calculateRealTimeRatios();
       });
     }
   }

@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -765,14 +767,7 @@ class LoginButton extends StatelessWidget {
           padding: EdgeInsets.zero,
         ),
         child: isLoading
-            ? SizedBox(
-                width: 24.w,
-                height: 24.h,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2.5,
-                ),
-              )
+            ? const ElectricLoadingIndicator(size: 24, color: Colors.white)
             : Text(
                 'تسجيل الدخول',
                 style: TextStyle(

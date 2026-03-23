@@ -14,6 +14,8 @@ import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:flutter/services.dart';
 import 'package:amiraly/core/services/auth_service.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:amiraly/main.dart' show ensureServicesInitialized;
 
 // ============================================================================
@@ -88,10 +90,8 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(
-                strokeWidth: 3.w,
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(Appcolors.primaryColor2),
+              const ElectricLoadingIndicator(
+                color: Appcolors.primaryColor2,
               ),
               SizedBox(height: 20.h),
               Text(

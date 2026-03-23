@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
@@ -341,13 +343,9 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
             ),
           ),
           child: controller.isLoading.value
-              ? SizedBox(
-                  width: 22.w,
-                  height: 22.h,
-                  child: const CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+              ? const ElectricLoadingIndicator(
+                  color: Colors.white,
+                  size: 22,
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,

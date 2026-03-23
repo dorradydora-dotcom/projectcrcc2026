@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
+
 
 const kPrimaryColor = Appcolors.primaryColor;
 const kSecondaryColor = StationDetailsConstants.secondaryColor;
@@ -128,7 +130,7 @@ class StationDetailsPage extends StatelessWidget {
                 return Container(
                   color: Colors.grey[300],
                   child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 3),
+                    child: ElectricLoadingIndicator(),
                   ),
                 );
               },
@@ -320,7 +322,7 @@ class FullScreenImagePage extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => const Center(
                     child: Icon(Icons.error, color: Colors.red, size: 40)),
                 loadingBuilder: (context, event) => const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2)))
+                    child: ElectricLoadingIndicator()))
           ]),
         ));
   }
