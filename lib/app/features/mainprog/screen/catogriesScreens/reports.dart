@@ -4,12 +4,20 @@ import 'package:amiraly/app/features/mainprog/screen/reportscreens/capacitors_re
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/spare_cells_report.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/transformer_ratio_report.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/network_faults_report.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/report1_screen.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/report2_screen.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/report3_screen.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/report4_screen.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
 import '../reportscreens/reports_controller.dart';
+import '../reportscreens/report1_controller.dart';
+import '../reportscreens/report2_controller.dart';
+import '../reportscreens/report3_controller.dart';
+import '../reportscreens/report4_controller.dart';
 
 
 class ReportsScreen extends StatefulWidget {
@@ -246,6 +254,26 @@ class OfferCard extends StatelessWidget {
                     case 'network_faults':
                       Get.to(() => NetworkFaultsReportScreen());
                       break;
+                     case 'report_1':
+                       Get.to(() => const Report1Screen(),
+                           binding: BindingsBuilder(
+                               () => Get.lazyPut(() => Report1Controller())));
+                       break;
+                     case 'report_2':
+                       Get.to(() => const Report2Screen(),
+                           binding: BindingsBuilder(
+                               () => Get.lazyPut(() => Report2Controller())));
+                       break;
+                     case 'report_3':
+                       Get.to(() => const Report3Screen(),
+                           binding: BindingsBuilder(
+                               () => Get.lazyPut(() => Report3Controller())));
+                       break;
+                     case 'report_4':
+                       Get.to(() => const Report4Screen(),
+                           binding: BindingsBuilder(
+                               () => Get.lazyPut(() => Report4Controller())));
+                       break;
                     default:
                       Get.snackbar('تنبيه', 'هذا التقرير غير متاح حالياً');
                   }

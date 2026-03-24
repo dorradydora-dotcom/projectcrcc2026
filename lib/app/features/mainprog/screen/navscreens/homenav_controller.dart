@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
@@ -60,6 +61,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
   Timer? _loadTimer;
   StreamSubscription? _connectivitySubscription;
   static const String _weatherCacheKey = WeatherConstants.weatherCacheKey;
+  // ✅ SharedPreferences instance مرة واحدة - بدل ما يتفتح في كل مرة
+  SharedPreferences? _prefs;
 
   @override
   List<MainCatogoryModel> get categories => _categories;
@@ -90,6 +93,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
     _initializeData();
     _startLoadVariationTimer();
     _updateCurrentDate();
+    // ✅ تأجيل جلب الأخبار لبعد ما الـ UI يتبنى كاملاً
+    SchedulerBinding.instance.addPostFrameCallback((_) => fetchNews());
   }
 
   void _updateCurrentDate() {
@@ -128,13 +133,13 @@ class HomenavcontrollerImp extends Homenavcontroller {
       final email = Get.find<AuthService>().getCurrentUserEmail();
       userEmail.value = email ?? 'مستخدم';
 
+      // ✅ بدون fetchNews() - متأجل لبعد الـ UI
       await Future.wait([
         checkUserGroup(),
         fetchCategories(),
         fetchAnnouncImages(),
         fetchCairoWeather(),
         fetchStationLoads(),
-        fetchNews(),
       ]);
     } catch (e) {
       AppLogger.logError('Error initializing data', e);
@@ -391,8 +396,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   Future<void> _cacheWeather(Map<String, dynamic> data) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_weatherCacheKey, json.encode(data));
+      // ✅ استخدام الـ instance المخزن بدل فتح SharedPreferences جديد
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs!.setString(_weatherCacheKey, json.encode(data));
     } catch (e) {
       AppLogger.logError('Error caching weather', e);
     }
@@ -400,8 +406,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   Future<void> _loadCachedWeather() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cached = prefs.getString(_weatherCacheKey);
+      // ✅ نفس الـ instance - لا يتفتح SharedPreferences مرتين
+      _prefs ??= await SharedPreferences.getInstance();
+      final cached = _prefs!.getString(_weatherCacheKey);
       if (cached != null) {
         final data = json.decode(cached);
         _parseWeatherData(data);

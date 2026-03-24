@@ -16,52 +16,52 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> {
   bool _hasError = false;
   String _errorMessage = '';
-  late AnimationController _bgAnimationController;
-  double _progress = 0.0;
+  // ✅ ValueNotifier بدل setState - بس الـ ProgressBar هو اللي بيتحدث
+  final ValueNotifier<double> _progress = ValueNotifier(0.0);
   Timer? _progressTimer;
 
   @override
   void initState() {
     super.initState();
-    _bgAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat(reverse: true);
     _startAppProcess();
   }
 
   @override
   void dispose() {
-    _bgAnimationController.dispose();
     _progressTimer?.cancel();
+    _progress.dispose();
     super.dispose();
   }
 
   Future<void> _startAppProcess() async {
-    setState(() {
-      _hasError = false;
-      _progress = 0.0;
-    });
+    // ✅ setState مرة واحدة فقط لإعادة تعيين حالة الخطأ
+    if (_hasError) {
+      setState(() {
+        _hasError = false;
+        _errorMessage = '';
+      });
+    }
+    _progress.value = 0.0;
 
     // بدء تهيئة الخدمات في الخلفية فور دخول الشاشة لمسابق الزمن
     final servicesFuture = ensureServicesInitialized();
 
     _progressTimer?.cancel();
     _progressTimer =
-        Timer.periodic(const Duration(milliseconds: 50), (timer) async {
-      if (mounted) {
-        setState(() {
-          _progress += 0.01;
-          if (_progress >= 1.0) {
-            _progress = 1.0;
-            timer.cancel();
-            _completeProcess(servicesFuture); // الانتقال فور الوصول لـ 100%
-          }
-        });
+        Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      // ✅ ValueNotifier.value - لا يعيد بناء كل الشاشة
+      final newValue = (_progress.value + 0.01).clamp(0.0, 1.0);
+      _progress.value = newValue;
+      if (newValue >= 1.0) {
+        timer.cancel();
+        _completeProcess(servicesFuture);
       }
     });
   }
@@ -171,45 +171,50 @@ class _SplashScreenState extends State<SplashScreen>
 
                   const Spacer(flex: 2),
 
-                  // شريط وكاونتر التحميل البرتقالي بناءً على طلب المستخدم
+                  // ✅ ValueListenableBuilder - بس الـ ProgressBar بيتحدث، مش كل الشاشة
                   if (!_hasError)
                     FadeIn(
                       duration: const Duration(seconds: 1),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 80), // تقصير الشريط بزيادة الـ padding
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: _progress,
-                                backgroundColor: Colors.white10,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                    Colors.orange),
-                                minHeight: 6,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '${(_progress * 100).toInt()}%',
-                              style: const TextStyle(
-                                color: Colors.orange,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: Appfontstring.digital,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'جاري تهيئة النظام...',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.3),
-                                fontSize: 11,
-                                fontFamily: Appfontstring.ChangaLight,
-                              ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(horizontal: 80),
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _progress,
+                          builder: (context, value, _) {
+                            return Column(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    value: value,
+                                    backgroundColor: Colors.white10,
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                            Colors.orange),
+                                    minHeight: 6,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  '${(value * 100).toInt()}%',
+                                  style: const TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: Appfontstring.digital,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'جاري تهيئة النظام...',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.3),
+                                    fontSize: 11,
+                                    fontFamily: Appfontstring.ChangaLight,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
