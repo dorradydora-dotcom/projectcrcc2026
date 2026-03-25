@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' show StreamSubscription, Timer, unawaited;
 import 'dart:ui';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -39,12 +39,10 @@ class CallNotificationService {
           'body': body,
           'payloadType': 'call',
           'route': 'call',
-          'callData': {
-            'callId': callId,
-            'callerName': callerName,
-            'channelName': channelName,
-            'status': 'ringing',
-          }
+          'call_id': callId,
+          'caller_name': callerName,
+          'channel_name': channelName,
+          'status': 'ringing',
         },
       );
       if (response.status == 200) {
@@ -69,10 +67,8 @@ class CallNotificationService {
           'targetToken': deviceToken,
           'payloadType': 'call',
           'route': 'call',
-          'callData': {
-            'callId': callId,
-            'status': 'ended',
-          }
+          'call_id': callId,
+          'status': 'ended',
         },
       );
       return response.status == 200;
@@ -262,7 +258,7 @@ class GoLiveController extends GetxController {
             'status': 'ringing',
           };
           // Immediately respond and navigate
-          respondToCall(data['call_id'], true);
+          unawaited(respondToCall(data['call_id'], true));
           Get.to(
             () => VideoCallPage(
               controller: this,
@@ -400,6 +396,23 @@ class GoLiveController extends GetxController {
             },
             onError: (ErrorCodeType err, String msg) {
               debugPrint('Agora Error: $err, $msg');
+              String userFriendlyError = 'حدث خطأ في مكالمة الفيديو ($err)';
+              if (err == ErrorCodeType.errInvalidAppId) {
+                userFriendlyError = 'خطأ في الـ Agora App ID. يرجى التحقق من لوحة التحكم.';
+              } else if (err == ErrorCodeType.errInvalidToken || err == ErrorCodeType.errTokenExpired) {
+                userFriendlyError = 'انتهت صلاحية الـ Token أو غير صالح. التطبيق يحتاج لـ Token جديد.';
+              } else if (err == ErrorCodeType.errConnectionLost) {
+                userFriendlyError = 'فقد الاتصال بالشبكة.';
+              }
+              
+              Get.snackbar(
+                'خطأ في الاتصال',
+                userFriendlyError,
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.red.withValues(alpha: 0.8),
+                colorText: Colors.white,
+                duration: const Duration(seconds: 5),
+              );
             },
           ),
         );
@@ -535,7 +548,7 @@ class GoLiveController extends GetxController {
         'خطأ',
         'فشل تحويل الكاميرا: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.7),
+        backgroundColor: Colors.red.withValues(alpha: 0.7),
         colorText: Colors.white,
       );
     }
@@ -637,14 +650,12 @@ class GoLiveController extends GetxController {
         await CallNotificationService.sendCallNotification(
           deviceToken: receiverToken,
           title: 'مكالمة واردة 📞',
-          body: 'مكالمة فيديو واردة',
+          body: 'مكالمة فيديو واردة من $callerName',
           callId: response['id'],
           callerName: callerName,
           channelName: userId,
         );
       }
-
-      await joinChannel(userId);
 
       _timeoutTimer?.cancel();
       _timeoutTimer = Timer(const Duration(seconds: 30), () {
@@ -896,7 +907,7 @@ class UsersPage extends StatelessWidget {
                                   Icon(
                                     Iconsax.user_remove,
                                     size: 48.sp,
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                   ),
                                   SizedBox(height: 16.h),
                                   Text(
@@ -923,14 +934,14 @@ class UsersPage extends StatelessWidget {
                             child: Container(
                               margin: EdgeInsets.all(15.w),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.15),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     width: 1.5),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 20,
                                     offset: const Offset(0, 10),
                                   ),
@@ -955,7 +966,7 @@ class UsersPage extends StatelessWidget {
                                             headingRowColor:
                                                 WidgetStateProperty.all(Colors
                                                     .white
-                                                    .withOpacity(0.12)),
+                                                    .withValues(alpha: 0.12)),
                                             dataRowColor:
                                                 WidgetStateProperty.all(
                                                     Colors.transparent),
@@ -1127,11 +1138,11 @@ class UsersPage extends StatelessWidget {
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.r),
             border:
-                Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5.w),
-            color: Colors.black.withOpacity(0.4),
+                Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 1.5.w),
+            color: Colors.black.withValues(alpha: 0.4),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -1175,22 +1186,35 @@ class UsersPage extends StatelessWidget {
     );
 
     try {
-      await controller.makeCall(receiverId);
-
+      // 1. Initialize Agora and Start Preview (Fast)
+      await controller.initializeAgora();
+      
       if (context.mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Close loading dialog
         controller.playRinging();
+        
+        // 2. Navigate immediately to VideoCallPage
         Get.to(
           () => VideoCallPage(
               controller: controller,
               channelName: controller.currentUserId ?? 'g-live'),
         );
+        
+        // 3. Trigger notification and join in background
+        unawaited(() async {
+          try {
+            await controller.makeCall(receiverId);
+            await controller.joinChannel(controller.currentUserId ?? 'g-live');
+          } catch (e) {
+             debugPrint('Background Call Join Error: $e');
+          }
+        }());
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start call: $e')),
+          SnackBar(content: Text('فشل بدء المكالمة: $e')),
         );
       }
     }
@@ -1215,9 +1239,9 @@ class UsersPage extends StatelessWidget {
                   width: 0.8.sw,
                   padding: EdgeInsets.all(25.r),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30.r),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1296,8 +1320,8 @@ class UsersPage extends StatelessWidget {
 
   Widget _buildShimmerRow() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.12),
+      baseColor: Colors.white.withValues(alpha: 0.05),
+      highlightColor: Colors.white.withValues(alpha: 0.12),
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         height: 50.h,
@@ -1318,7 +1342,7 @@ class UsersPage extends StatelessWidget {
             Icon(
               Iconsax.shield_cross5,
               size: 80.sp,
-              color: Colors.redAccent.withOpacity(0.5),
+              color: Colors.redAccent.withValues(alpha: 0.5),
             ),
             SizedBox(height: 20.h),
             Text(
@@ -1386,7 +1410,7 @@ class VideoCallPage extends StatelessWidget {
                       left: 20,
                       right: 20),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                   ),
                   child: Row(
                     children: [
@@ -1437,7 +1461,9 @@ class VideoCallPage extends StatelessWidget {
 
             // Local Video Preview
             Obx(() {
-              if (controller.localViewController.value != null) {
+              // Only show the small box if remote user IS present
+              if (controller.localViewController.value != null &&
+                  controller.remoteUid.value != null) {
                 return Positioned(
                   top: 100,
                   right: 20,
@@ -1447,7 +1473,7 @@ class VideoCallPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.black,
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.3), width: 2),
+                          color: Colors.white.withValues(alpha: 0.3), width: 2),
                     ),
                     child: AgoraVideoView(
                       key: const ValueKey(
@@ -1486,7 +1512,7 @@ class VideoCallPage extends StatelessWidget {
               label: 'صوت',
               color: controller.isAudioEnabled.value
                   ? Colors.white24
-                  : Colors.redAccent.withOpacity(0.8),
+                  : Colors.redAccent.withValues(alpha: 0.8),
               onPressed: () => controller.toggleAudio(),
             )),
         SizedBox(width: 40.w),
@@ -1527,7 +1553,7 @@ class VideoCallPage extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -1567,6 +1593,13 @@ class VideoCallPage extends StatelessWidget {
             controller: controller.remoteViewController.value!,
           ),
         );
+      } else if (controller.localViewController.value != null) {
+        // Show local video as background until remote joins
+        return SizedBox.expand(
+          child: AgoraVideoView(
+            controller: controller.localViewController.value!,
+          ),
+        );
       } else {
         return Container(
           decoration: const BoxDecoration(
@@ -1580,7 +1613,7 @@ class VideoCallPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SpinKitRipple(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 size: 100.r,
               ),
               SizedBox(height: 20.h),
