@@ -14,7 +14,6 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:amiraly/app/common/widgets/news_ticker.dart';
 import 'package:amiraly/core/widgets/electric_loading_indicator.dart';
 
-
 class HomeNav extends StatefulWidget {
   const HomeNav({super.key});
 
@@ -462,7 +461,7 @@ class _HomeNavState extends State<HomeNav> {
             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
             child: Container(
                 width: width,
-                height: 75.h,
+                constraints: BoxConstraints(minHeight: 75.h),
                 padding: EdgeInsets.all(2.w),
                 decoration: BoxDecoration(
                   color: isCurrent
@@ -481,37 +480,39 @@ class _HomeNavState extends State<HomeNav> {
                     ),
                   ],
                 ),
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        weather.dayName,
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          fontFamily: Appfontstring.ChangaLight,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      Text(
-                        weather.icon,
-                        style: TextStyle(
-                          fontSize: isCurrent ? 16.sp : 14.sp,
-                          fontFamily: Appfontstring.ChangaLight,
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      Text(
-                          isCurrent
-                              ? '${weather.maxTemp}°'
-                              : '${weather.maxTemp}° / ${weather.minTemp}°',
-                          style: TextStyle(
-                            fontSize: isCurrent ? 17.sp : 12.sp,
-                            fontFamily: Appfontstring.digital,
-                            color: Colors.white,
-                          ))
-                    ]))));
+                child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            weather.dayName,
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontFamily: Appfontstring.ChangaLight,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 3.h),
+                          Text(
+                            weather.icon,
+                            style: TextStyle(
+                              fontSize: isCurrent ? 16.sp : 14.sp,
+                              fontFamily: Appfontstring.ChangaLight,
+                            ),
+                          ),
+                          SizedBox(height: 3.h),
+                          Text(
+                              isCurrent
+                                  ? '${weather.maxTemp}°'
+                                  : '${weather.maxTemp}° / ${weather.minTemp}°',
+                              style: TextStyle(
+                                fontSize: isCurrent ? 17.sp : 12.sp,
+                                fontFamily: Appfontstring.digital,
+                                color: Colors.white,
+                              ))
+                        ])))));
   }
 
   Widget _buildStationSections() {
