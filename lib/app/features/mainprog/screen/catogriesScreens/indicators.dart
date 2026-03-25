@@ -309,6 +309,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                                 fontSize: 10.sp,
                                 color: Colors.white54,
                                 fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [Appfontstring.ChangaLight],
                               ),
                             ),
                           ),
@@ -342,6 +343,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                                     fontSize: 10.sp,
                                     color: Colors.white54,
                                     fontFamily: Appfontstring.digital,
+                                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                                   ),
                                 ),
                               );
@@ -572,6 +574,7 @@ class IndicatorsScreen extends GetView<IndicatorsController> {
                   fontSize: (isSmallScreen ? 11 : 13).sp,
                   color: Colors.white,
                   fontFamily: Appfontstring.digital,
+                  fontFamilyFallback: const [Appfontstring.ChangaLight],
                   fontWeight: FontWeight.bold,
                   shadows: shadows,
                   height: 1.1,

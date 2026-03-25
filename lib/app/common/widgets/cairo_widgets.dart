@@ -151,6 +151,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                       color: Colors.redAccent,
                       fontSize: 50.sp,
                       fontFamily: Appfontstring.digital,
+                      fontFamilyFallback: const [Appfontstring.ChangaLight],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -176,6 +177,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                                     isNegative ? Colors.red : Colors.redAccent,
                                 fontSize: 50.sp,
                                 fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [Appfontstring.ChangaLight],
                                 shadows: [
                                   Shadow(
                                     color: (isNegative
@@ -231,6 +233,7 @@ class _TotalLoadCardState extends State<TotalLoadCard> {
                       color: Colors.blueAccent,
                       fontSize: 15.sp,
                       fontFamily: Appfontstring.digital,
+                      fontFamilyFallback: const [Appfontstring.ChangaLight],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -348,6 +351,7 @@ class StationGaugeCard extends StatelessWidget {
                             color: color,
                             fontSize: 18.sp,
                             fontFamily: Appfontstring.digital,
+                            fontFamilyFallback: const [Appfontstring.ChangaLight],
                           ),
                         ),
                         SizedBox(width: 4.w),

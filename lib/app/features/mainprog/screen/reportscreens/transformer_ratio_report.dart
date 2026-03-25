@@ -317,8 +317,8 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                 liveLoad.toStringAsFixed(1),
                                                 style: TextStyle(
                                                     fontSize: 10.sp,
-                                                    fontFamily:
-                                                        Appfontstring.digital,
+                                                    fontFamily: Appfontstring.digital,
+                                                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                                                     color: Colors.blue)))),
                                         DataCell(
                                           SizedBox(
@@ -357,6 +357,7 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                             fontFamily:
                                                                 Appfontstring
                                                                     .digital,
+                                                                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                                                             color:
                                                                 Colors.white)),
                                                     if (_canEditUser) ...[
@@ -410,14 +411,13 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
                                                     '${ratio.toStringAsFixed(1)}%',
                                                     style: TextStyle(
                                                         fontSize: 12.sp,
-                                                        fontFamily:
-                                                            Appfontstring
-                                                                .digital,
+                                                        fontFamily: Appfontstring.digital,
+                                                        fontFamilyFallback: const [Appfontstring.ChangaLight],
                                                         color: ratio > 90
-                                                            ? Colors.red
-                                                            : ratio > 70
-                                                                ? Colors.orange
-                                                                : Colors.white,
+? Colors.red
+: ratio > 70
+? Colors.orange
+: Colors.white,
                                                         fontWeight:
                                                             FontWeight.bold)),
                                               ],
@@ -452,48 +452,15 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> _showEditDialog(String stationName, double currentCapacity) async {
-    final TextEditingController controller =
-        TextEditingController(text: currentCapacity.toStringAsFixed(0));
+  Future<void> _showEditDialog(
+      String stationName, double currentCapacity) async {
     await Get.dialog(
-      AlertDialog(
-        backgroundColor: const Color(0xFF163C5E),
-        title: Text('تعديل سعة محطة $stationName',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 14.sp,
-                fontFamily: Appfontstring.ChangaLight)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            labelText: 'السعة الكلية (MVA)',
-            labelStyle: TextStyle(color: Colors.white70),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white24)),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Get.back(),
-              child:
-                  const Text('إلغاء', style: TextStyle(color: Colors.white70))),
-          ElevatedButton(
-            onPressed: () {
-              final newCap = double.tryParse(controller.text);
-              if (newCap != null) {
-                _updateCapacity(stationName, newCap);
-                Get.back();
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text('حفظ', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      CapacityEditDialog(
+        stationName: stationName,
+        currentCapacity: currentCapacity,
+        onSave: (newCap) => _updateCapacity(stationName, newCap),
       ),
     );
-    controller.dispose();
   }
 
   Future<void> _updateCapacity(String stationName, double newCapacity) async {
@@ -725,6 +692,78 @@ class _TransformerReportScreenState extends State<TransformerReportScreen> {
           fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
         ),
       ),
+    );
+  }
+}
+
+class CapacityEditDialog extends StatefulWidget {
+  final String stationName;
+  final double currentCapacity;
+  final Function(double) onSave;
+
+  const CapacityEditDialog({
+    super.key,
+    required this.stationName,
+    required this.currentCapacity,
+    required this.onSave,
+  });
+
+  @override
+  State<CapacityEditDialog> createState() => _CapacityEditDialogState();
+}
+
+class _CapacityEditDialogState extends State<CapacityEditDialog> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        TextEditingController(text: widget.currentCapacity.toStringAsFixed(0));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF163C5E),
+      title: Text('تعديل سعة محطة ${widget.stationName}',
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: 14.sp,
+              fontFamily: Appfontstring.ChangaLight)),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(color: Colors.white),
+        decoration: const InputDecoration(
+          labelText: 'السعة الكلية (MVA)',
+          labelStyle: TextStyle(color: Colors.white70),
+          enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white24)),
+        ),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.white70))),
+        ElevatedButton(
+          onPressed: () {
+            final newCap = double.tryParse(_controller.text);
+            if (newCap != null) {
+              widget.onSave(newCap);
+              Get.back();
+            }
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+          child: const Text('حفظ', style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 }

@@ -281,6 +281,7 @@ class _CairoscreenState extends State<Cairoscreen> {
               'SEC_ID: 0x${title.hashCode.toRadixString(16).toUpperCase().substring(0, 4)}',
               style: TextStyle(
                 fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight],
                 fontSize: 7.sp,
                 color: const Color(0xFF00E5FF).withOpacity(0.3),
               ),

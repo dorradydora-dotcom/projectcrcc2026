@@ -510,6 +510,7 @@ class _HomeNavState extends State<HomeNav> {
                               style: TextStyle(
                                 fontSize: isCurrent ? 17.sp : 12.sp,
                                 fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [Appfontstring.ChangaLight],
                                 color: Colors.white,
                               ))
                         ])))));
@@ -918,6 +919,7 @@ class MyGaugeWidget extends StatelessWidget {
                 style: TextStyle(
                     color: Colors.white,
                     fontFamily: Appfontstring.digital,
+                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                     fontSize: 30.sp,
                     fontWeight: FontWeight.bold)),
           ),

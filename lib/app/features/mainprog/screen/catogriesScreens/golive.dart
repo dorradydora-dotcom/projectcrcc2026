@@ -43,6 +43,7 @@ class CallNotificationService {
           'caller_name': callerName,
           'channel_name': channelName,
           'status': 'ringing',
+          'priority': 'HIGH', // Use 'HIGH' instead of server default if it's 'highest'
         },
       );
       if (response.status == 200) {
@@ -83,6 +84,7 @@ class GlobalCallService extends GetxService {
 
   StreamSubscription? _signalingSubscription;
   final Rx<String?> currentCallId = Rx<String?>(null);
+  final Rx<Map<String, dynamic>?> incomingCall = Rx<Map<String, dynamic>?>(null);
 
   @override
   void onInit() {
@@ -158,9 +160,20 @@ class GlobalCallService extends GetxService {
               final String callId = activeCall['id'];
               if (currentCallId.value != callId) {
                 currentCallId.value = callId;
+                incomingCall.value = activeCall; // Update global state
                 _navigateToCall(activeCall);
               }
+            } else {
+              // No active call, clear global state if it was ringing
+              if (incomingCall.value != null &&
+                  incomingCall.value!['status'] == 'ringing') {
+                incomingCall.value = null;
+                currentCallId.value = null;
+              }
             }
+          } else {
+            incomingCall.value = null;
+            currentCallId.value = null;
           }
         }, onError: (error) {
           debugPrint('Global signaling error: $error');
@@ -219,8 +232,7 @@ class GoLiveController extends GetxController {
 
   // Signaling state
   final Rx<String?> currentCallId = Rx<String?>(null);
-  final Rx<Map<String, dynamic>?> incomingCall =
-      Rx<Map<String, dynamic>?>(null);
+  // incomingCall removed - now handled by GlobalCallService
   StreamSubscription? _signalingSubscription;
   Timer? _timeoutTimer;
 
@@ -250,13 +262,6 @@ class GoLiveController extends GetxController {
       if (data['route'] == 'call' && data['call_id'] != null) {
         currentCallId.value = data['call_id'];
         if (data['accepted'] == true) {
-          // Manually set incoming call data so respondToCall works
-          incomingCall.value = {
-            'id': data['call_id'],
-            'caller_id': data['caller_id'],
-            'channel_name': data['channel_name'],
-            'status': 'ringing',
-          };
           // Immediately respond and navigate
           unawaited(respondToCall(data['call_id'], true));
           Get.to(
@@ -266,17 +271,19 @@ class GoLiveController extends GetxController {
             ),
           );
         } else {
-          // Pre-fill incoming call to show the overlay
-          incomingCall.value = {
-            'id': data['call_id'],
-            'caller_id': data['caller_id'],
-            'channel_name': data['channel_name'],
-            'status': 'ringing',
-          };
           playRinging();
         }
       }
     }
+    
+    // Listen to global incoming calls reactively
+    ever(GlobalCallService.to.incomingCall, (call) {
+      if (call != null && call['status'] == 'ringing') {
+        playRinging();
+      } else {
+        stopRinging();
+      }
+    });
   }
 
   Future<void> fetchUsers() async {
@@ -660,8 +667,8 @@ class GoLiveController extends GetxController {
       _timeoutTimer?.cancel();
       _timeoutTimer = Timer(const Duration(seconds: 30), () {
         if (currentCallId.value != null &&
-            (incomingCall.value == null ||
-                incomingCall.value!['status'] == 'ringing')) {
+            (GlobalCallService.to.incomingCall.value == null ||
+                GlobalCallService.to.incomingCall.value!['status'] == 'ringing')) {
           debugPrint('Call timed out after 30 seconds');
           endCall();
         }
@@ -699,7 +706,7 @@ class GoLiveController extends GetxController {
 
       if (accept) {
         stopRinging();
-        final call = incomingCall.value;
+        final call = GlobalCallService.to.incomingCall.value;
         if (call != null) {
           await joinChannel(call['channel_name']);
         } else if (Get.arguments is Map &&
@@ -710,7 +717,7 @@ class GoLiveController extends GetxController {
       } else {
         stopRinging();
         playHangup();
-        incomingCall.value = null;
+        GlobalCallService.to.incomingCall.value = null;
         currentCallId.value = null;
       }
     } catch (e) {
@@ -755,7 +762,7 @@ class GoLiveController extends GetxController {
     localViewController.value = null; // Essential cleanup
     remoteViewController.value = null; // Essential cleanup
     currentCallId.value = null;
-    incomingCall.value = null;
+    GlobalCallService.to.incomingCall.value = null;
     debugPrint('Call Ended Cleanly');
   }
 
@@ -1122,7 +1129,7 @@ class UsersPage extends StatelessWidget {
               ),
             ),
             // Incoming Call Overlay
-            Obx(() => _buildIncomingCallOverlay(context, controller)),
+            Obx(() => _buildIncomingCallOverlay(context, controller, GlobalCallService.to.incomingCall.value)),
           ],
         ),
       ),
@@ -1221,8 +1228,7 @@ class UsersPage extends StatelessWidget {
   }
 
   Widget _buildIncomingCallOverlay(
-      BuildContext context, GoLiveController controller) {
-    final call = controller.incomingCall.value;
+      BuildContext context, GoLiveController controller, Map<String, dynamic>? call) {
     if (call == null) {
       return const SizedBox.shrink();
     }

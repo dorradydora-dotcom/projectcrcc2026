@@ -317,6 +317,7 @@ class LoadDisplayWidget extends StatelessWidget {
                       color: Colors.redAccent,
                       fontSize: 38.sp,
                       fontFamily: Appfontstring.digital,
+                      fontFamilyFallback: const [Appfontstring.ChangaLight],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -343,6 +344,7 @@ class LoadDisplayWidget extends StatelessWidget {
                                       value < 0 ? Colors.red : Colors.redAccent,
                                   fontSize: 38.sp,
                                   fontFamily: Appfontstring.digital,
+                                  fontFamilyFallback: const [Appfontstring.ChangaLight],
                                   shadows: [
                                     Shadow(
                                       color: (value < 0
@@ -399,6 +401,7 @@ class LoadDisplayWidget extends StatelessWidget {
                           color: Colors.blueAccent,
                           fontSize: 12.sp,
                           fontFamily: Appfontstring.digital,
+                          fontFamilyFallback: const [Appfontstring.ChangaLight],
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -487,6 +490,7 @@ class _StationCardState extends State<StationCard> {
                     fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: Appfontstring.digital,
+                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                     color: Colors.white,
                   ),
                 ),
@@ -533,6 +537,7 @@ class _StationCardState extends State<StationCard> {
                                 fontSize: 13.sp, // Reduced from 14.sp
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [Appfontstring.ChangaLight],
                                 color: isPositive
                                     ? Colors.greenAccent
                                     : Colors.redAccent,

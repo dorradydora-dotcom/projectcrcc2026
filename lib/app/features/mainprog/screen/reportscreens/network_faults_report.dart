@@ -104,7 +104,8 @@ class NetworkFaultsReportScreen extends StatelessWidget {
                             style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 14.sp,
-                                fontFamily: Appfontstring.digital),
+                                fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [Appfontstring.ChangaLight]),
                           )),
                     ),
                   ],

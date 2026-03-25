@@ -144,7 +144,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                         style: TextStyle(
                             color: Colors.white70,
                             fontSize: 12.sp,
-                            fontFamily: Appfontstring.digital),
+                            fontFamily: Appfontstring.digital,
+                            fontFamilyFallback: const [Appfontstring.ChangaLight]),
                       ),
                     ),
                   ],
@@ -329,7 +330,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
             style: TextStyle(
                 color: color,
                 fontSize: 10.sp,
-                fontFamily: Appfontstring.digital),
+                fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight]),
           ),
         ],
       ),

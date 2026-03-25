@@ -18,6 +18,7 @@ class NotificationService {
           'body': body,
           'route': route,
           'payloadType': 'notification',
+          'priority': 'HIGH',
         },
       );
 

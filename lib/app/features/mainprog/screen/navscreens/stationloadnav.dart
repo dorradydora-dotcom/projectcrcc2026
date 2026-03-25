@@ -201,7 +201,6 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 13.sp,
                     fontFamily: Appfontstring.ChangaLight,
-                    fontFamilyFallback: const [Appfontstring.ChangaLight],
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -229,6 +228,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                       color: Colors.redAccent,
                       fontSize: 50.sp,
                       fontFamily: Appfontstring.digital,
+                      fontFamilyFallback: const [Appfontstring.ChangaLight],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -254,6 +254,9 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                                     value < 0 ? Colors.red : Colors.redAccent,
                                 fontSize: 50.sp,
                                 fontFamily: Appfontstring.digital,
+                                fontFamilyFallback: const [
+                                  Appfontstring.ChangaLight
+                                ],
                                 shadows: [
                                   Shadow(
                                     color: (value < 0
@@ -310,6 +313,7 @@ class _LoadDisplayWidgetState extends State<LoadDisplayWidget> {
                       color: Colors.blueAccent,
                       fontSize: 15.sp,
                       fontFamily: Appfontstring.digital,
+                      fontFamilyFallback: const [Appfontstring.ChangaLight],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -553,6 +557,9 @@ class _StationCardState extends State<StationCard> {
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: Appfontstring.digital,
+                                    fontFamilyFallback: const [
+                                      Appfontstring.ChangaLight
+                                    ],
                                     color: widget.isUserAssigned
                                         ? Colors.orangeAccent
                                         : (value >= 0

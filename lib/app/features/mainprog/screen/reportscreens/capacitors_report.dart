@@ -140,7 +140,8 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
                         style: TextStyle(
                             color: Colors.white70,
                             fontSize: 12.sp,
-                            fontFamily: Appfontstring.digital),
+                            fontFamily: Appfontstring.digital,
+                            fontFamilyFallback: const [Appfontstring.ChangaLight]),
                       ),
                     ),
                   ],
@@ -327,7 +328,8 @@ class _CapacitorsReportScreenState extends State<CapacitorsReportScreen> {
             style: TextStyle(
                 color: color,
                 fontSize: 10.sp,
-                fontFamily: Appfontstring.digital),
+                fontFamily: Appfontstring.digital,
+                fontFamilyFallback: const [Appfontstring.ChangaLight]),
           ),
         ],
       ),

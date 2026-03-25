@@ -127,7 +127,8 @@ class Report4Screen extends GetView<Report4Controller> {
                 style: TextStyle(
                     color: Colors.white70,
                     fontSize: 12.sp,
-                    fontFamily: Appfontstring.digital),
+                    fontFamily: Appfontstring.digital,
+                    fontFamilyFallback: const [Appfontstring.ChangaLight]),
               )),
         ],
       ),

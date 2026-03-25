@@ -21,7 +21,6 @@ import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 import 'package:amiraly/app/features/splash/splash_screen.dart';
-import 'package:amiraly/core/widgets/error_app.dart';
 
 // 🔧 متغيرات تتبع حالة التهيئة
 bool _isServicesInitialized = false;
@@ -30,42 +29,40 @@ Completer<void> _servicesInitializedCompleter = Completer<void>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await dotenv.load(fileName: ".env");
-    await Firebase.initializeApp();
+  // تشغيل التطبيق فوراً لتقليل ظهور الشاشة السادة (Native Launch Screen)
+  runApp(const MyApp());
 
-    // تسجيل معالج رسائل الخلفية
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-    runApp(const MyApp());
-
-    // تهيئة WebView في الخلفية مع تأخير لعدم التأثير على سرعة بدء التطبيق (للتطوير فقط)
-    if (!kReleaseMode) {
-      Future.delayed(const Duration(seconds: 4), () async {
-        try {
-          await InAppWebViewController.setWebContentsDebuggingEnabled(true);
-          AppLogger.logInfo('✅ WebView debugging setup completed in background');
-        } catch (e) {
-          AppLogger.logWarning('WebView debugging setup failed');
-        }
-      });
-    }
-
-    // تهيئة الخدمات الثقيلة في الخلفية (بعد runApp لتجنب تأخير الـ frame الأول)
-    Future.microtask(() => _initializeHeavyServicesInBackground());
-  } catch (e, stackTrace) {
-    AppLogger.logError('Initialization failed', e, stackTrace);
-    runApp(const ErrorApp());
-  }
+  // تهيئة الخدمات الثقيلة في الخلفية بعد عرض الفريم الأول
+  Future.delayed(const Duration(milliseconds: 100), () => _initializeHeavyServicesInBackground());
 }
 
 Future<void> _initializeHeavyServicesInBackground() async {
   try {
     AppLogger.logInfo('🔄 Starting background services initialization...');
-    // تهيئة تنسيق التاريخ في الخلفية لتجنب تأخير الـ frame الأول
+
+    // 1. تحميل البيئة أولاً لأنها مطلوبة لـ Supabase و Firebase
+    await dotenv.load(fileName: ".env");
+    await Future.delayed(Duration.zero);
+
+    // 2. تهيئة Firebase قبل أي تعامل مع الرسائل
+    await Firebase.initializeApp();
+    await Future.delayed(Duration.zero);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    // 3. تهيئة باقي الخدمات
     await initializeDateFormatting('ar', null);
+    await Future.delayed(Duration.zero);
     await _initializeSupabaseInBackground();
+    await Future.delayed(Duration.zero);
     await _setupNotificationsInBackground();
+
+    // 4. تهيئة WebView في الخلفية (للتطوير فقط)
+    if (!kReleaseMode) {
+      await Future.delayed(Duration.zero);
+      await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+      AppLogger.logInfo('✅ WebView debugging setup completed in background');
+    }
+
     _isServicesInitialized = true;
     _servicesInitializedCompleter.complete();
     AppLogger.logSuccess('✅ All background services initialized');
