@@ -302,11 +302,14 @@ class AuthService extends GetxController {
     }
   }
 
+  bool _isDisposed = false;
+
   @override
   void onClose() {
-    for (var subscription in _subscriptions) {
-      subscription.cancel();
-    }
+    if (_isDisposed) return;
+    _isDisposed = true;
+    // إلغاء جميع الاشتراكات بشكل آمن
+    Future.wait(_subscriptions.map((s) => s.cancel())).catchError((_) => <void>[]);
     _subscriptions.clear();
     _cache.clear();
     _prefs = null;

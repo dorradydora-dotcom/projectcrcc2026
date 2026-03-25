@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
   void _initializeController() {
     // تسجيل الـ Controller إذا لم يكن مسجلاً
     if (!Get.isRegistered<LoginControllerImp>()) {
-      Get.put(LoginControllerImp(), permanent: true);
+      Get.put(LoginControllerImp());
     }
     _loginController = Get.find<LoginControllerImp>();
   }
@@ -425,7 +425,7 @@ class LoginControllerImp extends LoginController {
   final TextEditingController password = TextEditingController();
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
-  final AuthService authservice = AuthService();
+  AuthService get authservice => Get.find<AuthService>();
 
   @override
   void onInit() {
@@ -562,9 +562,12 @@ class LoginControllerImp extends LoginController {
           }
 
           await Future.delayed(const Duration(milliseconds: 500));
+          // تحرير الـ LoginControllerImp من الذاكرة قبل الانتقال
+          Get.delete<LoginControllerImp>();
           await gotohomepage();
         } else {
           AppLogger.logWarning('User found but token not saved to any table');
+          Get.delete<LoginControllerImp>();
           await gotohomepage();
         }
       } catch (e) {

@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/core/widgets/auth_wrapper.dart';
+import 'package:amiraly/app/features/auth/login/loginscreen.dart';
+import 'package:amiraly/app/features/auth/homepage/homepage.dart';
+import 'package:amiraly/app/features/auth/onboarding/onboardingscreen.dart';
+import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:amiraly/main.dart' show ensureServicesInitialized;
 
@@ -37,7 +42,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startAppProcess() async {
-    // ✅ setState مرة واحدة فقط لإعادة تعيين حالة الخطأ
     if (_hasError) {
       setState(() {
         _hasError = false;
@@ -45,31 +49,54 @@ class _SplashScreenState extends State<SplashScreen> {
       });
     }
     _progress.value = 0.0;
+    _progressTimer?.cancel();
 
-    // بدء تهيئة الخدمات في الخلفية فور دخول الشاشة لمسابق الزمن
+    // بدء تهيئة الخدمات في الخلفية
     final servicesFuture = ensureServicesInitialized();
 
-    _progressTimer?.cancel();
-    _progressTimer =
-        Timer.periodic(const Duration(milliseconds: 50), (timer) {
+    // تايمر مدته 3 ثوانٍ بالضبط (0.01 كل 30 ملي ثانية)
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
       if (!mounted) {
         timer.cancel();
         return;
       }
-      // ✅ ValueNotifier.value - لا يعيد بناء كل الشاشة
-      final newValue = (_progress.value + 0.01).clamp(0.0, 1.0);
-      _progress.value = newValue;
-      if (newValue >= 1.0) {
+      
+      // زيادة التقدم
+      if (_progress.value < 1.0) {
+        _progress.value = (_progress.value + 0.01).clamp(0.0, 1.0);
+      }
+      
+      // عند الوصول إلى 100% بعد 3 ثوانٍ
+      if (_progress.value >= 1.0) {
         timer.cancel();
-        _completeProcess(servicesFuture);
+        
+        try {
+          // ننتظر الخدمات لتأكيد انتهائها (عادةً ستكون قد انتهت أصلاً)
+          await servicesFuture;
+          if (!mounted) return;
+          _completeProcess();
+        } catch (e) {
+          if (!mounted) return;
+          AppLogger.logError('App initialization failed', e);
+          setState(() {
+            _hasError = true;
+            _errorMessage = 'حدث خطأ تقني أثناء تهيئة الخدمات الأساسية.';
+          });
+        }
       }
     });
   }
 
-  Future<void> _completeProcess(Future<void> servicesFuture) async {
+  Future<void> _completeProcess() async {
     try {
-      // التأكد من اكتمال كافة الخدمات الحيوية قبل الانتقال الفعلي
-      await servicesFuture;
+      // تهيئة خدمات المصادقة لتحديد الوجهة
+      final authService = Get.find<AuthService>();
+      if (!authService.isInitialized) {
+        await authService.initializeServices();
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      final isOnboardingCompleted = prefs.getBool(AppConstants.onboardingKey) ?? false;
 
       // فحص الاتصال بالإنترنت
       final List<ConnectivityResult> connectivityResult =
@@ -82,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'نعتذر، لا يوجد اتصال بالإنترنت حالياً.\nيرجى التأكد من اتصالك بالشبكة.';
         });
       } else {
-        _navigateToNext();
+        _navigateToNext(isOnboardingCompleted);
       }
     } catch (e) {
       AppLogger.logError('App completion process failed', e);
@@ -93,19 +120,25 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  void _navigateToNext() {
-    // If we have call arguments, we might be already navigating or need to pass them
+  void _navigateToNext(bool isOnboardingCompleted) {
+    Widget nextScreen;
+    if (!isOnboardingCompleted) {
+      nextScreen = const OnboardingScreen();
+    } else {
+      final user = Supabase.instance.client.auth.currentUser;
+      nextScreen = user != null ? const HomePage() : const LoginScreen();
+    }
+
     final args = Get.arguments;
     if (args is Map && args['route'] == 'call') {
       debugPrint(
           'SplashScreen: Detected call arguments, using Get.to to preserve flow');
-      Get.to(() => const AuthWrapper(),
+      Get.to(() => nextScreen,
           arguments: args,
-          transition: Transition.fade,
-          duration: const Duration(seconds: 2));
+          transition: Transition.noTransition);
     } else {
-      Get.offAll(() => const AuthWrapper(),
-          transition: Transition.fade, duration: const Duration(seconds: 2));
+      Get.offAll(() => nextScreen,
+          transition: Transition.noTransition);
     }
   }
 
@@ -207,7 +240,7 @@ class _SplashScreenState extends State<SplashScreen> {
                                 Text(
                                   'جاري تهيئة النظام...',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     fontSize: 11,
                                     fontFamily: Appfontstring.ChangaLight,
                                   ),
@@ -241,10 +274,10 @@ class _SplashScreenState extends State<SplashScreen> {
           width: 300,
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -280,7 +313,7 @@ class _SplashScreenState extends State<SplashScreen> {
             label: const Text('إعادة المحاولة'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.white,
-              backgroundColor: Colors.blue.withOpacity(0.2),
+              backgroundColor: Colors.blue.withValues(alpha: 0.2),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),

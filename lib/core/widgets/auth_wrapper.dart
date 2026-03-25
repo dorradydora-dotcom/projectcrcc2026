@@ -19,6 +19,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isCheckingServices = true;
+  bool _isOnboardingCompleted = false;
   String? _errorMessage;
 
   @override
@@ -36,6 +37,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
         await authService.initializeServices();
       }
 
+      // قراءة التفضيلات هنا في الـ Initialization لتجنب الـ FutureBuilder
+      final prefs = await SharedPreferences.getInstance();
+      _isOnboardingCompleted = prefs.getBool(AppConstants.onboardingKey) ?? false;
+
       if (mounted) setState(() => _isCheckingServices = false);
     } catch (e, stackTrace) {
       AppLogger.logError('Service check failed', e, stackTrace);
@@ -45,16 +50,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _errorMessage = 'فشل في تهيئة الخدمات';
         });
       }
-    }
-  }
-
-  Future<bool> _isOnboardingCompleted() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(AppConstants.onboardingKey) ?? false;
-    } catch (e) {
-      AppLogger.logError('Failed to check onboarding status', e);
-      return false;
     }
   }
 
@@ -84,30 +79,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
       );
     }
 
-    return FutureBuilder<bool>(
-      future: _isOnboardingCompleted(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(backgroundColor: Colors.black);
-        }
+    if (!_isOnboardingCompleted) return const OnboardingScreen();
 
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Text(
-                'حدث خطأ في تحميل التطبيق',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ),
-          );
-        }
-
-        final isOnboardingCompleted = snapshot.data ?? false;
-        if (!isOnboardingCompleted) return const OnboardingScreen();
-
-        final user = Supabase.instance.client.auth.currentUser;
-        return user != null ? const HomePage() : const LoginScreen();
-      },
-    );
+    final user = Supabase.instance.client.auth.currentUser;
+    return user != null ? const HomePage() : const LoginScreen();
   }
 }

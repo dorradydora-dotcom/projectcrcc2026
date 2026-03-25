@@ -29,7 +29,6 @@ Completer<void> _servicesInitializedCompleter = Completer<void>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('ar', null);
 
   try {
     await dotenv.load(fileName: ".env");
@@ -40,18 +39,19 @@ void main() async {
 
     runApp(const MyApp());
 
-    // تهيئة WebView في الخلفية (للتطوير فقط)
+    // تهيئة WebView في الخلفية مع تأخير لعدم التأثير على سرعة بدء التطبيق (للتطوير فقط)
     if (!kReleaseMode) {
-      Future.microtask(() async {
+      Future.delayed(const Duration(seconds: 4), () async {
         try {
           await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+          AppLogger.logInfo('✅ WebView debugging setup completed in background');
         } catch (e) {
           AppLogger.logWarning('WebView debugging setup failed');
         }
       });
     }
 
-    // تهيئة الخدمات الثقيلة في الخلفية
+    // تهيئة الخدمات الثقيلة في الخلفية (بعد runApp لتجنب تأخير الـ frame الأول)
     Future.microtask(() => _initializeHeavyServicesInBackground());
   } catch (e, stackTrace) {
     AppLogger.logError('Initialization failed', e, stackTrace);
@@ -62,6 +62,8 @@ void main() async {
 Future<void> _initializeHeavyServicesInBackground() async {
   try {
     AppLogger.logInfo('🔄 Starting background services initialization...');
+    // تهيئة تنسيق التاريخ في الخلفية لتجنب تأخير الـ frame الأول
+    await initializeDateFormatting('ar', null);
     await _initializeSupabaseInBackground();
     await _setupNotificationsInBackground();
     _isServicesInitialized = true;
@@ -120,7 +122,8 @@ Future<void> ensureServicesInitialized() async {
 class AppBindings implements Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => AuthService(), fenix: true);
+    // AuthService كـ permanent singleton — يُنشأ مرة واحدة فقط طوال عمر التطبيق
+    Get.put(AuthService(), permanent: true);
     Get.lazyPut(() => SupabaseService(), fenix: true);
     Get.lazyPut(() => HeartbeatService(), fenix: true);
     Get.lazyPut(() => GlobalCallService(), fenix: true);
