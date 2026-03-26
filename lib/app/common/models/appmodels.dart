@@ -362,24 +362,25 @@ class ProjectModel {
 class StationModelCall {
   final String id;
   final String? stationName;
+  final String? token; // Pre-assigned Agora RTC token
 
   StationModelCall({
     required this.id,
     required this.stationName,
+    this.token,
   });
 
-  // Status is now always online (since they have a token and are in the table)
+  // Status is now always online
   String get status => 'online';
 
   factory StationModelCall.fromJson(Map<String, dynamic> json) {
     return StationModelCall(
-      // Prioritize user_id or uid (common names for Auth UUID) over just 'id'
-      // which might be a row ID in a view
       id: json['user_id']?.toString() ??
           json['uid']?.toString() ??
           json['id']?.toString() ??
           '',
       stationName: json['station_name'] ?? '',
+      token: json['user_token']?.toString(), // Fetch the token put during registration
     );
   }
 

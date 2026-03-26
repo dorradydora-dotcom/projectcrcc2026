@@ -1,28 +1,21 @@
-import 'dart:async' show StreamSubscription, Timer, unawaited;
+import 'dart:async';
 import 'dart:ui';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:animate_do/animate_do.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:amiraly/core/services/call_service.dart';
-import 'package:amiraly/app/common/models/appmodels.dart' hide Event;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/app/util/validators/validator_helper.dart';
-
-// --- Services Consolidated Here ---
-
-// --- Services moved to call_service.dart ---
-
-// --- Controller and UI ---
+import 'package:amiraly/core/services/call_service.dart';
 
 class GoLiveController extends GetxController {
   final RxList<StationModelCall> users = <StationModelCall>[].obs;
@@ -31,11 +24,9 @@ class GoLiveController extends GetxController {
   final RxBool canInitiateCalls = false.obs;
   final Rx<String?> errorMessage = Rx<String?>(null);
 
-  // Audio players
   final AudioPlayer _ringPlayer = AudioPlayer();
   final AudioPlayer _effectPlayer = AudioPlayer();
 
-  // Constants
   String get _appId => dotenv.env['AGORA_APP_ID'] ?? '';
 
   static const List<String> _excludedStations = [
@@ -46,22 +37,15 @@ class GoLiveController extends GetxController {
     'ابو زعبل/بلبيس',
   ];
 
-  // Sound paths
   static const String ringSound = 'lib/assets/sounds/ring.mp3';
   static const String connectSound = 'lib/assets/sounds/connect.mp3';
   static const String hangupSound = 'lib/assets/sounds/hangup.mp3';
 
-  // Signaling state
   final Rx<String?> currentCallId = Rx<String?>(null);
-  // incomingCall removed - now handled by GlobalCallService
-  StreamSubscription? _signalingSubscription;
-  Timer? _timeoutTimer;
 
   RtcEngine? _engine;
-
   RtcEngine? get engine => _engine;
 
-  // Persistent Controllers to prevent flickering/noise on rebuild
   final localUserJoined = false.obs;
   final remoteUid = Rxn<int>();
   final localViewController = Rxn<VideoViewController>();
@@ -76,29 +60,7 @@ class GoLiveController extends GetxController {
     super.onInit();
     checkAccess();
     fetchUsers();
-    // startSignaling() is now handled globally by GlobalCallService
 
-    // Check if we opened the page from a call notification or global navigation
-    if (Get.arguments != null && Get.arguments is Map) {
-      final data = Get.arguments as Map<String, dynamic>;
-      if (data['route'] == 'call' && data['call_id'] != null) {
-        currentCallId.value = data['call_id'];
-        if (data['accepted'] == true) {
-          // Immediately respond and navigate
-          unawaited(respondToCall(data['call_id'], true));
-          Get.to(
-            () => VideoCallPage(
-              controller: this,
-              channelName: data['channel_name'],
-            ),
-          );
-        } else {
-          playRinging();
-        }
-      }
-    }
-    
-    // Listen to global incoming calls reactively
     ever(GlobalCallService.to.incomingCall, (call) {
       if (call != null && call['status'] == 'ringing') {
         playRinging();
@@ -112,7 +74,6 @@ class GoLiveController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = null;
-
       final response = await Supabase.instance.client
           .from(AppConstants.tableUserStations)
           .select();
@@ -121,21 +82,14 @@ class GoLiveController extends GetxController {
       final fetched =
           data.map((json) => StationModelCall.fromJson(json)).where((user) {
         final name = user.stationName ?? '';
-        return !_excludedStations.any(
-            (excluded) => name.contains(excluded) || excluded.contains(name));
+        return !_excludedStations.any((excluded) => name.contains(excluded));
       }).toList();
 
       fetched
           .sort((a, b) => (a.stationName ?? '').compareTo(b.stationName ?? ''));
-
-      for (var u in fetched) {
-        debugPrint('Fetched User: ${u.stationName}, ID: ${u.id}');
-      }
-
       users.assignAll(fetched);
     } catch (e) {
       errorMessage.value = 'Failed to load users: $e';
-      users.clear();
     } finally {
       isLoading.value = false;
     }
@@ -143,15 +97,14 @@ class GoLiveController extends GetxController {
 
   Future<void> checkAccess() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null || user.email == null) {
+    if (user?.email == null) {
       isAccessDenied.value = true;
       return;
     }
 
     try {
-      final email = user.email!;
+      final email = user!.email!;
       final client = Supabase.instance.client;
-
       final results = await Future.wait([
         client
             .from(AppConstants.tableUserTop)
@@ -170,15 +123,10 @@ class GoLiveController extends GetxController {
             .limit(1),
       ]);
 
-      final inTop = results[0].isNotEmpty;
-      final inCrcc = results[1].isNotEmpty;
-      final inStations = results[2].isNotEmpty;
-
-      isAccessDenied.value = !inTop && !inCrcc && !inStations;
-      canInitiateCalls.value = inTop || inCrcc;
+      isAccessDenied.value = results.every((r) => r.isEmpty);
+      canInitiateCalls.value = results[0].isNotEmpty || results[1].isNotEmpty;
     } catch (e) {
       isAccessDenied.value = true;
-      debugPrint('Error checking GoLive access: $e');
     }
   }
 
@@ -186,16 +134,13 @@ class GoLiveController extends GetxController {
     isLocalVideoReady.value = false;
     isRemoteVideoReady.value = false;
     try {
-      // 1. Request permissions first
       final status = await [Permission.camera, Permission.microphone].request();
-      if (status[Permission.camera] != PermissionStatus.granted ||
-          status[Permission.microphone] != PermissionStatus.granted) {
-        debugPrint("!!! Permissions Denied: $status !!!");
-        throw 'يجب منح صلاحيات الكاميرا والميكروفون لبدء المكالمة';
-      }
+      if (status[Permission.camera] != PermissionStatus.granted)
+        throw 'صلاحية الكاميرا مطلوبة';
+      if (status[Permission.microphone] != PermissionStatus.granted)
+        throw 'صلاحية الميكروفون مطلوبة';
 
       if (_engine == null) {
-        debugPrint("Creating new Agora engine...");
         _engine = createAgoraRtcEngine();
         await _engine!.initialize(RtcEngineContext(
           appId: _appId,
@@ -204,289 +149,121 @@ class GoLiveController extends GetxController {
 
         _engine!.registerEventHandler(
           RtcEngineEventHandler(
-            onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-              debugPrint("local user ${connection.localUid} joined");
+            onJoinChannelSuccess: (connection, elapsed) {
               localUserJoined.value = true;
+              isLocalVideoReady.value = true;
             },
-            onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-              debugPrint("Remote user $remoteUid joined");
-              this.remoteUid.value = remoteUid;
-              remoteViewController.value = VideoViewController.remote(
-                rtcEngine: _engine!,
-                canvas: VideoCanvas(
-                  uid: remoteUid,
-                  renderMode: RenderModeType.renderModeHidden,
-                ),
-                connection: connection,
-              );
+            onUserJoined: (connection, uid, elapsed) {
+              remoteUid.value = uid;
+              isRemoteVideoReady.value = true;
               stopRinging();
+              playConnect();
             },
-            onUserOffline: (RtcConnection connection, int uid,
-                UserOfflineReasonType reason) {
-              debugPrint("Remote user $uid left: $reason");
+            onUserOffline: (connection, uid, reason) {
               remoteUid.value = null;
-              remoteViewController.value = null;
               isRemoteVideoReady.value = false;
-            },
-            onError: (ErrorCodeType err, String msg) {
-              debugPrint('Agora Error: $err, $msg');
-              String userFriendlyError = 'حدث خطأ في مكالمة الفيديو ($err)';
-              if (err == ErrorCodeType.errInvalidAppId) {
-                userFriendlyError = 'خطأ في الـ Agora App ID. يرجى التحقق من لوحة التحكم.';
-              } else if (err == ErrorCodeType.errInvalidToken || err == ErrorCodeType.errTokenExpired) {
-                userFriendlyError = 'انتهت صلاحية الـ Token أو غير صالح. التطبيق يحتاج لـ Token جديد.';
-              } else if (err == ErrorCodeType.errConnectionLost) {
-                userFriendlyError = 'فقد الاتصال بالشبكة.';
-              }
-              
-              Get.snackbar(
-                'خطأ في الاتصال',
-                userFriendlyError,
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.red.withOpacity(0.8),
-                colorText: Colors.white,
-                duration: const Duration(seconds: 5),
-              );
-            },
-            onLocalVideoStateChanged: (VideoSourceType source, LocalVideoStreamState state, LocalVideoStreamReason reason) {
-              debugPrint('Local Video State: $state, Reason: $reason');
-            },
-            onFirstLocalVideoFrame: (VideoSourceType source, int width, int height, int elapsed) {
-              debugPrint('First local video frame: ${width}x${height}');
             },
           ),
         );
       }
 
-      // 2. Configure video/audio
       await _engine!.enableVideo();
-      await _engine!.enableLocalVideo(true);
       await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-      // --- Optimization for Noise/Quality ---
-      // 1. Explicitly set video encoder configuration
-      await _engine!.setVideoEncoderConfiguration(
-        const VideoEncoderConfiguration(
-          dimensions: VideoDimensions(width: 640, height: 480),
-          frameRate: 15,
-          bitrate: 1000,
-          orientationMode: OrientationMode.orientationModeAdaptive,
-          degradationPreference: DegradationPreference.maintainQuality,
-        ),
-      );
-
-      // 4. Enable Color Enhancement
-      await _engine!.setColorEnhanceOptions(
-        enabled: true,
-        options: const ColorEnhanceOptions(
-          strengthLevel: 0.5,
-          skinProtectLevel: 0.5,
-        ),
-      );
-
-      // 5. Set Camera Capturer Configuration to match encoder
-      await _engine!.setCameraCapturerConfiguration(
-        const CameraCapturerConfiguration(
-          cameraDirection: CameraDirection.cameraRear,
-          format: VideoFormat(width: 640, height: 480, fps: 15),
-        ),
-      );
-      // --------------------------------------
-
-      // Stop preview if already running to avoid "stale" preview locks
-      try {
-        await _engine!.stopPreview();
-      } catch (_) {}
-
-      // 6. Start preview FIRST to prime the camera
       await _engine!.startPreview();
 
-      // 7. Explicitly setup local video
-      await _engine!.setupLocalVideo(const VideoCanvas(
-          uid: 0,
-          renderMode: RenderModeType.renderModeHidden,
-          mirrorMode: VideoMirrorModeType.videoMirrorModeAuto,
-      ));
-
-      // 8. Setup local view controller (SurfaceView is more stable for full-screen)
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
-        canvas: const VideoCanvas(
-          uid: 0,
-          renderMode: RenderModeType.renderModeHidden,
-        ),
+        canvas: const VideoCanvas(uid: 0),
         useAndroidSurfaceView: true,
       );
-      
-      // Give the hardware a moment to stabilize the frame
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      debugPrint("!!! Agora preview started and primed successfully !!!");
     } catch (e) {
-      debugPrint('Error initializing Agora: $e');
+      debugPrint('Agora Error: $e');
       rethrow;
     }
   }
 
-  Future<String> _fetchSecureToken(String channelName) async {
-    return '';
-  }
-
-  Future<void> joinChannel(String channelName) async {
+  Future<void> joinChannel(String channelName, String? token) async {
     try {
       await initializeAgora();
-
-      debugPrint('Joining channel: $channelName');
+      final int uid = currentUserId.hashCode & 0x7FFFFFFF;
       await _engine!.joinChannel(
-        token: await _fetchSecureToken(channelName),
+        token: token ?? '',
         channelId: channelName,
-        uid: 0,
+        uid: uid,
         options: const ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
           publishCameraTrack: true,
           publishMicrophoneTrack: true,
         ),
       );
-    } catch (e, stack) {
-      debugPrint('Error joining channel: $e');
-      AppLogger.logError('Agora Join Error', e, stack);
+    } catch (e) {
       rethrow;
     }
   }
 
   Future<void> leaveChannel() async {
-    try {
-      if (_engine != null) {
-        await _engine!.leaveChannel();
-        localUserJoined.value = false;
-        remoteUid.value = null;
-        remoteViewController.value = null;
-      }
-    } catch (e) {
-      debugPrint('Error leaving channel: $e');
-    }
-  }
-
-  Future<void> toggleAudio() async {
-    if (_engine == null) return;
-    debugPrint('Toggle Audio: Current value = ${isAudioEnabled.value}');
-    isAudioEnabled.value = !isAudioEnabled.value;
-    await _engine!.enableLocalAudio(isAudioEnabled.value);
-
-    if (currentCallId.value != null) {
-      await _engine!.updateChannelMediaOptions(
-        ChannelMediaOptions(
-          publishMicrophoneTrack: isAudioEnabled.value,
-        ),
-      );
-    }
-  }
-
-  Future<void> switchCamera() async {
-    debugPrint('!!! TRIGGER: switchCamera() called !!!');
-    if (_engine == null) {
-      debugPrint('!!! ERROR: switchCamera failed - Engine is NULL !!!');
-      return;
-    }
-    try {
-      await _engine!.switchCamera();
-      debugPrint('!!! SUCCESS: switchCamera completed !!!');
-    } catch (e) {
-      debugPrint('!!! EXCEPTION in switchCamera: $e');
-      Get.snackbar(
-        'خطأ',
-        'فشل تحويل الكاميرا: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.7),
-        colorText: Colors.white,
-      );
+    if (_engine != null) {
+      await _engine!.leaveChannel();
+      localUserJoined.value = false;
+      remoteUid.value = null;
     }
   }
 
   String? get currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   Future<String?> _getReceiverToken(String receiverId) async {
-    final supabase = Supabase.instance.client;
     const tables = [
       AppConstants.tableUserStations,
       AppConstants.tableUserCrcc,
-      AppConstants.tableUserTop,
-      'user_others',
-      'user_cm',
+      AppConstants.tableUserTop
     ];
-
     for (final table in tables) {
       try {
-        final data = await supabase
+        final data = await Supabase.instance.client
             .from(table)
             .select('user_token')
             .eq('id', receiverId)
             .maybeSingle();
-
-        if (data != null && data['user_token'] != null) {
-          return data['user_token'] as String;
-        }
-      } catch (e) {
-        continue;
-      }
+        if (data?['user_token'] != null) return data!['user_token'] as String;
+      } catch (_) {}
     }
     return null;
   }
 
   Future<String> _getUserName(String userId) async {
-    final supabase = Supabase.instance.client;
     const tables = [
       AppConstants.tableUserStations,
       AppConstants.tableUserCrcc,
-      AppConstants.tableUserTop,
-      'user_others',
-      'user_cm',
+      AppConstants.tableUserTop
     ];
-
     for (final table in tables) {
       try {
-        final data = await supabase
+        final data = await Supabase.instance.client
             .from(table)
             .select('station_name')
             .eq('id', userId)
             .maybeSingle();
-
-        if (data != null && data['station_name'] != null) {
-          return data['station_name'] as String;
-        }
-      } catch (e) {
-        continue;
-      }
+        if (data?['station_name'] != null)
+          return data!['station_name'] as String;
+      } catch (_) {}
     }
-    return 'محطة ';
+    return 'محطة';
   }
-
-  /*
-  Future<void> startSignaling() async {
-    // Logic moved to GlobalCallService
-  }
-  */
 
   Future<void> makeCall(String receiverId) async {
     final userId = currentUserId;
-    if (userId == null) {
-      throw 'يجب تسجيل الدخول أولاً';
-    }
-
-    debugPrint('Initiating call: Caller=$userId, Receiver=$receiverId');
+    if (userId == null) return;
 
     try {
-      // 1. Get receiver token
+      final callerToken = await _getReceiverToken(userId);
       final receiverToken = await _getReceiverToken(receiverId);
 
-      // 2. Insert signaling record
       final response = await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
           .insert({
             'caller_id': userId,
             'receiver_id': receiverId,
-            'channel_name': userId,
+            'channel_name': receiverId,
             'status': 'ringing',
           })
           .select()
@@ -494,7 +271,6 @@ class GoLiveController extends GetxController {
 
       currentCallId.value = response['id'];
 
-      // 3. Send Dedicated Call Push Notification
       if (receiverToken != null) {
         final callerName = await _getUserName(userId);
         await CallNotificationService.sendCallNotification(
@@ -503,39 +279,11 @@ class GoLiveController extends GetxController {
           body: 'مكالمة فيديو واردة من $callerName',
           callId: response['id'],
           callerName: callerName,
-          channelName: userId,
+          channelName: receiverId,
         );
       }
-
-      _timeoutTimer?.cancel();
-      _timeoutTimer = Timer(const Duration(seconds: 30), () {
-        if (currentCallId.value != null &&
-            (GlobalCallService.to.incomingCall.value == null ||
-                GlobalCallService.to.incomingCall.value!['status'] == 'ringing')) {
-          debugPrint('Call timed out after 30 seconds');
-          endCall();
-        }
-      });
-
-      Supabase.instance.client
-          .from(AppConstants.tableCallsSignaling)
-          .stream(primaryKey: ['id'])
-          .eq('id', currentCallId.value!)
-          .listen((data) {
-            if (data.isNotEmpty) {
-              final status = data.first['status'];
-              if (status == 'rejected' || status == 'ended') {
-                stopRinging();
-                playHangup();
-                leaveChannel();
-                currentCallId.value = null;
-              } else if (status == 'accepted') {
-                stopRinging();
-              }
-            }
-          });
+      await joinChannel(receiverId, callerToken);
     } catch (e) {
-      debugPrint('Error making call: $e');
       rethrow;
     }
   }
@@ -546,130 +294,77 @@ class GoLiveController extends GetxController {
           .from(AppConstants.tableCallsSignaling)
           .update({'status': accept ? 'accepted' : 'rejected'}).eq(
               'id', callId);
-
       if (accept) {
         stopRinging();
         final call = GlobalCallService.to.incomingCall.value;
         if (call != null) {
-          await joinChannel(call['channel_name']);
-        } else if (Get.arguments is Map &&
-            Get.arguments['channel_name'] != null) {
-          // Fallback to arguments if incomingCall is null (e.g. cold start)
-          await joinChannel(Get.arguments['channel_name']);
+          final myToken = await _getReceiverToken(currentUserId!);
+          await joinChannel(call['channel_name'], myToken);
         }
       } else {
         stopRinging();
-        playHangup();
-        GlobalCallService.to.incomingCall.value = null;
         currentCallId.value = null;
       }
-    } catch (e) {
-      debugPrint('Error responding to call: $e');
-    }
+    } catch (_) {}
   }
 
   Future<void> endCall() async {
-    debugPrint('Ending Call...');
-    _timeoutTimer?.cancel();
     if (currentCallId.value != null) {
-      try {
-        // Find if we were the caller and notify receiver to stop ringing
-        final callRecord = await Supabase.instance.client
-            .from(AppConstants.tableCallsSignaling)
-            .select('caller_id, receiver_id')
-            .eq('id', currentCallId.value!)
-            .maybeSingle();
-
-        if (callRecord != null && callRecord['caller_id'] == currentUserId) {
-          final receiverToken =
-              await _getReceiverToken(callRecord['receiver_id']);
-          if (receiverToken != null) {
-            await CallNotificationService.sendCancelNotification(
-              deviceToken: receiverToken,
-              callId: currentCallId.value!,
-            );
-          }
-        }
-
-        await Supabase.instance.client
-            .from(AppConstants.tableCallsSignaling)
-            .update({'status': 'ended'}).eq('id', currentCallId.value!);
-        debugPrint('Signaling record updated to ended');
-      } catch (e) {
-        debugPrint('Error ending call record: $e');
-      }
+      await Supabase.instance.client
+          .from(AppConstants.tableCallsSignaling)
+          .update({'status': 'ended'}).eq('id', currentCallId.value!);
     }
     stopRinging();
     playHangup();
     await leaveChannel();
-    localViewController.value = null; // Essential cleanup
-    remoteViewController.value = null; // Essential cleanup
     currentCallId.value = null;
     GlobalCallService.to.incomingCall.value = null;
-    debugPrint('Call Ended Cleanly');
+    localViewController.value = null;
+    remoteViewController.value = null;
   }
 
   Future<void> disposeAgora() async {
-    try {
-      if (_engine != null) {
-        await _engine!.release();
-        _engine = null;
-      }
-      localViewController.value = null;
-      remoteViewController.value = null;
-    } catch (e) {
-      debugPrint('Error disposing Agora: $e');
+    if (_engine != null) {
+      await _engine!.release();
+      _engine = null;
     }
   }
 
-  // Sound helpers
   void playRinging() {
     try {
       AudioCache.instance.prefix = '';
       _ringPlayer.setReleaseMode(ReleaseMode.loop);
       _ringPlayer.play(AssetSource(ringSound));
-    } catch (e) {
-      debugPrint('Error playing ring sound: $e');
-    }
+    } catch (_) {}
   }
 
-  void stopRinging() {
-    try {
-      _ringPlayer.stop();
-    } catch (e) {
-      debugPrint('Error stopping ring sound: $e');
-    }
-  }
-
+  void stopRinging() => _ringPlayer.stop();
   void playConnect() {
-    try {
-      AudioCache.instance.prefix = '';
-      _effectPlayer.play(AssetSource(connectSound));
-    } catch (e) {
-      debugPrint('Error playing connect sound: $e');
-    }
+    AudioCache.instance.prefix = '';
+    _effectPlayer.play(AssetSource(connectSound));
   }
 
   void playHangup() {
-    try {
-      AudioCache.instance.prefix = '';
-      _effectPlayer.play(AssetSource(hangupSound));
-    } catch (e) {
-      debugPrint('Error playing hangup sound: $e');
-    }
+    AudioCache.instance.prefix = '';
+    _effectPlayer.play(AssetSource(hangupSound));
   }
 
   @override
   void onClose() {
-    debugPrint('GoLiveController onClose called!');
-    debugPrint(StackTrace.current.toString());
-    _ringPlayer.stop();
     _ringPlayer.dispose();
-    _effectPlayer.stop();
     _effectPlayer.dispose();
-    _signalingSubscription?.cancel();
     disposeAgora();
     super.onClose();
+  }
+
+  Future<void> toggleAudio() async {
+    if (_engine == null) return;
+    isAudioEnabled.value = !isAudioEnabled.value;
+    await _engine!.enableLocalAudio(isAudioEnabled.value);
+  }
+
+  Future<void> switchCamera() async {
+    if (_engine != null) await _engine!.switchCamera();
   }
 }
 
@@ -972,7 +667,8 @@ class UsersPage extends StatelessWidget {
               ),
             ),
             // Incoming Call Overlay
-            Obx(() => _buildIncomingCallOverlay(context, controller, GlobalCallService.to.incomingCall.value)),
+            Obx(() => _buildIncomingCallOverlay(
+                context, controller, GlobalCallService.to.incomingCall.value)),
           ],
         ),
       ),
@@ -987,8 +683,8 @@ class UsersPage extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.r),
-            border:
-                Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 1.5.w),
+            border: Border.all(
+                color: Colors.orange.withValues(alpha: 0.5), width: 1.5.w),
             color: Colors.black.withValues(alpha: 0.4),
             boxShadow: [
               BoxShadow(
@@ -1037,11 +733,10 @@ class UsersPage extends StatelessWidget {
     try {
       // 2. Initialize Agora in the background while the user is on the VideoCallPage
       await controller.initializeAgora();
-      
+
       // 3. Start ringing and trigger the call
       controller.playRinging();
       await controller.makeCall(receiverId);
-      await controller.joinChannel(controller.currentUserId ?? 'g-live');
     } catch (e) {
       Get.back(); // Return to users page on failure
       if (context.mounted) {
@@ -1052,8 +747,8 @@ class UsersPage extends StatelessWidget {
     }
   }
 
-  Widget _buildIncomingCallOverlay(
-      BuildContext context, GoLiveController controller, Map<String, dynamic>? call) {
+  Widget _buildIncomingCallOverlay(BuildContext context,
+      GoLiveController controller, Map<String, dynamic>? call) {
     if (call == null) {
       return const SizedBox.shrink();
     }
@@ -1072,7 +767,8 @@ class UsersPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30.r),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1210,263 +906,203 @@ class VideoCallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('Building VideoCallPage for channel: $channelName');
-    debugPrint(
-        '!!! VideoCallPage localViewController: ${controller.localViewController.value != null} !!!');
     return Scaffold(
       backgroundColor: Colors.black,
-      body: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) {
-            return;
-          }
-          await _onWillPop(context);
-        },
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: _remoteVideo(controller),
-            ),
-            // Header Positioned
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: FadeInDown(
-                child: Container(
-                  padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top + 10,
-                      bottom: 15,
-                      left: 20,
-                      right: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: Colors.white),
-                        onPressed: () => _onWillPop(context),
-                      ),
-                      const Spacer(),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('بث مباشر',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12.sp,
-                                        fontFamily: Appfontstring.ChangaLight)),
-                                SizedBox(width: 8.w),
-                                Pulse(
-                                    infinite: true,
-                                    child: Container(
-                                        width: 8.w,
-                                        height: 8.w,
-                                        decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle))),
-                              ],
-                            ),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text("Connection Secured by (RtcEngine)",
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 10.sp)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Local Video Preview
-            Obx(() {
-              // Only show the small box if remote user IS present
-              if (controller.localViewController.value != null &&
-                  controller.isRemoteVideoReady.value) {
-                return Positioned(
-                  top: 100,
-                  right: 20,
-                  child: Container(
-                    width: 110.w,
-                    height: 160.h,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3), width: 2),
-                    ),
-                    child: AgoraVideoView(
-                      key: ValueKey('corner_preview_${controller.localViewController.value.hashCode}'),
-                      controller: controller.localViewController.value!,
-                    ),
+      body: Stack(
+        children: [
+          // Remote Video (Full Screen)
+          Positioned.fill(
+            child: Obx(() {
+              if (controller.remoteUid.value != null &&
+                  controller.engine != null) {
+                return AgoraVideoView(
+                  controller: VideoViewController.remote(
+                    rtcEngine: controller.engine!,
+                    canvas: VideoCanvas(
+                        uid: controller.remoteUid.value!,
+                        renderMode: RenderModeType.renderModeHidden),
+                    connection: RtcConnection(channelId: channelName),
+                    useAndroidSurfaceView: true,
                   ),
                 );
               }
-              return const SizedBox.shrink();
+              return Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SpinKitRipple(
+                      color: Colors.white.withOpacity(0.3),
+                      size: 100.r,
+                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'جاري الاتصال...',
+                      style: TextStyle(
+                        fontFamily: Appfontstring.ChangaLight,
+                        fontSize: 18.sp,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             }),
+          ),
 
-            // Controls
-            Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: FadeInUp(
-                child: _buildControls(context, controller),
+          // Local Video (Overlay)
+          Obx(() {
+            if (controller.localViewController.value != null) {
+              return AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                top: 50.h,
+                right: controller.remoteUid.value != null
+                    ? 20.w
+                    : (1.sw - 150.w) / 2,
+                child: Container(
+                  width: controller.remoteUid.value != null ? 120.w : 150.w,
+                  height: controller.remoteUid.value != null ? 180.h : 220.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: Colors.white24, width: 2),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black54, blurRadius: 10)
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18.r),
+                    child: AgoraVideoView(
+                        controller: controller.localViewController.value!),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+
+          // Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(
+                  top: ScreenUtil().statusBarHeight + 10,
+                  left: 20,
+                  right: 20,
+                  bottom: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black87, Colors.transparent],
+                ),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios,
+                        color: Colors.white70, size: 20.sp),
+                    onPressed: () => _handleBack(),
+                  ),
+                  const Spacer(),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'مكالمة فيديو',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontFamily: Appfontstring.ChangaLight),
+                      ),
+                      Text(
+                        'آمنة ومشفرة',
+                        style:
+                            TextStyle(color: Colors.white54, fontSize: 10.sp),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildControls(BuildContext context, GoLiveController controller) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Obx(() => _buildControlButton(
-              icon: controller.isAudioEnabled.value
-                  ? Iconsax.microphone_2
-                  : Iconsax.microphone_slash,
-              label: 'صوت',
-              color: controller.isAudioEnabled.value
-                  ? Colors.white24
-                  : Colors.redAccent.withValues(alpha: 0.8),
-              onPressed: () => controller.toggleAudio(),
-            )),
-        SizedBox(width: 40.w),
-        _buildControlButton(
-          icon: Iconsax.refresh,
-          label: 'تبديل',
-          color: Colors.white24,
-          onPressed: () => controller.switchCamera(),
-        ),
-        SizedBox(width: 40.w),
-        _buildControlButton(
-          icon: Iconsax.call_remove5,
-          label: 'إنهاء',
-          color: Colors.redAccent,
-          isLarge: true,
-          onPressed: () => _onWillPop(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildControlButton(
-      {required IconData icon,
-      required String label,
-      required Color color,
-      bool isLarge = false,
-      required VoidCallback onPressed}) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: isLarge ? 65.w : 50.w,
-            height: isLarge ? 65.w : 50.w,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child:
-                Icon(icon, color: Colors.white, size: isLarge ? 28.sp : 20.sp),
           ),
-          SizedBox(height: 5.h),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 10.sp,
-              fontFamily: Appfontstring.ChangaLight,
-            ),
-          ),
+
+          // Controls
+          Positioned(
+              bottom: 40.h,
+              left: 0,
+              right: 0,
+              child: _buildControls(controller)),
         ],
       ),
     );
   }
 
-  Future<void> _onWillPop(BuildContext context) async {
-    debugPrint('_onWillPop triggered');
-    await controller.endCall();
-    if (context.mounted) {
-      Get.back();
-    }
+  void _handleBack() {
+    Get.back();
   }
 
-  Widget _remoteVideo(GoLiveController controller) {
-    return Obx(() {
-      // 1. Show Remote Video if it's joined AND starting to stream
-      if (controller.remoteViewController.value != null &&
-          controller.isRemoteVideoReady.value) {
-        return SizedBox.expand(
-          child: AgoraVideoView(
-            key: ValueKey('remote_bg_${controller.remoteViewController.value.hashCode}'),
-            controller: controller.remoteViewController.value!,
-          ),
-        );
-      }
-      
-      // 2. Otherwise show Local Video full screen (as background) 
-      // ONLY if the engine says the local frame is ready
-      if (controller.localViewController.value != null && 
-          controller.isLocalVideoReady.value) {
-        return SizedBox.expand(
-          child: AgoraVideoView(
-            key: ValueKey('local_bg_${controller.localViewController.value.hashCode}'),
-            controller: controller.localViewController.value!,
-          ),
-        );
-      }
-      
-      // 3. Last fallback: Premium Gradient Background
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          ),
+  Widget _buildControls(GoLiveController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _controlButton(
+          icon: Iconsax.refresh,
+          onPressed: controller.switchCamera,
+          color: Colors.white24,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SpinKitRipple(
-              color: Colors.white.withOpacity(0.3),
-              size: 100.r,
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'بانتظار انضمام المحــطة',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14.sp,
-                fontFamily: Appfontstring.ChangaLight,
-              ),
-            ),
-          ],
+        SizedBox(width: 20.w),
+        Obx(() => _controlButton(
+              icon: controller.isAudioEnabled.value
+                  ? Iconsax.microphone_2
+                  : Iconsax.microphone_slash,
+              onPressed: controller.toggleAudio,
+              color: controller.isAudioEnabled.value
+                  ? Colors.white24
+                  : Colors.orange,
+            )),
+        SizedBox(width: 20.w),
+        _controlButton(
+          icon: Iconsax.call_remove5,
+          onPressed: () async {
+            await controller.endCall();
+            Get.back();
+          },
+          color: Colors.redAccent,
+          isLarge: true,
         ),
-      );
-    });
+      ],
+    );
+  }
+
+  Widget _controlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color color,
+    bool isLarge = false,
+  }) {
+    return ZoomIn(
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          padding: EdgeInsets.all(isLarge ? 20.r : 15.r),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2)
+            ],
+          ),
+          child: Icon(icon, color: Colors.white, size: isLarge ? 30.sp : 24.sp),
+        ),
+      ),
+    );
   }
 }
