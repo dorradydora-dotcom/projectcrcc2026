@@ -10,10 +10,9 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
-import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:amiraly/core/services/call_service.dart';
 import 'package:amiraly/app/common/models/appmodels.dart' hide Event;
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
@@ -21,184 +20,7 @@ import 'package:amiraly/app/util/validators/validator_helper.dart';
 
 // --- Services Consolidated Here ---
 
-class CallNotificationService {
-  static Future<bool> sendCallNotification({
-    required String deviceToken,
-    required String title,
-    required String body,
-    required String callId,
-    required String callerName,
-    required String channelName,
-  }) async {
-    try {
-      final response = await Supabase.instance.client.functions.invoke(
-        'send-fcm',
-        body: {
-          'targetToken': deviceToken,
-          'title': title,
-          'body': body,
-          'payloadType': 'call',
-          'route': 'call',
-          'call_id': callId,
-          'caller_name': callerName,
-          'channel_name': channelName,
-          'status': 'ringing',
-          'priority': 'HIGH', // Use 'HIGH' instead of server default if it's 'highest'
-        },
-      );
-      if (response.status == 200) {
-        AppLogger.logSuccess('Call notification sent via Edge Function');
-        return true;
-      }
-      return false;
-    } catch (e, stackTrace) {
-      AppLogger.logError('Error invoking send-fcm for call', e, stackTrace);
-      return false;
-    }
-  }
-
-  static Future<bool> sendCancelNotification({
-    required String deviceToken,
-    required String callId,
-  }) async {
-    try {
-      final response = await Supabase.instance.client.functions.invoke(
-        'send-fcm',
-        body: {
-          'targetToken': deviceToken,
-          'payloadType': 'call',
-          'route': 'call',
-          'call_id': callId,
-          'status': 'ended',
-        },
-      );
-      return response.status == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-}
-
-class GlobalCallService extends GetxService {
-  static GlobalCallService get to => Get.find();
-
-  StreamSubscription? _signalingSubscription;
-  final Rx<String?> currentCallId = Rx<String?>(null);
-  final Rx<Map<String, dynamic>?> incomingCall = Rx<Map<String, dynamic>?>(null);
-
-  @override
-  void onInit() {
-    super.onInit();
-    startListening();
-    _listenToCallkitEvents();
-  }
-
-  void _listenToCallkitEvents() {
-    FlutterCallkitIncoming.onEvent.listen((event) async {
-      switch (event!.event) {
-        case Event.actionCallIncoming:
-          // Received incoming call
-          break;
-        case Event.actionCallAccept:
-          // User accepted the call from native UI
-          final data = event.body['extra'];
-          if (data != null && data['route'] == 'call') {
-            _navigateToCall({...data, 'accepted': true});
-          }
-          break;
-        case Event.actionCallDecline:
-          // User declined the call from native UI
-          final data = event.body['extra'];
-          if (data != null && data['call_id'] != null) {
-            await Supabase.instance.client
-                .from(AppConstants.tableCallsSignaling)
-                .update({'status': 'rejected'}).eq('id', data['call_id']);
-          }
-          break;
-        case Event.actionCallEnded:
-          // Call ended from native UI
-          break;
-        case Event.actionCallTimeout:
-          // Call timed out
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
-  void startListening() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
-      return;
-    }
-
-    _signalingSubscription?.cancel();
-    _signalingSubscription = Supabase.instance.client
-        .from(AppConstants.tableCallsSignaling)
-        .stream(primaryKey: ['id'])
-        .eq('receiver_id', userId)
-        .listen((List<Map<String, dynamic>> data) {
-          if (data.isNotEmpty) {
-            final now = DateTime.now();
-            final activeCall = data.firstWhere(
-              (call) {
-                if (call['status'] != 'ringing') return false;
-                final createdAtStr = call['created_at'];
-                if (createdAtStr != null) {
-                  final createdAt = DateTime.parse(createdAtStr);
-                  if (now.difference(createdAt).inSeconds.abs() > 120) {
-                    return false;
-                  }
-                }
-                return true;
-              },
-              orElse: () => {},
-            );
-
-            if (activeCall.isNotEmpty) {
-              final String callId = activeCall['id'];
-              if (currentCallId.value != callId) {
-                currentCallId.value = callId;
-                incomingCall.value = activeCall; // Update global state
-                _navigateToCall(activeCall);
-              }
-            } else {
-              // No active call, clear global state if it was ringing
-              if (incomingCall.value != null &&
-                  incomingCall.value!['status'] == 'ringing') {
-                incomingCall.value = null;
-                currentCallId.value = null;
-              }
-            }
-          } else {
-            incomingCall.value = null;
-            currentCallId.value = null;
-          }
-        }, onError: (error) {
-          debugPrint('Global signaling error: $error');
-          Future.delayed(const Duration(seconds: 10), () => startListening());
-        });
-  }
-
-  void _navigateToCall(Map<String, dynamic> callData) {
-    if (Get.currentRoute != 'Go live') {
-      Get.toNamed('Go live', arguments: {
-        'route': 'call',
-        'call_id': callData['id'],
-        'caller_id': callData['caller_id'],
-        'channel_name': callData['channel_name'],
-        'accepted': callData['accepted'] ?? false,
-      });
-    }
-  }
-
-  @override
-  void onClose() {
-    _signalingSubscription?.cancel();
-    super.onClose();
-  }
-}
+// --- Services moved to call_service.dart ---
 
 // --- Controller and UI ---
 
@@ -207,7 +29,6 @@ class GoLiveController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isAccessDenied = false.obs;
   final RxBool canInitiateCalls = false.obs;
-  final RxBool isAudioEnabled = true.obs;
   final Rx<String?> errorMessage = Rx<String?>(null);
 
   // Audio players
@@ -241,13 +62,14 @@ class GoLiveController extends GetxController {
   RtcEngine? get engine => _engine;
 
   // Persistent Controllers to prevent flickering/noise on rebuild
-  final Rx<VideoViewController?> localViewController =
-      Rx<VideoViewController?>(null);
-  final Rx<VideoViewController?> remoteViewController =
-      Rx<VideoViewController?>(null);
-
-  final Rx<int?> remoteUid = Rx<int?>(null);
-  final RxBool localUserJoined = false.obs;
+  final localUserJoined = false.obs;
+  final remoteUid = Rxn<int>();
+  final localViewController = Rxn<VideoViewController>();
+  final remoteViewController = Rxn<VideoViewController>();
+  final isLocalVideoReady = false.obs;
+  final isRemoteVideoReady = false.obs;
+  final isAudioEnabled = true.obs;
+  final isVideoEnabled = true.obs;
 
   @override
   void onInit() {
@@ -361,6 +183,8 @@ class GoLiveController extends GetxController {
   }
 
   Future<void> initializeAgora() async {
+    isLocalVideoReady.value = false;
+    isRemoteVideoReady.value = false;
     try {
       // 1. Request permissions first
       final status = await [Permission.camera, Permission.microphone].request();
@@ -384,22 +208,25 @@ class GoLiveController extends GetxController {
               debugPrint("local user ${connection.localUid} joined");
               localUserJoined.value = true;
             },
-            onUserJoined: (RtcConnection connection, int uid, int elapsed) {
-              debugPrint("remote user $uid joined");
-              remoteUid.value = uid;
+            onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+              debugPrint("Remote user $remoteUid joined");
+              this.remoteUid.value = remoteUid;
               remoteViewController.value = VideoViewController.remote(
                 rtcEngine: _engine!,
-                canvas: VideoCanvas(uid: uid),
+                canvas: VideoCanvas(
+                  uid: remoteUid,
+                  renderMode: RenderModeType.renderModeHidden,
+                ),
                 connection: connection,
               );
               stopRinging();
-              playConnect();
             },
             onUserOffline: (RtcConnection connection, int uid,
                 UserOfflineReasonType reason) {
-              debugPrint("remote user $uid left channel");
+              debugPrint("Remote user $uid left: $reason");
               remoteUid.value = null;
               remoteViewController.value = null;
+              isRemoteVideoReady.value = false;
             },
             onError: (ErrorCodeType err, String msg) {
               debugPrint('Agora Error: $err, $msg');
@@ -416,10 +243,16 @@ class GoLiveController extends GetxController {
                 'خطأ في الاتصال',
                 userFriendlyError,
                 snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.red.withValues(alpha: 0.8),
+                backgroundColor: Colors.red.withOpacity(0.8),
                 colorText: Colors.white,
                 duration: const Duration(seconds: 5),
               );
+            },
+            onLocalVideoStateChanged: (VideoSourceType source, LocalVideoStreamState state, LocalVideoStreamReason reason) {
+              debugPrint('Local Video State: $state, Reason: $reason');
+            },
+            onFirstLocalVideoFrame: (VideoSourceType source, int width, int height, int elapsed) {
+              debugPrint('First local video frame: ${width}x${height}');
             },
           ),
         );
@@ -465,20 +298,30 @@ class GoLiveController extends GetxController {
         await _engine!.stopPreview();
       } catch (_) {}
 
-      // 6. Setup local view controller with SurfaceView (Hybrid Composition)
+      // 6. Start preview FIRST to prime the camera
+      await _engine!.startPreview();
+
+      // 7. Explicitly setup local video
+      await _engine!.setupLocalVideo(const VideoCanvas(
+          uid: 0,
+          renderMode: RenderModeType.renderModeHidden,
+          mirrorMode: VideoMirrorModeType.videoMirrorModeAuto,
+      ));
+
+      // 8. Setup local view controller (SurfaceView is more stable for full-screen)
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
         canvas: const VideoCanvas(
           uid: 0,
           renderMode: RenderModeType.renderModeHidden,
         ),
-        useAndroidSurfaceView: true, // Use SurfaceView for better stability
+        useAndroidSurfaceView: true,
       );
-
-      // 4. Start preview
-      await _engine!.startPreview();
-      debugPrint(
-          "!!! Agora preview started successfully (Hybrid Composition) !!!");
+      
+      // Give the hardware a moment to stabilize the frame
+      await Future.delayed(const Duration(milliseconds: 300));
+      
+      debugPrint("!!! Agora preview started and primed successfully !!!");
     } catch (e) {
       debugPrint('Error initializing Agora: $e');
       rethrow;
@@ -1184,42 +1027,24 @@ class UsersPage extends StatelessWidget {
 
   Future<void> _handleStartCall(BuildContext context,
       GoLiveController controller, String receiverId) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Center(
-        child: SpinKitCubeGrid(color: Appcolors.secondaryColor, size: 50.r),
-      ),
+    // 1. Navigate immediately to VideoCallPage (Messenger Style)
+    Get.to(
+      () => VideoCallPage(
+          controller: controller,
+          channelName: controller.currentUserId ?? 'g-live'),
     );
 
     try {
-      // 1. Initialize Agora and Start Preview (Fast)
+      // 2. Initialize Agora in the background while the user is on the VideoCallPage
       await controller.initializeAgora();
       
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        controller.playRinging();
-        
-        // 2. Navigate immediately to VideoCallPage
-        Get.to(
-          () => VideoCallPage(
-              controller: controller,
-              channelName: controller.currentUserId ?? 'g-live'),
-        );
-        
-        // 3. Trigger notification and join in background
-        unawaited(() async {
-          try {
-            await controller.makeCall(receiverId);
-            await controller.joinChannel(controller.currentUserId ?? 'g-live');
-          } catch (e) {
-             debugPrint('Background Call Join Error: $e');
-          }
-        }());
-      }
+      // 3. Start ringing and trigger the call
+      controller.playRinging();
+      await controller.makeCall(receiverId);
+      await controller.joinChannel(controller.currentUserId ?? 'g-live');
     } catch (e) {
+      Get.back(); // Return to users page on failure
       if (context.mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('فشل بدء المكالمة: $e')),
         );
@@ -1469,7 +1294,7 @@ class VideoCallPage extends StatelessWidget {
             Obx(() {
               // Only show the small box if remote user IS present
               if (controller.localViewController.value != null &&
-                  controller.remoteUid.value != null) {
+                  controller.isRemoteVideoReady.value) {
                 return Positioned(
                   top: 100,
                   right: 20,
@@ -1482,8 +1307,7 @@ class VideoCallPage extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.3), width: 2),
                     ),
                     child: AgoraVideoView(
-                      key: const ValueKey(
-                          'local_preview_key'), // Stable key to prevent native flickering
+                      key: ValueKey('corner_preview_${controller.localViewController.value.hashCode}'),
                       controller: controller.localViewController.value!,
                     ),
                   ),
@@ -1592,49 +1416,57 @@ class VideoCallPage extends StatelessWidget {
 
   Widget _remoteVideo(GoLiveController controller) {
     return Obx(() {
+      // 1. Show Remote Video if it's joined AND starting to stream
       if (controller.remoteViewController.value != null &&
-          controller.remoteUid.value != null) {
+          controller.isRemoteVideoReady.value) {
         return SizedBox.expand(
           child: AgoraVideoView(
+            key: ValueKey('remote_bg_${controller.remoteViewController.value.hashCode}'),
             controller: controller.remoteViewController.value!,
           ),
         );
-      } else if (controller.localViewController.value != null) {
-        // Show local video as background until remote joins
+      }
+      
+      // 2. Otherwise show Local Video full screen (as background) 
+      // ONLY if the engine says the local frame is ready
+      if (controller.localViewController.value != null && 
+          controller.isLocalVideoReady.value) {
         return SizedBox.expand(
           child: AgoraVideoView(
+            key: ValueKey('local_bg_${controller.localViewController.value.hashCode}'),
             controller: controller.localViewController.value!,
           ),
         );
-      } else {
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SpinKitRipple(
-                color: Colors.white.withValues(alpha: 0.3),
-                size: 100.r,
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                'بانتظار انضمام المحــطة',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14.sp,
-                  fontFamily: Appfontstring.ChangaLight,
-                ),
-              ),
-            ],
-          ),
-        );
       }
+      
+      // 3. Last fallback: Premium Gradient Background
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SpinKitRipple(
+              color: Colors.white.withOpacity(0.3),
+              size: 100.r,
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'بانتظار انضمام المحــطة',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 14.sp,
+                fontFamily: Appfontstring.ChangaLight,
+              ),
+            ),
+          ],
+        ),
+      );
     });
   }
 }
