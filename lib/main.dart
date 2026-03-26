@@ -40,25 +40,22 @@ Future<void> _initializeHeavyServicesInBackground() async {
   try {
     AppLogger.logInfo('🔄 Starting background services initialization...');
 
-    // 1. تحميل البيئة أولاً لأنها مطلوبة لـ Supabase و Firebase
-    await dotenv.load(fileName: ".env");
-    await Future.delayed(Duration.zero);
-
-    // 2. تهيئة Firebase قبل أي تعامل مع الرسائل
+    // 1. تشغيل المهام المستقلة بالتوازي
+    await Future.wait([
+      dotenv.load(fileName: ".env"),
+      initializeDateFormatting('ar', null),
+    ]);
+    
+    // 2. تهيئة Firebase بعد تحميل الـ .env
     await Firebase.initializeApp();
-    await Future.delayed(Duration.zero);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // 3. تهيئة باقي الخدمات
-    await initializeDateFormatting('ar', null);
-    await Future.delayed(Duration.zero);
+    // 3. تهيئة الخدمات التي تعتمد على بعضها بالتتابع ولكن مع فواصل Frames
     await _initializeSupabaseInBackground();
-    await Future.delayed(Duration.zero);
     await _setupNotificationsInBackground();
 
     // 4. تهيئة WebView في الخلفية (للتطوير فقط)
     if (!kReleaseMode) {
-      await Future.delayed(Duration.zero);
       await InAppWebViewController.setWebContentsDebuggingEnabled(true);
       AppLogger.logInfo('✅ WebView debugging setup completed in background');
     }
@@ -66,6 +63,7 @@ Future<void> _initializeHeavyServicesInBackground() async {
     _isServicesInitialized = true;
     _servicesInitializedCompleter.complete();
     AppLogger.logSuccess('✅ All background services initialized');
+
   } catch (e, stackTrace) {
     AppLogger.logError('❌ Background initialization failed', e, stackTrace);
     _servicesInitializedCompleter.completeError(e);

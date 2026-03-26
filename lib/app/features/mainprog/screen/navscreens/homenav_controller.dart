@@ -83,6 +83,16 @@ class HomenavcontrollerImp extends Homenavcontroller {
   void onInit() {
     _stationController = Get.find<StationLoadController>();
     super.onInit();
+    _updateCurrentDate();
+    _startLoadVariationTimer();
+    // ✅ تأجيل جلب الأخبار لبعد ما الـ UI يتبنى كاملاً
+    SchedulerBinding.instance.addPostFrameCallback((_) => fetchNews());
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // ✅ العمليات الثقيلة والـ Networking تبدأ بعد ظهور الواجهة
     _checkInitialConnectivity();
     _connectivitySubscription = Connectivity()
         .onConnectivityChanged
@@ -91,11 +101,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
     });
     _loadCachedWeather();
     _initializeData();
-    _startLoadVariationTimer();
-    _updateCurrentDate();
-    // ✅ تأجيل جلب الأخبار لبعد ما الـ UI يتبنى كاملاً
-    SchedulerBinding.instance.addPostFrameCallback((_) => fetchNews());
   }
+
+
 
   void _updateCurrentDate() {
     final now = DateTime.now();

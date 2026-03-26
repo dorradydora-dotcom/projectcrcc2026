@@ -64,13 +64,21 @@ class StationLoadController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _checkPermissions();
+    // 1. فقط تحميل الاتجاهات (Directions) من SharedPreferences لأنها سريعة ومطلوبة للرسم
     _loadDirections();
+    _initAuthListener();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // 2. العمليات الثقيلة (Fetched/Realtime) تبدأ بعد ظهور الواجهة للمستخدم
+    _checkPermissions();
     _initializeData();
     _initRealtimeSubscription();
-    _initAuthListener();
     _initHeartbeat();
   }
+
 
   void _initHeartbeat() {
     _heartbeatSubscription = HeartbeatService.instance.onTick.listen((tick) {
