@@ -562,12 +562,10 @@ class LoginControllerImp extends LoginController {
           }
 
           await Future.delayed(const Duration(milliseconds: 500));
-          // تحرير الـ LoginControllerImp من الذاكرة قبل الانتقال
-          Get.delete<LoginControllerImp>();
+          // إزالة Get.delete لتفادي مشكلة dispose قبل انتهاء الانتقال
           await gotohomepage();
         } else {
           AppLogger.logWarning('User found but token not saved to any table');
-          Get.delete<LoginControllerImp>();
           await gotohomepage();
         }
       } catch (e) {

@@ -46,7 +46,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
   late final StationLoadController _stationController;
   RxList<StationLoad> get _stationLoads => _stationController.stationLoads;
   final RxString _userGroup = 'none'.obs;
-  final RxBool isLoading = false.obs;
+  final RxBool isLoading = true.obs;
   final RxBool isOffline = false.obs;
   final RxString userEmail = 'جاري التحميل...'.obs;
   final RxString currentDate = ''.obs;
@@ -85,6 +85,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
     super.onInit();
     _updateCurrentDate();
     _startLoadVariationTimer();
+    // ✅ جلب الكاش والتحقق من الاتصال فوراً في onInit
+    _loadCachedWeather();
+    _checkInitialConnectivity();
     // ✅ تأجيل جلب الأخبار لبعد ما الـ UI يتبنى كاملاً
     SchedulerBinding.instance.addPostFrameCallback((_) => fetchNews());
   }
@@ -93,17 +96,13 @@ class HomenavcontrollerImp extends Homenavcontroller {
   void onReady() {
     super.onReady();
     // ✅ العمليات الثقيلة والـ Networking تبدأ بعد ظهور الواجهة
-    _checkInitialConnectivity();
     _connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
       _updateConnectionStatus(results);
     });
-    _loadCachedWeather();
     _initializeData();
   }
-
-
 
   void _updateCurrentDate() {
     final now = DateTime.now();
@@ -141,7 +140,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
       final email = Get.find<AuthService>().getCurrentUserEmail();
       userEmail.value = email ?? 'مستخدم';
 
-      // ✅ بدون fetchNews() - متأجل لبعد الـ UI
+      // ✅ تأخير لمدة 3 ثوانٍ لضمان استقرار الواجهة وظهور الـ Loading
+      await Future.delayed(const Duration(seconds: 4));
+
       await Future.wait([
         checkUserGroup(),
         fetchCategories(),

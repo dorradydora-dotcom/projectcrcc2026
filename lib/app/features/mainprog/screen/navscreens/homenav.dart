@@ -222,6 +222,12 @@ class _HomeNavState extends State<HomeNav> {
   Widget _buildCategoryList() {
     final categories = _controller.categories;
     if (categories.isEmpty) {
+      if (_controller.isLoading.value) {
+        return SizedBox(
+          height: 100.h,
+          child: const Center(child: ElectricLoadingIndicator(size: 30)),
+        );
+      }
       return SizedBox(
         height: 90.h,
         child: const Center(child: Text(Stringshomenav.noCategories)),
@@ -303,6 +309,12 @@ class _HomeNavState extends State<HomeNav> {
   Widget _buildCarousel() {
     final announcImages = _controller.announcImages;
     if (announcImages.isEmpty) {
+      if (_controller.isLoading.value) {
+        return SizedBox(
+          height: 170.h,
+          child: const Center(child: ElectricLoadingIndicator(size: 35)),
+        );
+      }
       return const Padding(
         padding: EdgeInsets.all(7.5),
         child: Center(child: Text(Stringshomenav.noImages)),
@@ -411,6 +423,12 @@ class _HomeNavState extends State<HomeNav> {
   Widget _buildWeatherSection() {
     final weatherData = _controller.weatherData;
     if (weatherData.isEmpty) {
+      if (_controller.isLoading.value) {
+        return SizedBox(
+          height: 80.h,
+          child: const Center(child: ElectricLoadingIndicator(size: 30)),
+        );
+      }
       return _buildErrorWidget(
         error: Stringshomenav.noWeatherData,
         onRetry: _controller.refreshWeather,
@@ -519,6 +537,12 @@ class _HomeNavState extends State<HomeNav> {
   Widget _buildStationSections() {
     final stationData = _controller.stationLoads;
     if (stationData.isEmpty) {
+      if (_controller.isLoading.value) {
+        return SizedBox(
+          height: 150.h,
+          child: const Center(child: ElectricLoadingIndicator(size: 40)),
+        );
+      }
       return const Padding(
         padding: EdgeInsets.all(5.5),
         child: Center(child: Text(Stringshomenav.noStationData)),
@@ -596,14 +620,28 @@ class _HomeNavState extends State<HomeNav> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Failed to load',
+              error.isNotEmpty ? error : 'فشل في تحميل البيانات',
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 16.sp,
+                fontSize: 14.sp,
+                fontFamily: Appfontstring.ChangaLight,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
-            )
+            ),
+            SizedBox(height: 8.h),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: Icon(Icons.refresh, size: 18.sp, color: Colors.blueAccent),
+              label: Text(
+                'إعادة المحاولة',
+                style: TextStyle(
+                  color: Colors.blueAccent,
+                  fontSize: 12.sp,
+                  fontFamily: Appfontstring.ChangaLight,
+                ),
+              ),
+            ),
           ],
         ),
       ),

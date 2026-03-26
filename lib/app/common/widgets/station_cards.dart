@@ -175,7 +175,8 @@ class HeaderVerticalProduct extends StatelessWidget {
           placeholder: (context, url) => Container(
             color: Colors.white.withOpacity(0.05),
             child: const Center(
-                child: ElectricLoadingIndicator(size: 20, color: Colors.white24)),
+                child:
+                    ElectricLoadingIndicator(size: 20, color: Colors.white24)),
           ),
         ),
       ),
@@ -216,14 +217,19 @@ class BodyVerticalProduct extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TxtName(station: station),
-        SizedBox(height: 6.h),
-        TxtDescription(station: station),
-      ],
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TxtName(station: station),
+            SizedBox(height: 6.h),
+            TxtDescription(station: station),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -263,18 +269,16 @@ class TxtDescription extends StatelessWidget {
       children: [
         Icon(Iconsax.location, color: const Color(0xFF0ED2D2), size: 10.sp),
         SizedBox(width: 4.w),
-        Flexible(
-          child: Text(
-            station.zone,
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontFamily: Appfontstring.ChangaLight,
-              color: Colors.white.withOpacity(0.55),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
+        Text(
+          station.zone,
+          style: TextStyle(
+            fontSize: 10.sp,
+            fontFamily: Appfontstring.ChangaLight,
+            color: Colors.white.withOpacity(0.55),
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.right,
         ),
       ],
     );

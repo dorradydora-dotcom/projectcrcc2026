@@ -217,7 +217,7 @@ class __HomePageContentState extends State<_HomePageContent>
 
   @override
   Widget build(BuildContext context) {
-    final double height = 57.h;
+    final double height = 53.h;
 
     return PopScope(
       canPop: false,
@@ -307,7 +307,7 @@ class __HomePageContentState extends State<_HomePageContent>
         child: _buildNavigationIcon(item, isSelected),
         label: item.label,
         labelStyle: TextStyle(
-          fontSize: 12.sp,
+          fontSize: 10.sp,
           fontFamily: Appfontstring.ChangaLight,
           color: Colors.white,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -340,7 +340,7 @@ class __HomePageContentState extends State<_HomePageContent>
           child: Icon(
             item.icon,
             color: Colors.white,
-            size: 22.sp,
+            size: 20.sp,
           ),
         ),
       ),
