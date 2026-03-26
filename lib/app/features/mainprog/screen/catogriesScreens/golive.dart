@@ -58,8 +58,6 @@ class GoLiveController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkAccess();
-    fetchUsers();
 
     ever(GlobalCallService.to.incomingCall, (call) {
       if (call != null && call['status'] == 'ringing') {
@@ -68,6 +66,13 @@ class GoLiveController extends GetxController {
         stopRinging();
       }
     });
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    checkAccess();
+    fetchUsers();
   }
 
   Future<void> fetchUsers() async {
@@ -174,7 +179,7 @@ class GoLiveController extends GetxController {
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
         canvas: const VideoCanvas(uid: 0),
-        useAndroidSurfaceView: true,
+        useFlutterTexture: true,
       );
     } catch (e) {
       debugPrint('Agora Error: $e');
@@ -922,7 +927,7 @@ class VideoCallPage extends StatelessWidget {
                         uid: controller.remoteUid.value!,
                         renderMode: RenderModeType.renderModeHidden),
                     connection: RtcConnection(channelId: channelName),
-                    useAndroidSurfaceView: true,
+                    useFlutterTexture: true,
                   ),
                 );
               }

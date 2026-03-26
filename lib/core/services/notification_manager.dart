@@ -89,6 +89,30 @@ class NotificationManager {
         onDidReceiveNotificationResponse: _handleNotificationTap,
       );
 
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        debugPrint('🔥 [Foreground Message] Received: ${message.messageId}');
+        final route = message.data['route'];
+        if (route == 'call') {
+          final status = message.data['status'];
+          if (status == 'ended' || status == 'rejected') {
+            final callId = message.data['call_id'];
+            if (callId != null) {
+              await FlutterCallkitIncoming.endCall(callId);
+            } else {
+              await FlutterCallkitIncoming.endAllCalls();
+            }
+            return;
+          }
+          await showCallKit(message.data);
+        } else {
+          final title = message.data['title'] ?? message.notification?.title;
+          final body = message.data['body'] ?? message.notification?.body;
+          if (title != null && body != null) {
+            await show(title, body, message.messageId, route: route, data: message.data);
+          }
+        }
+      });
+
       _isInitialized = true;
       AppLogger.logSuccess('🔔 Local notifications initialized');
     } catch (e, stackTrace) {

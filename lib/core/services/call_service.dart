@@ -75,6 +75,15 @@ class GlobalCallService extends GetxService {
   @override
   void onInit() {
     super.onInit();
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session?.user != null) {
+        startListening();
+      } else {
+        _signalingSubscription?.cancel();
+        incomingCall.value = null;
+        currentCallId.value = null;
+      }
+    });
     startListening();
     _listenToCallkitEvents();
   }
