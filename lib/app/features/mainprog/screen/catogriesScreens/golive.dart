@@ -35,8 +35,6 @@ class CallNotificationService {
         'send-fcm',
         body: {
           'targetToken': deviceToken,
-          'title': title,
-          'body': body,
           'payloadType': 'call',
           'route': 'call',
           'call_id': callId,
@@ -44,6 +42,7 @@ class CallNotificationService {
           'channel_name': channelName,
           'status': 'ringing',
           'priority': 'HIGH',
+          'timestamp': DateTime.now().toUtc().toIso8601String(),
         },
       );
       
@@ -87,6 +86,19 @@ class CallNotificationService {
     try {
       debugPrint('📞 [CallNotificationService] handleCallNotification received data: $data');
       final status = data['status'];
+
+      final timestampStr = data['timestamp'];
+      if (timestampStr != null) {
+        final createdAt = DateTime.tryParse(timestampStr);
+        if (createdAt != null) {
+           final diff = DateTime.now().toUtc().difference(createdAt).inSeconds.abs();
+           if (diff > 60) {
+             debugPrint('📞 [CallNotificationService] Call notification is too old ($diff s). Ignoring.');
+             return;
+           }
+        }
+      }
+
       if (status == 'ended' || status == 'rejected') {
         debugPrint('📞 [CallNotificationService] Status is $status, ending CallKit.');
         final callId = data['call_id'];
@@ -172,6 +184,23 @@ class GlobalCallService extends GetxService {
     _listenToCallkitEvents();
   }
 
+  void _handleCallNavigation(GoLiveController controller, String channelName) {
+    final String currentRoute = Get.currentRoute;
+    final bool isSplash = currentRoute == '/' || 
+        currentRoute == '/SplashScreen' || 
+        currentRoute == '' || 
+        currentRoute.contains('Splash');
+    
+    if (isSplash) {
+       Future.delayed(const Duration(milliseconds: 500), () {
+           _handleCallNavigation(controller, channelName);
+       });
+    } else {
+       Get.to(() => VideoCallPage(controller: controller, channelName: channelName),
+           transition: Transition.noTransition);
+    }
+  }
+
   void _listenToCallkitEvents() {
     FlutterCallkitIncoming.onEvent.listen((event) async {
       switch (event!.event) {
@@ -179,16 +208,13 @@ class GlobalCallService extends GetxService {
           break;
         case callkit.Event.actionCallAccept:
           final data = event.body['extra'];
-          if (data != null && data['route'] == 'call') {
+          if (data != null && (data['route'] == 'call' || data['call_id'] != null)) {
             final callId = data['call_id'];
             final channelName = data['channel_name'] ?? callId;
             if (callId != null) {
               final controller = Get.put(GoLiveController(), permanent: true);
               controller.respondToCall(callId, true, channelName);
-              Future.delayed(const Duration(milliseconds: 500), () {
-                Get.to(() => VideoCallPage(
-                    controller: controller, channelName: channelName));
-              });
+              _handleCallNavigation(controller, channelName);
             }
           }
           break;
@@ -226,14 +252,13 @@ class GlobalCallService extends GetxService {
         .listen((List<Map<String, dynamic>> data) {
           debugPrint('📞 [GlobalCallService] Stream updated. Rows count: ${data.length}');
           if (data.isNotEmpty) {
-            final now = DateTime.now();
             final activeCall = data.firstWhere(
               (call) {
                 if (call['status'] != 'ringing') return false;
                 final createdAtStr = call['created_at'];
                 if (createdAtStr != null) {
-                  final createdAt = DateTime.parse(createdAtStr);
-                  if (now.difference(createdAt).inSeconds.abs() > 60) {
+                  final createdAt = DateTime.parse(createdAtStr).toUtc();
+                  if (DateTime.now().toUtc().difference(createdAt).inSeconds.abs() > 60) {
                     debugPrint('📞 [GlobalCallService] Ignoring call ${call['id']} (older than 60s).');
                     return false;
                   }
@@ -628,9 +653,32 @@ class GoLiveController extends GetxController {
   Future<void> endCall() async {
     _callTimeoutTimer?.cancel();
     if (currentCallId.value != null) {
+      final callId = currentCallId.value!;
+      
+      final callData = await Supabase.instance.client
+          .from(AppConstants.tableCallsSignaling)
+          .select('receiver_id, caller_id')
+          .eq('id', callId)
+          .maybeSingle();
+
       await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
-          .update({'status': 'ended'}).eq('id', currentCallId.value!);
+          .update({'status': 'ended'}).eq('id', callId);
+
+      if (callData != null) {
+         final receiverId = callData['receiver_id'];
+         final callerId = callData['caller_id'];
+         final targetUserId = currentUserId == callerId ? receiverId : callerId;
+         if (targetUserId != null) {
+             final targetToken = await _getReceiverToken(targetUserId.toString());
+             if (targetToken != null) {
+                 CallNotificationService.sendCancelNotification(
+                     deviceToken: targetToken,
+                     callId: callId,
+                 );
+             }
+         }
+      }
     }
     stopRinging();
     playHangup();
@@ -1049,7 +1097,7 @@ class UsersPage extends StatelessWidget {
     Get.to(
       () => VideoCallPage(
           controller: controller,
-          channelName: controller.currentUserId ?? 'g-live'),
+          channelName: receiverId),
     );
 
     try {

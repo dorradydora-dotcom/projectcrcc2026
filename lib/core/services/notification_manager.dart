@@ -23,8 +23,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     final String body =
         message.data['body'] ?? message.notification?.body ?? '';
     final String? route = message.data['route'];
+    final bool isCall = route == 'call' || message.data['call_id'] != null;
 
-    if (route == 'call') {
+    if (isCall) {
       debugPrint('🔥 [Background Message] Call route detected');
       await CallNotificationService.handleCallNotification(message.data);
       return;
@@ -80,7 +81,8 @@ class NotificationManager {
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
         debugPrint('🔥 [Foreground Message] Received: ${message.messageId}');
         final route = message.data['route'];
-        if (route == 'call') {
+        final bool isCall = route == 'call' || message.data['call_id'] != null;
+        if (isCall) {
           await CallNotificationService.handleCallNotification(message.data);
         } else {
           final title = message.data['title'] ?? message.notification?.title;

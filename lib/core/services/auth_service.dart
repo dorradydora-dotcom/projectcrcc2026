@@ -112,8 +112,9 @@ class AuthService extends GetxController {
         final String title = message.data['title'] ?? 'تعليمات طارئة';
         final String body = message.data['body'] ?? '';
         final String? route = message.data['route'];
+        final bool isCall = route == 'call' || message.data['call_id'] != null;
 
-        if (route == 'call') {
+        if (isCall) {
           CallNotificationService.handleCallNotification(message.data);
           return;
         }
