@@ -170,9 +170,9 @@ class OnboardingContent extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.1),
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.9),
+                    Colors.black.withValues(alpha: 0.1),
+                    Colors.black.withValues(alpha: 0.4),
+                    Colors.black.withValues(alpha: 0.9),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
@@ -190,7 +190,7 @@ class OnboardingContent extends StatelessWidget {
                   radius: 1.0,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withValues(alpha: 0.3),
                   ],
                 ),
               ),
@@ -231,11 +231,11 @@ class OnboardingContent extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontFamily: Appfontstring.ChangaLight,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       height: 1.5,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           offset: const Offset(0, 1),
                           blurRadius: 2,
                         ),
@@ -333,7 +333,7 @@ class OnboardingNextButton extends StatelessWidget {
             shape: const CircleBorder(),
             padding: EdgeInsets.all(16.w),
             elevation: 10,
-            shadowColor: Colors.blue.withOpacity(0.4),
+            shadowColor: Colors.blue.withValues(alpha: 0.4),
           ),
           child: Icon(
             Iconsax.arrow_right_3,

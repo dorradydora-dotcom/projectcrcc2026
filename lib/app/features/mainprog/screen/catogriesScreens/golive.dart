@@ -140,10 +140,12 @@ class GoLiveController extends GetxController {
     isRemoteVideoReady.value = false;
     try {
       final status = await [Permission.camera, Permission.microphone].request();
-      if (status[Permission.camera] != PermissionStatus.granted)
+      if (status[Permission.camera] != PermissionStatus.granted) {
         throw 'صلاحية الكاميرا مطلوبة';
-      if (status[Permission.microphone] != PermissionStatus.granted)
+      }
+      if (status[Permission.microphone] != PermissionStatus.granted) {
         throw 'صلاحية الميكروفون مطلوبة';
+      }
 
       if (_engine == null) {
         _engine = createAgoraRtcEngine();
@@ -248,8 +250,9 @@ class GoLiveController extends GetxController {
             .select('station_name')
             .eq('id', userId)
             .maybeSingle();
-        if (data?['station_name'] != null)
+        if (data?['station_name'] != null) {
           return data!['station_name'] as String;
+        }
       } catch (_) {}
     }
     return 'محطة';
@@ -615,22 +618,24 @@ class UsersPage extends StatelessWidget {
                                                           decoration:
                                                               BoxDecoration(
                                                             color: Colors.blue
-                                                                .withOpacity(
-                                                                    0.2),
+                                                                .withValues(
+                                                                    alpha: 0.2),
                                                             shape:
                                                                 BoxShape.circle,
                                                             border: Border.all(
                                                                 color: Colors
                                                                     .blue
-                                                                    .withOpacity(
-                                                                        0.5),
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.5),
                                                                 width: 1),
                                                             boxShadow: [
                                                               BoxShadow(
                                                                 color: Colors
                                                                     .blue
-                                                                    .withOpacity(
-                                                                        0.3),
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.3),
                                                                 blurRadius: 8,
                                                                 spreadRadius: 1,
                                                               ),
@@ -763,7 +768,7 @@ class UsersPage extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             child: Center(
               child: ZoomIn(
                 child: Container(
@@ -943,7 +948,7 @@ class VideoCallPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SpinKitRipple(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       size: 100.r,
                     ),
                     SizedBox(height: 24.h),

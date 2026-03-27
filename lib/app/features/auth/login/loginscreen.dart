@@ -689,7 +689,7 @@ class CustomTextFormFieldloginState extends State<CustomTextFormFieldlogin> {
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: Colors.black.withOpacity(0.2),
+        fillColor: Colors.black.withValues(alpha: 0.2),
         contentPadding: EdgeInsets.symmetric(
           horizontal: 20.w,
           vertical: 16.h,
@@ -741,7 +741,7 @@ class LoginButton extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             blurRadius: 10.r,
             spreadRadius: 1.r,
           ),

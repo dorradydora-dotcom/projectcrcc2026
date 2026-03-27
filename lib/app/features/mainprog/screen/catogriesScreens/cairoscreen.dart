@@ -283,7 +283,7 @@ class _CairoscreenState extends State<Cairoscreen> {
                 fontFamily: Appfontstring.digital,
                 fontFamilyFallback: const [Appfontstring.ChangaLight],
                 fontSize: 7.sp,
-                color: const Color(0xFF00E5FF).withOpacity(0.3),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -368,9 +368,9 @@ class _CairoscreenState extends State<Cairoscreen> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.1),
+            color: Colors.amber.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.amber.withOpacity(0.2)),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

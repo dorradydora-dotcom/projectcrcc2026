@@ -95,8 +95,8 @@ class _WorldScreenState extends State<WorldScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF0F172A).withOpacity(0.9),
-                const Color(0xFF0F172A).withOpacity(0.0),
+                const Color(0xFF0F172A).withValues(alpha: 0.9),
+                const Color(0xFF0F172A).withValues(alpha: 0.0),
               ],
             ),
           ),
@@ -112,7 +112,7 @@ class _WorldScreenState extends State<WorldScreen>
       }
       return Positioned.fill(
         child: Container(
-          color: const Color(0xFF0F172A).withOpacity(0.8),
+          color: const Color(0xFF0F172A).withValues(alpha: 0.8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -168,9 +168,9 @@ class _WorldScreenState extends State<WorldScreen>
                   padding: EdgeInsets.all(24.w),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.2), width: 2),
+                        color: Colors.redAccent.withValues(alpha: 0.2), width: 2),
                   ),
                   child: Icon(Icons.wifi_off_rounded,
                       size: 60.sp, color: Colors.redAccent),
@@ -206,7 +206,7 @@ class _WorldScreenState extends State<WorldScreen>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.r)),
                     elevation: 10,
-                    shadowColor: const Color(0xFF38BDF8).withOpacity(0.4),
+                    shadowColor: const Color(0xFF38BDF8).withValues(alpha: 0.4),
                   ),
                 ),
               ],

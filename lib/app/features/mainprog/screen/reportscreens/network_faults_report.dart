@@ -28,7 +28,7 @@ class NetworkFaultsReportScreen extends StatelessWidget {
                   onPressed: controller.isGeneratingPdf.value
                       ? null
                       : controller.generateAndSharePdf,
-                  backgroundColor: Colors.white.withOpacity(0.15),
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
                   mini: true,
                   heroTag: 'pdfFAB_NetFaults',
                   child: controller.isGeneratingPdf.value
@@ -78,10 +78,10 @@ class NetworkFaultsReportScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                             horizontal: 16.w, vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20.r),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.1)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           children: [
@@ -168,9 +168,9 @@ class NetworkFaultsReportScreen extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 6.h),
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -180,7 +180,7 @@ class NetworkFaultsReportScreen extends StatelessWidget {
                 width: 24.w,
                 height: 24.w,
                 decoration: BoxDecoration(
-                  color: Colors.redAccent.withOpacity(0.1),
+                  color: Colors.redAccent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -244,7 +244,7 @@ class NetworkFaultsReportScreen extends StatelessWidget {
               }),
             ],
           ),
-          Divider(color: Colors.white.withOpacity(0.05), height: 6.h),
+          Divider(color: Colors.white.withValues(alpha: 0.05), height: 6.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -286,7 +286,7 @@ class NetworkFaultsReportScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(5.r),
       ),
       child: Row(
@@ -469,8 +469,8 @@ class NetworkFaultsReportScreen extends StatelessWidget {
 
   Widget _buildShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.1),
-      highlightColor: Colors.white.withOpacity(0.3),
+      baseColor: Colors.white.withValues(alpha: 0.1),
+      highlightColor: Colors.white.withValues(alpha: 0.3),
       child: ListView.builder(
         itemCount: 10,
         itemBuilder: (_, __) => Container(

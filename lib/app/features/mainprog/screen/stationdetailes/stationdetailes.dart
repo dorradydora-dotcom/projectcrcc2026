@@ -104,7 +104,7 @@ class StationDetailsPage extends StatelessWidget {
             borderRadius: kCardBorderRadius,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 12.r,
                 offset: Offset(0, 6.h),
               ),
@@ -214,7 +214,7 @@ class StationDetailsPage extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: kPrimaryColor.withOpacity(0.1),
+              color: kPrimaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Icon(icon, color: kPrimaryColor, size: 20.sp),
@@ -293,7 +293,7 @@ class StationDetailsPage extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 5.h),
             shape: RoundedRectangleBorder(borderRadius: kCardBorderRadius),
             elevation: 5,
-            shadowColor: Colors.black.withOpacity(0.25),
+            shadowColor: Colors.black.withValues(alpha: 0.25),
           ),
         ),
       ),

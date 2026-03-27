@@ -74,7 +74,7 @@ class _HomeNavState extends State<HomeNav> {
                 if (_controller.isOffline.value)
                   SliverToBoxAdapter(
                     child: Container(
-                      color: Colors.redAccent.withOpacity(0.1),
+                      color: Colors.redAccent.withValues(alpha: 0.1),
                       padding: EdgeInsets.symmetric(vertical: 4.h),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +130,7 @@ class _HomeNavState extends State<HomeNav> {
               child: Icon(
                 Iconsax.flash5,
                 size: 110.sp,
-                color: Colors.white.withOpacity(0.09),
+                color: Colors.white.withValues(alpha: 0.09),
               ),
             ),
             Column(
@@ -155,14 +155,14 @@ class _HomeNavState extends State<HomeNav> {
                         icon: Icons.bolt,
                         velocity: -40.0,
                         backgroundColor: const Color.fromARGB(255, 193, 118, 6)
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                       ),
                       NewsTicker(
                         news: tNews,
                         title: 'تكنولوجيا',
                         icon: Icons.biotech,
                         velocity: -25.0,
-                        backgroundColor: Colors.blue.withOpacity(0.05),
+                        backgroundColor: Colors.blue.withValues(alpha: 0.05),
                       ),
                     ],
                   );
@@ -207,7 +207,7 @@ class _HomeNavState extends State<HomeNav> {
               padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 3.h),
               margin: EdgeInsets.only(left: 10.w),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(color: Colors.white10),
               ),
@@ -330,8 +330,8 @@ class _HomeNavState extends State<HomeNav> {
               EdgeInsets.only(top: 10.h, bottom: 10.h, left: 2.w, right: 2.w),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16.r),
-              color: Colors.white.withOpacity(0.1),
-              border: Border.all(color: Colors.white.withOpacity(0.12))),
+              color: Colors.white.withValues(alpha: 0.1),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12))),
           child: Column(
             children: [
               ClipRRect(
@@ -406,7 +406,7 @@ class _HomeNavState extends State<HomeNav> {
                       backgroundColor:
                           _controller.currentCarouselIndex.value == i
                               ? Colors.blueAccent
-                              : Colors.white.withOpacity(0.3),
+                              : Colors.white.withValues(alpha: 0.3),
                       radius: 50.r,
                       margin: EdgeInsets.symmetric(horizontal: 2.w),
                     ),
@@ -483,16 +483,16 @@ class _HomeNavState extends State<HomeNav> {
                 padding: EdgeInsets.all(2.w),
                 decoration: BoxDecoration(
                   color: isCurrent
-                      ? const Color(0xFF1E293B).withOpacity(0.6)
-                      : Colors.white.withOpacity(0.03),
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
                     width: 1,
-                    color: Colors.orange.withOpacity(0.2),
+                    color: Colors.orange.withValues(alpha: 0.2),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 5.r,
                       offset: const Offset(0, 2),
                     ),
@@ -785,10 +785,10 @@ Widget buildGaugeSection(
       padding: EdgeInsets.only(left: 10.75.w, right: 10.75.w, top: 10.w),
       margin: EdgeInsets.symmetric(horizontal: 7.w),
       decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16.r),
           border:
-              Border.all(width: 1.5, color: Colors.white.withOpacity(0.12))),
+              Border.all(width: 1.5, color: Colors.white.withValues(alpha: 0.12))),
       child: MyGaugeWidget(
         label: 'M.W',
         minValuescale: minValuescale,
@@ -903,7 +903,7 @@ class MyGaugeWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.15),
+                color: statusColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(

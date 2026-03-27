@@ -27,7 +27,7 @@ class ElectricLoadingIndicator extends StatelessWidget {
           shadows: [
             Shadow(
               blurRadius: 10.0,
-              color: (color ?? Appcolors.gold).withOpacity(0.5),
+              color: (color ?? Appcolors.gold).withValues(alpha: 0.5),
               offset: const Offset(0, 0),
             ),
           ],

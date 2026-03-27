@@ -68,7 +68,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
           if (_cachedData.isNotEmpty)
             FloatingActionButton(
               onPressed: _isGeneratingPdf ? null : _generateAndSharePdf,
-              backgroundColor: Colors.white.withOpacity(0.15),
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
               mini: true,
               heroTag: 'pdfFAB',
               child: _isGeneratingPdf
@@ -118,10 +118,10 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 16.w, vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20.r),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.1)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           children: [
@@ -221,9 +221,9 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(8.r),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -234,7 +234,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                 height: 30.w,
                 decoration: BoxDecoration(
                   color: (isReserved ? Colors.redAccent : Colors.blue)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -292,7 +292,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
                 ),
             ],
           ),
-          Divider(color: Colors.white.withOpacity(0.05), height: 8.h),
+          Divider(color: Colors.white.withValues(alpha: 0.05), height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -317,7 +317,7 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: Row(
@@ -617,8 +617,8 @@ class _SpareCellsReportScreenState extends State<SpareCellsReportScreen> {
 
   Widget _buildShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.1),
-      highlightColor: Colors.white.withOpacity(0.3),
+      baseColor: Colors.white.withValues(alpha: 0.1),
+      highlightColor: Colors.white.withValues(alpha: 0.3),
       child: ListView.builder(
         itemCount: 10,
         itemBuilder: (_, __) => Container(

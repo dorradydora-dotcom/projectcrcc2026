@@ -10,7 +10,7 @@ class CacheHelper {
         'نجاح',
         'تم مسح التخزين المؤقت للصور بنجاح',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withOpacity(0.8),
+        backgroundColor: Colors.green.withValues(alpha: 0.8),
         colorText: Colors.white,
         margin: const EdgeInsets.all(15),
         duration: const Duration(seconds: 3),
@@ -20,7 +20,7 @@ class CacheHelper {
         'خطأ',
         'فشل مسح التخزين المؤقت: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
         margin: const EdgeInsets.all(15),
       );

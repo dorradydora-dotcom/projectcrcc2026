@@ -32,9 +32,9 @@ class NewsTicker extends StatelessWidget {
       height: 20.h,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withValues(alpha: 0.04),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 0.8,
           ),
         ),
@@ -47,10 +47,10 @@ class NewsTicker extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w),
                   decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.1),
+                    color: Colors.blueAccent.withValues(alpha: 0.1),
                     border: Border(
                       left: BorderSide(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 0.5,
                       ),
                     ),
@@ -67,7 +67,7 @@ class NewsTicker extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 9.sp,
                           fontFamily: Appfontstring.ChangaLight,
                           fontWeight: FontWeight.bold,
@@ -83,7 +83,7 @@ class NewsTicker extends StatelessWidget {
                     child: Marquee(
                       text: fullText,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
+                        color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 10.sp,
                         fontFamily: Appfontstring.ChangaLight,
                         fontWeight: FontWeight.w400,

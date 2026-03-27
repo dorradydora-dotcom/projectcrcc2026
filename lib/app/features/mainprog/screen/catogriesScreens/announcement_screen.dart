@@ -88,9 +88,9 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.redAccent.withOpacity(0.1),
+                  color: Colors.redAccent.withValues(alpha: 0.1),
                   border: Border.all(
-                    color: Colors.redAccent.withOpacity(0.2),
+                    color: Colors.redAccent.withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -143,15 +143,15 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
                   child: Container(
                     padding: EdgeInsets.all(24.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.95),
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(24.r),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -204,7 +204,7 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+            border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
           ),
           child: TextField(
             controller: controller.messageController,
@@ -258,7 +258,7 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
             color: const Color(0xFF0F172A),
             borderRadius: BorderRadius.circular(16.r),
             border:
-                Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+                Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
           ),
           child: DropdownButtonHideUnderline(
             child: Obx(() => DropdownButton<String>(
@@ -320,11 +320,11 @@ class _AnnouncementScreenDarkState extends State<AnnouncementScreenDark>
                   colors: [Color(0xFF10B981), Color(0xFF059669)],
                 )
               : null,
-          color: isEnabled ? null : Colors.white.withOpacity(0.1),
+          color: isEnabled ? null : Colors.white.withValues(alpha: 0.1),
           boxShadow: isEnabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFF10B981).withOpacity(0.3),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
