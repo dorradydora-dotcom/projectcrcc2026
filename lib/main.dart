@@ -19,7 +19,7 @@ import 'package:amiraly/app/features/mainprog/screen/navscreens/station_load_con
 import 'package:amiraly/app/common/routes/app_routes.dart';
 import 'package:amiraly/core/services/auth_service.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
-import 'package:amiraly/core/services/call_service.dart';
+import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 import 'package:amiraly/app/features/splash/splash_screen.dart';
 
 // 🔧 متغيرات تتبع حالة التهيئة

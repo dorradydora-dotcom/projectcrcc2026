@@ -15,7 +15,280 @@ import 'package:shimmer/shimmer.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
-import 'package:amiraly/core/services/call_service.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart' as callkit;
+import 'package:amiraly/app/util/validators/validator_helper.dart';
+
+class CallNotificationService {
+  static Future<bool> sendCallNotification({
+    required String deviceToken,
+    required String title,
+    required String body,
+    required String callId,
+    required String callerName,
+    required String channelName,
+  }) async {
+    try {
+      debugPrint('📞 [CallNotificationService] Preparing to send FCM to token: $deviceToken');
+      debugPrint('📞 [CallNotificationService] Payload: callId=$callId, channel=$channelName');
+      final response = await Supabase.instance.client.functions.invoke(
+        'send-fcm',
+        body: {
+          'targetToken': deviceToken,
+          'title': title,
+          'body': body,
+          'payloadType': 'call',
+          'route': 'call',
+          'call_id': callId,
+          'caller_name': callerName,
+          'channel_name': channelName,
+          'status': 'ringing',
+          'priority': 'HIGH',
+        },
+      );
+      
+      debugPrint('📞 [CallNotificationService] Edge function response status: ${response.status}');
+      if (response.status == 200) {
+        AppLogger.logSuccess('Call notification sent via Edge Function');
+        debugPrint('📞 [CallNotificationService] Success payload sent.');
+        return true;
+      }
+      debugPrint('📞 [CallNotificationService] Failed to send notification. Response body: ${response.data}');
+      return false;
+    } catch (e, stackTrace) {
+      debugPrint('📞 [CallNotificationService] Exception during send-fcm: $e');
+      AppLogger.logError('Error invoking send-fcm for call', e, stackTrace);
+      return false;
+    }
+  }
+
+  static Future<bool> sendCancelNotification({
+    required String deviceToken,
+    required String callId,
+  }) async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'send-fcm',
+        body: {
+          'targetToken': deviceToken,
+          'payloadType': 'call',
+          'route': 'call',
+          'call_id': callId,
+          'status': 'ended',
+        },
+      );
+      return response.status == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<void> handleCallNotification(Map<String, dynamic> data) async {
+    try {
+      debugPrint('📞 [CallNotificationService] handleCallNotification received data: $data');
+      final status = data['status'];
+      if (status == 'ended' || status == 'rejected') {
+        debugPrint('📞 [CallNotificationService] Status is $status, ending CallKit.');
+        final callId = data['call_id'];
+        if (callId != null) {
+          await FlutterCallkitIncoming.endCall(callId);
+        } else {
+          await FlutterCallkitIncoming.endAllCalls();
+        }
+        return;
+      }
+      debugPrint('📞 [CallNotificationService] Calling showCallKit...');
+      await showCallKit(data);
+    } catch (e, stack) {
+      debugPrint('Error handling call notification: $e\n$stack');
+    }
+  }
+
+  static Future<void> showCallKit(Map<String, dynamic> data) async {
+    final String? callId = data['call_id'];
+    if (callId == null) {
+      debugPrint('Cannot show CallKit: missing call_id in data');
+      return;
+    }
+    final callerName = data['caller_name'] ?? 'محطة غير معروفة';
+    final channelName = data['channel_name'] ?? 'g-live';
+
+    final params = callkit.CallKitParams(
+      id: callId,
+      nameCaller: callerName,
+      appName: 'Amiraly GoLive',
+      handle: 'فيديو مباشر',
+      type: 1, // 0: Audio, 1: Video
+      duration: 60000,
+      textAccept: 'رد',
+      textDecline: 'رفض',
+      missedCallNotification: const callkit.NotificationParams(
+        showNotification: true,
+        isShowCallback: true,
+        subtitle: 'مكالمة فائتة',
+        callbackText: 'اتصال لاحقاً',
+      ),
+      extra: <String, dynamic>{
+        'route': 'call',
+        'call_id': callId,
+        'channel_name': channelName,
+        'caller_name': callerName,
+      },
+      android: const callkit.AndroidParams(
+        isCustomNotification: true,
+        isShowLogo: true,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#071624',
+        actionColor: '#4CAF50',
+        incomingCallNotificationChannelName: "Incoming Call",
+        missedCallNotificationChannelName: "Missed Call",
+      ),
+    );
+
+    await FlutterCallkitIncoming.showCallkitIncoming(params);
+  }
+}
+
+class GlobalCallService extends GetxService {
+  static GlobalCallService get to => Get.find();
+
+  StreamSubscription? _signalingSubscription;
+  final Rx<String?> currentCallId = Rx<String?>(null);
+  final Rx<Map<String, dynamic>?> incomingCall = Rx<Map<String, dynamic>?>(null);
+
+  @override
+  void onInit() {
+    super.onInit();
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session?.user != null) {
+        startListening();
+      } else {
+        _signalingSubscription?.cancel();
+        incomingCall.value = null;
+        currentCallId.value = null;
+      }
+    });
+    startListening();
+    _listenToCallkitEvents();
+  }
+
+  void _listenToCallkitEvents() {
+    FlutterCallkitIncoming.onEvent.listen((event) async {
+      switch (event!.event) {
+        case callkit.Event.actionCallIncoming:
+          break;
+        case callkit.Event.actionCallAccept:
+          final data = event.body['extra'];
+          if (data != null && data['route'] == 'call') {
+            final callId = data['call_id'];
+            final channelName = data['channel_name'] ?? callId;
+            if (callId != null) {
+              final controller = Get.put(GoLiveController(), permanent: true);
+              controller.respondToCall(callId, true, channelName);
+              Future.delayed(const Duration(milliseconds: 500), () {
+                Get.to(() => VideoCallPage(
+                    controller: controller, channelName: channelName));
+              });
+            }
+          }
+          break;
+        case callkit.Event.actionCallDecline:
+          final data = event.body['extra'];
+          if (data != null && data['call_id'] != null) {
+            await Supabase.instance.client
+                .from(AppConstants.tableCallsSignaling)
+                .update({'status': 'rejected'}).eq('id', data['call_id']);
+          }
+          break;
+        case callkit.Event.actionCallEnded:
+          break;
+        case callkit.Event.actionCallTimeout:
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  void startListening() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      debugPrint('📞 [GlobalCallService] startListening: userId is null. Returning.');
+      return;
+    }
+    
+    debugPrint('📞 [GlobalCallService] Starting stream listener for receiver_id: $userId');
+    _signalingSubscription?.cancel();
+    _signalingSubscription = Supabase.instance.client
+        .from(AppConstants.tableCallsSignaling)
+        .stream(primaryKey: ['id'])
+        .eq('receiver_id', userId)
+        .listen((List<Map<String, dynamic>> data) {
+          debugPrint('📞 [GlobalCallService] Stream updated. Rows count: ${data.length}');
+          if (data.isNotEmpty) {
+            final now = DateTime.now();
+            final activeCall = data.firstWhere(
+              (call) {
+                if (call['status'] != 'ringing') return false;
+                final createdAtStr = call['created_at'];
+                if (createdAtStr != null) {
+                  final createdAt = DateTime.parse(createdAtStr);
+                  if (now.difference(createdAt).inSeconds.abs() > 60) {
+                    debugPrint('📞 [GlobalCallService] Ignoring call ${call['id']} (older than 60s).');
+                    return false;
+                  }
+                }
+                return true;
+              },
+              orElse: () => <String, dynamic>{},
+            );
+
+            if (activeCall.isNotEmpty) {
+              debugPrint('📞 [GlobalCallService] Active call found: ${activeCall['id']}');
+              final String callId = activeCall['id'];
+              if (currentCallId.value != callId) {
+                currentCallId.value = callId;
+                incomingCall.value = activeCall;
+                debugPrint('📞 [GlobalCallService] Navigating to call: $callId');
+                _navigateToCall(activeCall);
+              }
+            } else {
+              debugPrint('📞 [GlobalCallService] No active ringing calls within last 60s.');
+              if (incomingCall.value != null &&
+                  incomingCall.value!['status'] == 'ringing') {
+                incomingCall.value = null;
+                currentCallId.value = null;
+              }
+            }
+          } else {
+            debugPrint('📞 [GlobalCallService] Stream returned empty list.');
+            incomingCall.value = null;
+            currentCallId.value = null;
+          }
+        }, onError: (error) {
+          debugPrint('Global signaling error: $error');
+          Future.delayed(const Duration(seconds: 5), () => startListening());
+        });
+  }
+
+  void _navigateToCall(Map<String, dynamic> callData) {
+    if (Get.currentRoute != 'Go live') {
+      Get.toNamed('Go live', arguments: {
+        'route': 'call',
+        'call_id': callData['id'],
+        'caller_id': callData['caller_id'],
+        'channel_name': callData['channel_name'],
+        'accepted': callData['accepted'] ?? false,
+      });
+    }
+  }
+
+  @override
+  void onClose() {
+    _signalingSubscription?.cancel();
+    super.onClose();
+  }
+}
 
 class GoLiveController extends GetxController {
   final RxList<StationModelCall> users = <StationModelCall>[].obs;
@@ -23,6 +296,8 @@ class GoLiveController extends GetxController {
   final RxBool isAccessDenied = false.obs;
   final RxBool canInitiateCalls = false.obs;
   final Rx<String?> errorMessage = Rx<String?>(null);
+
+  Timer? _callTimeoutTimer;
 
   final AudioPlayer _ringPlayer = AudioPlayer();
   final AudioPlayer _effectPlayer = AudioPlayer();
@@ -165,10 +440,16 @@ class GoLiveController extends GetxController {
               isRemoteVideoReady.value = true;
               stopRinging();
               playConnect();
+              _callTimeoutTimer?.cancel();
             },
             onUserOffline: (connection, uid, reason) {
               remoteUid.value = null;
               isRemoteVideoReady.value = false;
+              // إنهاء المكالمة تلقائياً إذا غادر الطرف الآخر
+              endCall();
+              if (Get.currentRoute != 'Go live') {
+                 Get.back();
+              }
             },
           ),
         );
@@ -259,13 +540,21 @@ class GoLiveController extends GetxController {
   }
 
   Future<void> makeCall(String receiverId) async {
+    debugPrint('📞 [GoLiveController] makeCall started for receiver: $receiverId');
     final userId = currentUserId;
-    if (userId == null) return;
+    if (userId == null) {
+      debugPrint('📞 [GoLiveController] makeCall failed: currentUserId is null');
+      return;
+    }
 
     try {
+      debugPrint('📞 [GoLiveController] Fetching tokens...');
       final callerToken = await _getReceiverToken(userId);
       final receiverToken = await _getReceiverToken(receiverId);
+      debugPrint('📞 [GoLiveController] callerToken fetched: ${callerToken != null}');
+      debugPrint('📞 [GoLiveController] receiverToken fetched: ${receiverToken != null}');
 
+      debugPrint('📞 [GoLiveController] Inserting signaling record...');
       final response = await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
           .insert({
@@ -277,9 +566,11 @@ class GoLiveController extends GetxController {
           .select()
           .single();
 
+      debugPrint('📞 [GoLiveController] Signaling record created. Call ID: ${response['id']}');
       currentCallId.value = response['id'];
 
       if (receiverToken != null) {
+        debugPrint('📞 [GoLiveController] Sending push notification to receiver...');
         final callerName = await _getUserName(userId);
         await CallNotificationService.sendCallNotification(
           deviceToken: receiverToken,
@@ -289,14 +580,29 @@ class GoLiveController extends GetxController {
           callerName: callerName,
           channelName: receiverId,
         );
+      } else {
+        debugPrint('📞 [GoLiveController] WARNING: Receiver token is NULL! Push notification will not be sent.');
       }
+      
+      debugPrint('📞 [GoLiveController] Joining Agora channel...');
       await joinChannel(receiverId, callerToken);
+
+      _callTimeoutTimer?.cancel();
+      _callTimeoutTimer = Timer(const Duration(seconds: 60), () {
+        if (remoteUid.value == null) {
+          endCall();
+          Get.snackbar('تنبيه', 'الطرف الآخر لا يرد',
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+              colorText: Colors.white,
+              snackPosition: SnackPosition.TOP);
+        }
+      });
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> respondToCall(String callId, bool accept) async {
+  Future<void> respondToCall(String callId, bool accept, [String? fallbackChannel]) async {
     try {
       await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
@@ -305,18 +611,22 @@ class GoLiveController extends GetxController {
       if (accept) {
         stopRinging();
         final call = GlobalCallService.to.incomingCall.value;
-        if (call != null) {
+        final targetChannel = call != null ? call['channel_name'] : fallbackChannel;
+        if (targetChannel != null && currentUserId != null) {
           final myToken = await _getReceiverToken(currentUserId!);
-          await joinChannel(call['channel_name'], myToken);
+          await joinChannel(targetChannel, myToken);
         }
       } else {
         stopRinging();
+        await leaveChannel();
+        await disposeAgora();
         currentCallId.value = null;
       }
     } catch (_) {}
   }
 
   Future<void> endCall() async {
+    _callTimeoutTimer?.cancel();
     if (currentCallId.value != null) {
       await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
@@ -325,6 +635,7 @@ class GoLiveController extends GetxController {
     stopRinging();
     playHangup();
     await leaveChannel();
+    await disposeAgora(); // يتم تدمير المحرك بالكامل لإغلاق الكاميرا والمايكروفون
     currentCallId.value = null;
     GlobalCallService.to.incomingCall.value = null;
     localViewController.value = null;
@@ -359,6 +670,7 @@ class GoLiveController extends GetxController {
 
   @override
   void onClose() {
+    _callTimeoutTimer?.cancel();
     _ringPlayer.dispose();
     _effectPlayer.dispose();
     disposeAgora();
@@ -916,9 +1228,15 @@ class VideoCallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+    return WillPopScope(
+      onWillPop: () async {
+        // إغلاق الواجهة فوراً ثم إنهاء الاتصال في الخلفية لتفادي وميض (جاري الاتصال)
+        controller.endCall();
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
         children: [
           // Remote Video (Full Screen)
           Positioned.fill(
@@ -931,7 +1249,9 @@ class VideoCallPage extends StatelessWidget {
                     canvas: VideoCanvas(
                         uid: controller.remoteUid.value!,
                         renderMode: RenderModeType.renderModeHidden),
-                    connection: RtcConnection(channelId: channelName),
+                    connection: RtcConnection(
+                        channelId: channelName,
+                        localUid: controller.currentUserId.hashCode & 0x7FFFFFFF),
                     useFlutterTexture: true,
                   ),
                 );
@@ -1052,11 +1372,12 @@ class VideoCallPage extends StatelessWidget {
               child: _buildControls(controller)),
         ],
       ),
-    );
+    ));
   }
 
   void _handleBack() {
     Get.back();
+    controller.endCall();
   }
 
   Widget _buildControls(GoLiveController controller) {
@@ -1081,9 +1402,10 @@ class VideoCallPage extends StatelessWidget {
         SizedBox(width: 20.w),
         _controlButton(
           icon: Iconsax.call_remove5,
-          onPressed: () async {
-            await controller.endCall();
+          onPressed: () {
+            // الخروج مباشرة لتفادي وميض شاشة (جاري الاتصال) ثم مسح الموارد بالخلفية
             Get.back();
+            controller.endCall();
           },
           color: Colors.redAccent,
           isLarge: true,

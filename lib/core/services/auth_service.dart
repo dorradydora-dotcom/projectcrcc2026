@@ -11,6 +11,7 @@ import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
 import 'package:amiraly/app/features/auth/login/loginscreen.dart';
 import 'package:amiraly/core/services/notification_manager.dart';
+import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 
 class AuthService extends GetxController {
   static AuthService get instance => Get.find<AuthService>();
@@ -113,7 +114,7 @@ class AuthService extends GetxController {
         final String? route = message.data['route'];
 
         if (route == 'call') {
-          NotificationManager().showCallKit(message.data);
+          CallNotificationService.handleCallNotification(message.data);
           return;
         }
 

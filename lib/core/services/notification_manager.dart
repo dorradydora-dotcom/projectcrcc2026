@@ -4,11 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_callkit_incoming/entities/entities.dart';
-import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
+import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/golive.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -27,18 +26,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
     if (route == 'call') {
       debugPrint('🔥 [Background Message] Call route detected');
-      final status = message.data['status'];
-      if (status == 'ended' || status == 'rejected') {
-        final callId = message.data['call_id'];
-        if (callId != null) {
-          await FlutterCallkitIncoming.endCall(callId);
-        } else {
-          await FlutterCallkitIncoming.endAllCalls();
-        }
-        return;
-      }
-      debugPrint('🔥 [Background Message] Showing CallKit');
-      await NotificationManager().showCallKit(message.data);
+      await CallNotificationService.handleCallNotification(message.data);
       return;
     }
 
@@ -93,17 +81,7 @@ class NotificationManager {
         debugPrint('🔥 [Foreground Message] Received: ${message.messageId}');
         final route = message.data['route'];
         if (route == 'call') {
-          final status = message.data['status'];
-          if (status == 'ended' || status == 'rejected') {
-            final callId = message.data['call_id'];
-            if (callId != null) {
-              await FlutterCallkitIncoming.endCall(callId);
-            } else {
-              await FlutterCallkitIncoming.endAllCalls();
-            }
-            return;
-          }
-          await showCallKit(message.data);
+          await CallNotificationService.handleCallNotification(message.data);
         } else {
           final title = message.data['title'] ?? message.notification?.title;
           final body = message.data['body'] ?? message.notification?.body;
@@ -210,50 +188,6 @@ class NotificationManager {
     } catch (e, stackTrace) {
       AppLogger.logError('Failed to show notification', e, stackTrace);
     }
-  }
-
-  Future<void> showCallKit(Map<String, dynamic> data) async {
-    final String? callId = data['call_id'];
-    if (callId == null) {
-      debugPrint('Cannot show CallKit: missing call_id in data');
-      return;
-    }
-    final callerName = data['caller_name'] ?? 'محطة غير معروفة';
-    final channelName = data['channel_name'] ?? 'g-live';
-
-    final params = CallKitParams(
-      id: callId,
-      nameCaller: callerName,
-      appName: 'Amiraly GoLive',
-      handle: 'فيديو مباشر',
-      type: 1, // 0: Audio, 1: Video
-      duration: 30000,
-      textAccept: 'رد',
-      textDecline: 'رفض',
-      missedCallNotification: const NotificationParams(
-        showNotification: true,
-        isShowCallback: true,
-        subtitle: 'مكالمة فائتة',
-        callbackText: 'اتصال لاحقاً',
-      ),
-      extra: <String, dynamic>{
-        'route': 'call',
-        'call_id': callId,
-        'channel_name': channelName,
-        'caller_name': callerName,
-      },
-      android: const AndroidParams(
-        isCustomNotification: true,
-        isShowLogo: true,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#071624',
-        actionColor: '#4CAF50',
-        incomingCallNotificationChannelName: "Incoming Call",
-        missedCallNotificationChannelName: "Missed Call",
-      ),
-    );
-
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 
   Future<bool> _isNotificationProcessed(String messageId) async {
