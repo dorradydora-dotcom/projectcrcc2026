@@ -653,7 +653,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       fontFamily: Appfontstring.ChangaLight, fontSize: 12.sp)),
               value: value,
               onChanged: onChanged,
-              activeThumbColor: Colors.blue,
+              activeColor: Colors.blue,
             )));
   }
 

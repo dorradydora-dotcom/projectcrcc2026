@@ -1276,11 +1276,11 @@ class VideoCallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
         // إغلاق الواجهة فوراً ثم إنهاء الاتصال في الخلفية لتفادي وميض (جاري الاتصال)
         controller.endCall();
-        return true;
       },
       child: Scaffold(
         backgroundColor: Colors.black,

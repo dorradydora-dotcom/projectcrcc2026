@@ -558,7 +558,7 @@ class ProjectsScreen extends StatelessWidget {
                       ],
                     )),
                 Obx(() => DropdownButtonFormField<String>(
-                      initialValue: status.value,
+                      value: status.value,
                       dropdownColor: const Color(0xFF1E293B),
                       decoration: InputDecoration(
                         labelText: 'الحالة',
