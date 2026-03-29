@@ -487,7 +487,7 @@ class GoLiveController extends GetxController {
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
         canvas: const VideoCanvas(uid: 0),
-        useFlutterTexture: true,
+        useAndroidSurfaceView: true,
       );
     } catch (e) {
       debugPrint('Agora Error: $e');
@@ -1300,7 +1300,7 @@ class VideoCallPage extends StatelessWidget {
                     connection: RtcConnection(
                         channelId: channelName,
                         localUid: controller.currentUserId.hashCode & 0x7FFFFFFF),
-                    useFlutterTexture: true,
+                    useAndroidSurfaceView: true,
                   ),
                 );
               }

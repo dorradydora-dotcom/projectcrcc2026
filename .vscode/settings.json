@@ -1,3 +1,25 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.import.exclusions": [
+        "**/android/**",
+        "**/ios/**",
+        "**/.dart_tool/**",
+        "**/.pub-cache/**",
+        "**/macos/**"
+    ],
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-11",
+            "path": "C:\\Program Files\\Java\\jdk-11"
+        },
+        {
+            "name": "JavaSE-17",
+            "path": "C:\\Program Files\\Java\\jdk-17",
+            "default": true
+        },
+        {
+            "name": "JavaSE-19",
+            "path": "C:\\Program Files\\Java\\jdk-20"
+        }
+    ]
 }

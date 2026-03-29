@@ -527,8 +527,7 @@ class _HomeNavState extends State<HomeNav> {
                                   : '${weather.maxTemp}° / ${weather.minTemp}°',
                               style: TextStyle(
                                 fontSize: isCurrent ? 17.sp : 12.sp,
-                                fontFamily: Appfontstring.digital,
-                                fontFamilyFallback: const [Appfontstring.ChangaLight],
+                                fontFamily: Appfontstring.ChangaLight,
                                 color: Colors.white,
                               ))
                         ])))));
@@ -676,7 +675,13 @@ class CategoryItem extends StatelessWidget {
           height: 52.h,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 1),
+            border: Border.all(color: Colors.black, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black,
+                blurRadius: 1,
+              ),
+            ],
           ),
           child: ClipOval(
             child: CachedNetworkImage(
@@ -787,8 +792,8 @@ Widget buildGaugeSection(
       decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16.r),
-          border:
-              Border.all(width: 1.5, color: Colors.white.withValues(alpha: 0.12))),
+          border: Border.all(
+              width: 1.5, color: Colors.white.withValues(alpha: 0.12))),
       child: MyGaugeWidget(
         label: 'M.W',
         minValuescale: minValuescale,

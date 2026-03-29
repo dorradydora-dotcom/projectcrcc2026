@@ -470,18 +470,20 @@ class LoginControllerImp extends LoginController {
             .eq('user_email', email.trim())
             .limit(1);
 
-        if (response.isNotEmpty && response.isNotEmpty) {
-          // Commented out to preserve Agora Tokens put during registration
-          // final Map<String, dynamic> updateMap = {'user_token': authToken};
+        if (response.isNotEmpty) {
+          final Map<String, dynamic> updateMap = {};
 
-          // if (fcmToken != null && fcmToken.isNotEmpty) {
-          //   updateMap['user_token'] = fcmToken;
-          // }
+          if (fcmToken != null && fcmToken.isNotEmpty) {
+            updateMap['user_token'] = fcmToken;
+          }
 
-          // await supabase
-          //     .from(table)
-          //     .update(updateMap)
-          //     .eq('user_email', email.trim());
+          if (updateMap.isNotEmpty) {
+            await supabase
+                .from(table)
+                .update(updateMap)
+                .eq('user_email', email.trim());
+          }
+          
           updatedTable = table;
           break;
         }
