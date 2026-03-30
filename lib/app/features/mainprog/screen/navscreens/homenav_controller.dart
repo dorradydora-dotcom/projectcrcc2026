@@ -314,79 +314,96 @@ class HomenavcontrollerImp extends Homenavcontroller {
   @override
   Future<void> fetchAnnouncImages() async {
     if (isOffline.value) return;
-    
+
     try {
       final rssUrls = await _getRssUrls();
-      
+
       // 10 صور عالية الجودة وسريعة التحميل (مضغوطة) للطاقة والتكنولوجيا
       final fallbackImages = [
-         'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=70', // توربينات رياح
-         'https://images.unsplash.com/photo-1509391366360-1e96191cb14b?w=600&q=70', // طاقة شمسية
-         'https://images.unsplash.com/photo-1548337138-e87f88ebcc8a?w=600&q=70', // خطوط كهرباء
-         'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=70', // لوحة تقنية
-         'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&q=70', // محطة توليد
-         'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=70', // شبكة أجهزة
-         'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&q=70', // مصباح متوهج
-         'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=70', // تقنية برمجيات
-         'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70', // سيرفرات
-         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=70'  // شبكة العالم الرقمي
+        'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=70', // توربينات رياح
+        'https://images.unsplash.com/photo-1509391366360-1e96191cb14b?w=600&q=70', // طاقة شمسية
+        'https://images.unsplash.com/photo-1548337138-e87f88ebcc8a?w=600&q=70', // خطوط كهرباء
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=70', // لوحة تقنية
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&q=70', // محطة توليد
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=70', // شبكة أجهزة
+        'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&q=70', // مصباح متوهج
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=70', // تقنية برمجيات
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70', // سيرفرات
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=70' // شبكة العالم الرقمي
       ];
       int fallbackIndex = 0;
-      
+
       List<AnnouncImagesModel> fetchedNews = [];
-      
+
       for (var url in rssUrls) {
-        final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        final response =
+            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) {
           final decoded = utf8.decode(response.bodyBytes);
           final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true);
           final matches = regExp.allMatches(decoded);
-          
-          for (var m in matches) {
-             final itemStr = m.group(1) ?? '';
-             final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true).firstMatch(itemStr) 
-                             ?? RegExp(r'<title>(.*?)<\/title>', dotAll: true).firstMatch(itemStr);
-             final descMatch = RegExp(r'<description>(.*?)<\/description>', dotAll: true).firstMatch(itemStr);
-             
-             if (titleMatch != null) {
-                String title = titleMatch.group(1) ?? '';
-                title = title.replaceAll('&#39;', "'").replaceAll('&quot;', '"').replaceAll('&amp;', '&');
-                if (title.contains(' - ')) title = title.split(' - ')[0]; // حذف اسم المصدر
 
-                String? imageUrl;
-                
-                if (descMatch != null) {
-                   final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"', dotAll: true).firstMatch(descMatch.group(1)!);
-                   if (imgMatch != null) imageUrl = imgMatch.group(1);
-                }
-                
-                if (imageUrl == null || imageUrl.isEmpty) {
-                    final encMatch = RegExp(r'<enclosure[^>]+url="([^"]+)"', dotAll: true).firstMatch(itemStr);
-                    if (encMatch != null) imageUrl = encMatch.group(1);
-                }
-                
-                // إضافة الصورة الافتراضية المناسبة من الـ 10 صور إذا لم تتوفر صورة
-                if (imageUrl == null || imageUrl.isEmpty) {
-                   imageUrl = fallbackImages[fallbackIndex % fallbackImages.length];
-                   fallbackIndex++;
-                }
-                
-                fetchedNews.add(AnnouncImagesModel(imageUrl: imageUrl, title: title.trim()));
-             }
+          for (var m in matches) {
+            final itemStr = m.group(1) ?? '';
+            final titleMatch =
+                RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true)
+                        .firstMatch(itemStr) ??
+                    RegExp(r'<title>(.*?)<\/title>', dotAll: true)
+                        .firstMatch(itemStr);
+            final descMatch =
+                RegExp(r'<description>(.*?)<\/description>', dotAll: true)
+                    .firstMatch(itemStr);
+
+            if (titleMatch != null) {
+              String title = titleMatch.group(1) ?? '';
+              title = title
+                  .replaceAll('&#39;', "'")
+                  .replaceAll('&quot;', '"')
+                  .replaceAll('&amp;', '&');
+              if (title.contains(' - '))
+                title = title.split(' - ')[0]; // حذف اسم المصدر
+
+              String? imageUrl;
+
+              if (descMatch != null) {
+                final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"', dotAll: true)
+                    .firstMatch(descMatch.group(1)!);
+                if (imgMatch != null) imageUrl = imgMatch.group(1);
+              }
+
+              if (imageUrl == null || imageUrl.isEmpty) {
+                final encMatch =
+                    RegExp(r'<enclosure[^>]+url="([^"]+)"', dotAll: true)
+                        .firstMatch(itemStr);
+                if (encMatch != null) imageUrl = encMatch.group(1);
+              }
+
+              // إضافة الصورة الافتراضية المناسبة من الـ 10 صور إذا لم تتوفر صورة
+              if (imageUrl == null || imageUrl.isEmpty) {
+                imageUrl =
+                    fallbackImages[fallbackIndex % fallbackImages.length];
+                fallbackIndex++;
+              }
+
+              fetchedNews.add(
+                  AnnouncImagesModel(imageUrl: imageUrl, title: title.trim()));
+            }
           }
         }
       }
-      
+
       if (fetchedNews.isNotEmpty) {
-         fetchedNews.shuffle(); // تنويع الأخبار
-         _announcImages.assignAll(fetchedNews.take(10).toList());
-         return; // نجاح
+        fetchedNews.shuffle(); // تنويع الأخبار
+        _announcImages.assignAll(fetchedNews.take(10).toList());
+        return; // نجاح
       }
     } catch (e) {
-      AppLogger.logWarning('Failed to fetch/parse news RSS for carousel images: $e');
+      AppLogger.logWarning(
+          'Failed to fetch/parse news RSS for carousel images: $e');
     }
 
     // Fallback: Fetch from Supabase
+    await Future.delayed(const Duration(seconds: 3));
     try {
       final response = await Supabase.instance.client
           .from(AppConstants.tableAnnouncingImages)
@@ -514,16 +531,32 @@ class HomenavcontrollerImp extends Homenavcontroller {
     try {
       final rssUrls = await _getRssUrls();
       final List<Future> fetchTasks = [];
-      
+
       if (rssUrls.isNotEmpty) {
         fetchTasks.add(_fetchRssNews(rssUrls[0], electricityNews));
       }
       if (rssUrls.length > 1) {
         fetchTasks.add(_fetchRssNews(rssUrls[1], techNews));
       }
-      
+
       if (fetchTasks.isNotEmpty) {
         await Future.wait(fetchTasks);
+      }
+
+      // إضافة نصوص بديلة في حال كانت القوائم فارغة لضمان ظهور الأشرطة دائماً
+      if (electricityNews.isEmpty) {
+        electricityNews.assignAll([
+          'جاري متابعة أحمال الشبكة القومية واستقرار الخدمة...',
+          'متابعة مستمرة لأخبار قطاع الكهرباء والطاقة المتجددة...',
+          'الشركة المصرية لنقل الكهرباء: تطوير مستمر لمحطات المحولات والتحكمات...'
+        ]);
+      }
+      if (techNews.isEmpty) {
+        techNews.assignAll([
+          'جاري جلب أحدث أخبار التكنولوجيا والرقمنة...',
+          'متابعة أحدث التقنيات في مجال الطاقة والذكاء الاصطناعي...',
+          'تحول رقمي كامل في خدمات الكهرباء لخدمة المواطنين بشكل أفضل...'
+        ]);
       }
     } catch (e) {
       AppLogger.logError('Error fetching news', e);
@@ -534,27 +567,49 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   Future<void> _fetchRssNews(String url, RxList<String> targetList) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final decoded = utf8.decode(response.bodyBytes);
-        // Target titles inside <item> tags only to avoid channel/image metadata
-        final regExp = RegExp(r'<item>.*?<title>(.*?)<\/title>', dotAll: true);
+        
+        // تحسين البحث عن العناصر ليدعم CDATA بشكل أفضل
+        final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true);
         final matches = regExp.allMatches(decoded);
-        final news = matches
-            .map((m) => m.group(1) ?? '')
-            .map((t) => t
+        
+        final news = <String>[];
+        for (var m in matches) {
+          final itemStr = m.group(1) ?? '';
+          
+          // محاولة جلب العنوان مع دعم CDATA أو بدونه
+          final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true).firstMatch(itemStr) 
+                          ?? RegExp(r'<title>(.*?)<\/title>', dotAll: true).firstMatch(itemStr);
+          
+          if (titleMatch != null) {
+            String title = titleMatch.group(1) ?? '';
+            
+            // تنظيف النص
+            title = title
                 .replaceAll('&#39;', "'")
                 .replaceAll('&quot;', '"')
-                .replaceAll('&amp;', '&'))
-            .map((t) => t.contains(' - ')
-                ? t.split(' - ')[0]
-                : t) // Remove publication name suffix
-            .where((t) =>
-                t.isNotEmpty &&
-                !t.contains('Google News') &&
-                !t.contains('أخبار Google'))
-            .toList();
-        targetList.assignAll(news);
+                .replaceAll('&amp;', '&')
+                .replaceAll('<![CDATA[', '')
+                .replaceAll(']]>', '')
+                .trim();
+                
+            if (title.contains(' - ')) {
+              title = title.split(' - ')[0]; // حذف مصدر الخبر
+            }
+            
+            if (title.isNotEmpty && 
+                !title.contains('Google News') && 
+                !title.contains('أخبار Google')) {
+              news.add(title);
+            }
+          }
+        }
+        
+        if (news.isNotEmpty) {
+          targetList.assignAll(news);
+        }
       }
     } catch (e) {
       AppLogger.logError('Error fetching RSS news from $url', e);
@@ -575,9 +630,15 @@ class HomenavcontrollerImp extends Homenavcontroller {
           .order('url_name', ascending: true);
 
       if ((response as List).isNotEmpty) {
-        return (response as List)
+        final fetchedUrls = (response as List)
             .map((e) => e['link_string'] as String)
             .toList();
+            
+        // دمج الروابط المجلوبة مع الروابط الافتراضية لضمان وجود رابطين على الأقل
+        if (fetchedUrls.length < 2) {
+          fetchedUrls.add(defaultUrls[1]); // إضافة الرابط الافتراضي للتكنولوجيا
+        }
+        return fetchedUrls;
       }
     } catch (e) {
       AppLogger.logWarning('Failed to fetch RSS URLs from Supabase: $e');

@@ -32,7 +32,7 @@ class NewsTicker extends StatelessWidget {
       height: 20.h,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: backgroundColor,
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.08),
             width: 0.8,

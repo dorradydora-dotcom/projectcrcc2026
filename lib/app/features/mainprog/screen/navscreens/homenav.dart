@@ -162,7 +162,7 @@ class _HomeNavState extends State<HomeNav> {
                         title: 'تكنولوجيا',
                         icon: Icons.biotech,
                         velocity: -25.0,
-                        backgroundColor: Colors.blue.withValues(alpha: 0.05),
+                        backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
                       ),
                     ],
                   );
