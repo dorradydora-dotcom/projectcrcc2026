@@ -235,9 +235,15 @@ const navigationItems = [
 
 class AnnouncImagesModel {
   final String imageUrl;
-  AnnouncImagesModel({required this.imageUrl});
+  final String? title;
+  
+  AnnouncImagesModel({required this.imageUrl, this.title});
+  
   factory AnnouncImagesModel.fromJson(Map<String, dynamic> json) {
-    return AnnouncImagesModel(imageUrl: json['image_path'] as String? ?? '');
+    return AnnouncImagesModel(
+      imageUrl: json['image_path'] as String? ?? '',
+      title: json['title'] as String?,
+    );
   }
 }
 

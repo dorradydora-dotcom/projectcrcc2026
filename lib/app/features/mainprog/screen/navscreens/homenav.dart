@@ -366,23 +366,62 @@ class _HomeNavState extends State<HomeNav> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12.r),
-                            child: CachedNetworkImage(
-                              maxHeightDiskCache: 400,
-                              maxWidthDiskCache: 400,
-                              memCacheHeight: 400,
-                              memCacheWidth: 400,
-                              imageUrl: photo.imageUrl,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Center(
-                                child: Icon(
-                                  Icons.error,
-                                  color: Colors.redAccent,
-                                  size: 40.sp,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                CachedNetworkImage(
+                                  maxHeightDiskCache: 400,
+                                  maxWidthDiskCache: 400,
+                                  memCacheHeight: 400,
+                                  memCacheWidth: 400,
+                                  imageUrl: photo.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Center(
+                                    child: Icon(
+                                      Icons.error,
+                                      color: Colors.redAccent,
+                                      size: 40.sp,
+                                    ),
+                                  ),
+                                  placeholder: (context, url) => const Center(
+                                    child: ElectricLoadingIndicator(size: 25),
+                                  ),
                                 ),
-                              ),
-                              placeholder: (context, url) => const Center(
-                                child: ElectricLoadingIndicator(size: 25),
-                              ),
+                                if (photo.title != null &&
+                                    photo.title!.isNotEmpty)
+                                  Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 6.h, horizontal: 8.w),
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.black87,
+                                            Colors.black45,
+                                            Colors.transparent
+                                          ],
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        photo.title!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12.sp,
+                                          fontFamily: Appfontstring.ChangaLight,
+                                          height: 1.2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         );

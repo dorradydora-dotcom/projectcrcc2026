@@ -313,9 +313,80 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   @override
   Future<void> fetchAnnouncImages() async {
-    if (isOffline.value) {
-      return;
+    if (isOffline.value) return;
+    
+    try {
+      final rssUrls = await _getRssUrls();
+      
+      // 10 صور عالية الجودة وسريعة التحميل (مضغوطة) للطاقة والتكنولوجيا
+      final fallbackImages = [
+         'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=70', // توربينات رياح
+         'https://images.unsplash.com/photo-1509391366360-1e96191cb14b?w=600&q=70', // طاقة شمسية
+         'https://images.unsplash.com/photo-1548337138-e87f88ebcc8a?w=600&q=70', // خطوط كهرباء
+         'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=70', // لوحة تقنية
+         'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&q=70', // محطة توليد
+         'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=70', // شبكة أجهزة
+         'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&q=70', // مصباح متوهج
+         'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=70', // تقنية برمجيات
+         'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70', // سيرفرات
+         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=70'  // شبكة العالم الرقمي
+      ];
+      int fallbackIndex = 0;
+      
+      List<AnnouncImagesModel> fetchedNews = [];
+      
+      for (var url in rssUrls) {
+        final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        if (response.statusCode == 200) {
+          final decoded = utf8.decode(response.bodyBytes);
+          final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true);
+          final matches = regExp.allMatches(decoded);
+          
+          for (var m in matches) {
+             final itemStr = m.group(1) ?? '';
+             final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true).firstMatch(itemStr) 
+                             ?? RegExp(r'<title>(.*?)<\/title>', dotAll: true).firstMatch(itemStr);
+             final descMatch = RegExp(r'<description>(.*?)<\/description>', dotAll: true).firstMatch(itemStr);
+             
+             if (titleMatch != null) {
+                String title = titleMatch.group(1) ?? '';
+                title = title.replaceAll('&#39;', "'").replaceAll('&quot;', '"').replaceAll('&amp;', '&');
+                if (title.contains(' - ')) title = title.split(' - ')[0]; // حذف اسم المصدر
+
+                String? imageUrl;
+                
+                if (descMatch != null) {
+                   final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"', dotAll: true).firstMatch(descMatch.group(1)!);
+                   if (imgMatch != null) imageUrl = imgMatch.group(1);
+                }
+                
+                if (imageUrl == null || imageUrl.isEmpty) {
+                    final encMatch = RegExp(r'<enclosure[^>]+url="([^"]+)"', dotAll: true).firstMatch(itemStr);
+                    if (encMatch != null) imageUrl = encMatch.group(1);
+                }
+                
+                // إضافة الصورة الافتراضية المناسبة من الـ 10 صور إذا لم تتوفر صورة
+                if (imageUrl == null || imageUrl.isEmpty) {
+                   imageUrl = fallbackImages[fallbackIndex % fallbackImages.length];
+                   fallbackIndex++;
+                }
+                
+                fetchedNews.add(AnnouncImagesModel(imageUrl: imageUrl, title: title.trim()));
+             }
+          }
+        }
+      }
+      
+      if (fetchedNews.isNotEmpty) {
+         fetchedNews.shuffle(); // تنويع الأخبار
+         _announcImages.assignAll(fetchedNews.take(10).toList());
+         return; // نجاح
+      }
+    } catch (e) {
+      AppLogger.logWarning('Failed to fetch/parse news RSS for carousel images: $e');
     }
+
+    // Fallback: Fetch from Supabase
     try {
       final response = await Supabase.instance.client
           .from(AppConstants.tableAnnouncingImages)
@@ -326,7 +397,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
               AnnouncImagesModel.fromJson(json as Map<String, dynamic>))
           .toList());
     } catch (e) {
-      AppLogger.logError('Error fetching announc images', e);
+      AppLogger.logError(
+          'Error fetching announc images from Supabase fallback', e);
       _announcImages.clear();
     }
   }
@@ -440,14 +512,19 @@ class HomenavcontrollerImp extends Homenavcontroller {
   Future<void> fetchNews() async {
     isNewsLoading.value = true;
     try {
-      await Future.wait([
-        _fetchRssNews(
-            'https://news.google.com/rss/search?q=%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1%20%D9%85%D8%B5%D8%B1%20%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
-            electricityNews),
-        _fetchRssNews(
-            'https://news.google.com/rss/search?q=%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A7%20%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
-            techNews),
-      ]);
+      final rssUrls = await _getRssUrls();
+      final List<Future> fetchTasks = [];
+      
+      if (rssUrls.isNotEmpty) {
+        fetchTasks.add(_fetchRssNews(rssUrls[0], electricityNews));
+      }
+      if (rssUrls.length > 1) {
+        fetchTasks.add(_fetchRssNews(rssUrls[1], techNews));
+      }
+      
+      if (fetchTasks.isNotEmpty) {
+        await Future.wait(fetchTasks);
+      }
     } catch (e) {
       AppLogger.logError('Error fetching news', e);
     } finally {
@@ -482,6 +559,30 @@ class HomenavcontrollerImp extends Homenavcontroller {
     } catch (e) {
       AppLogger.logError('Error fetching RSS news from $url', e);
     }
+  }
+
+  Future<List<String>> _getRssUrls() async {
+    final defaultUrls = [
+      'https://news.google.com/rss/search?q=%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1%20%D9%85%D8%B5%D8%B1%20%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
+      'https://news.google.com/rss/search?q=%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A1%20%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar'
+    ];
+
+    try {
+      final response = await Supabase.instance.client
+          .from(AppConstants.tableWorldTable)
+          .select('link_string')
+          .like('url_name', 'rss_url_%')
+          .order('url_name', ascending: true);
+
+      if ((response as List).isNotEmpty) {
+        return (response as List)
+            .map((e) => e['link_string'] as String)
+            .toList();
+      }
+    } catch (e) {
+      AppLogger.logWarning('Failed to fetch RSS URLs from Supabase: $e');
+    }
+    return defaultUrls;
   }
 
   void _startLoadVariationTimer() {
