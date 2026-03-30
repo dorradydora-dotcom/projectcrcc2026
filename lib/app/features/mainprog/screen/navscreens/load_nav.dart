@@ -197,8 +197,7 @@ class _LoadnavScreenState extends State<LoadnavScreen> {
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: ElectricLoadingIndicator(
-                    color: Colors.black, size: 24),
+                child: ElectricLoadingIndicator(color: Colors.black, size: 24),
               )
             : const Icon(Icons.picture_as_pdf, color: Colors.black)),
       ),
@@ -344,7 +343,9 @@ class LoadDisplayWidget extends StatelessWidget {
                                       value < 0 ? Colors.red : Colors.redAccent,
                                   fontSize: 38.sp,
                                   fontFamily: Appfontstring.digital,
-                                  fontFamilyFallback: const [Appfontstring.ChangaLight],
+                                  fontFamilyFallback: const [
+                                    Appfontstring.ChangaLight
+                                  ],
                                   shadows: [
                                     Shadow(
                                       color: (value < 0
@@ -380,7 +381,8 @@ class LoadDisplayWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.blueAccent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
+              border:
+                  Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
             ),
             child: Obx(() => RichText(
                   textDirection: TextDirection.rtl,
@@ -537,7 +539,9 @@ class _StationCardState extends State<StationCard> {
                                 fontSize: 13.sp, // Reduced from 14.sp
                                 fontWeight: FontWeight.bold,
                                 fontFamily: Appfontstring.digital,
-                                fontFamilyFallback: const [Appfontstring.ChangaLight],
+                                fontFamilyFallback: const [
+                                  Appfontstring.ChangaLight
+                                ],
                                 color: isPositive
                                     ? Colors.greenAccent
                                     : Colors.redAccent,
