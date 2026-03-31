@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:amiraly/app/util/validators/validator_helper.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/features/mainprog/screen/catogriesScreens/cairoscreen.dart';
@@ -88,8 +87,6 @@ class HomenavcontrollerImp extends Homenavcontroller {
     // ✅ جلب الكاش والتحقق من الاتصال فوراً في onInit
     _loadCachedWeather();
     _checkInitialConnectivity();
-    // ✅ تأجيل جلب الأخبار لبعد ما الـ UI يتبنى كاملاً
-    SchedulerBinding.instance.addPostFrameCallback((_) => fetchNews());
   }
 
   @override
@@ -149,6 +146,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
         fetchAnnouncImages(),
         fetchCairoWeather(),
         fetchStationLoads(),
+        fetchNews(),
       ]);
     } catch (e) {
       AppLogger.logError('Error initializing data', e);
@@ -340,53 +338,56 @@ class HomenavcontrollerImp extends Homenavcontroller {
             await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) {
           final decoded = utf8.decode(response.bodyBytes);
-          final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true);
+          
+          // تحسين البحث عن العناصر - دعم حالة الأحرف
+          final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true, caseSensitive: false);
           final matches = regExp.allMatches(decoded);
 
           for (var m in matches) {
             final itemStr = m.group(1) ?? '';
-            final titleMatch =
-                RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true)
-                        .firstMatch(itemStr) ??
-                    RegExp(r'<title>(.*?)<\/title>', dotAll: true)
-                        .firstMatch(itemStr);
-            final descMatch =
-                RegExp(r'<description>(.*?)<\/description>', dotAll: true)
-                    .firstMatch(itemStr);
+            
+            // محاولة جلب العنوان مع دعم CDATA أو بدونه - تجاهل حالة الأحرف
+            final titleRegEx = RegExp(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>', dotAll: true, caseSensitive: false);
+            final titleMatch = titleRegEx.firstMatch(itemStr);
+            
+            final descRegEx = RegExp(r'<description>(.*?)<\/description>', dotAll: true, caseSensitive: false);
+            final descMatch = descRegEx.firstMatch(itemStr);
 
             if (titleMatch != null) {
               String title = titleMatch.group(1) ?? '';
               title = title
                   .replaceAll('&#39;', "'")
                   .replaceAll('&quot;', '"')
-                  .replaceAll('&amp;', '&');
-              if (title.contains(' - '))
-                title = title.split(' - ')[0]; // حذف اسم المصدر
+                  .replaceAll('&amp;', '&')
+                  .replaceAll('&lt;', '<')
+                  .replaceAll('&gt;', '>')
+                  .replaceAll(RegExp(r'\s+'), ' ')
+                  .trim();
+              
+              if (title.contains(' - ')) title = title.split(' - ')[0];
 
               String? imageUrl;
 
               if (descMatch != null) {
-                final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"', dotAll: true)
+                final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"', dotAll: true, caseSensitive: false)
                     .firstMatch(descMatch.group(1)!);
                 if (imgMatch != null) imageUrl = imgMatch.group(1);
               }
 
               if (imageUrl == null || imageUrl.isEmpty) {
-                final encMatch =
-                    RegExp(r'<enclosure[^>]+url="([^"]+)"', dotAll: true)
-                        .firstMatch(itemStr);
+                final encMatch = RegExp(r'<enclosure[^>]+url="([^"]+)"', dotAll: true, caseSensitive: false)
+                    .firstMatch(itemStr);
                 if (encMatch != null) imageUrl = encMatch.group(1);
               }
 
-              // إضافة الصورة الافتراضية المناسبة من الـ 10 صور إذا لم تتوفر صورة
               if (imageUrl == null || imageUrl.isEmpty) {
-                imageUrl =
-                    fallbackImages[fallbackIndex % fallbackImages.length];
+                imageUrl = fallbackImages[fallbackIndex % fallbackImages.length];
                 fallbackIndex++;
               }
 
-              fetchedNews.add(
-                  AnnouncImagesModel(imageUrl: imageUrl, title: title.trim()));
+              if (title.length > 10) {
+                fetchedNews.add(AnnouncImagesModel(imageUrl: imageUrl, title: title));
+              }
             }
           }
         }
@@ -533,17 +534,26 @@ class HomenavcontrollerImp extends Homenavcontroller {
       final List<Future> fetchTasks = [];
 
       if (rssUrls.isNotEmpty) {
+        AppLogger.logInfo('Fetching Electricity News from: ${rssUrls[0]}');
         fetchTasks.add(_fetchRssNews(rssUrls[0], electricityNews));
       }
       if (rssUrls.length > 1) {
-        fetchTasks.add(_fetchRssNews(rssUrls[1], techNews));
+        AppLogger.logInfo('Fetching Technology News from: ${rssUrls[1]}');
+        final techKeywords = [
+          'تكنولوجيا', 'تقنية', 'ذكاء', 'اصطناعي', 'هاتف', 'آيفون', 'سامسونج', 
+          'تطبيق', 'إنترنت', 'رقمي', 'برمج', 'حاسوب', 'كمبيوتر', 'إلكترون',
+          'فضاء', 'سيبراني', 'شاشة', 'أندرويد', 'آبل', 'مايكروسوفت', 'فيسبوك'
+        ];
+        fetchTasks.add(_fetchRssNews(rssUrls[1], techNews, filterKeywords: techKeywords));
       }
 
       if (fetchTasks.isNotEmpty) {
-        await Future.wait(fetchTasks);
+        await Future.wait(fetchTasks).timeout(const Duration(seconds: 15));
       }
-
-      // إضافة نصوص بديلة في حال كانت القوائم فارغة لضمان ظهور الأشرطة دائماً
+    } catch (e) {
+      AppLogger.logError('Error fetching news', e);
+    } finally {
+      // ✅ نصوص بديلة تظهر دائماً في حال فشل الجلب أو كانت النتائج فارغة
       if (electricityNews.isEmpty) {
         electricityNews.assignAll([
           'جاري متابعة أحمال الشبكة القومية واستقرار الخدمة...',
@@ -558,69 +568,83 @@ class HomenavcontrollerImp extends Homenavcontroller {
           'تحول رقمي كامل في خدمات الكهرباء لخدمة المواطنين بشكل أفضل...'
         ]);
       }
-    } catch (e) {
-      AppLogger.logError('Error fetching news', e);
-    } finally {
       isNewsLoading.value = false;
     }
   }
 
-  Future<void> _fetchRssNews(String url, RxList<String> targetList) async {
+  Future<void> _fetchRssNews(String url, RxList<String> targetList, {List<String>? filterKeywords}) async {
     try {
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
-        final decoded = utf8.decode(response.bodyBytes);
+        // استخدام allowMalformed لتجنب أخطاء التحويل في حال وجود محارف غير صالحة
+        final decoded = utf8.decode(response.bodyBytes, allowMalformed: true);
         
-        // تحسين البحث عن العناصر ليدعم CDATA بشكل أفضل
-        final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true);
+        // تحسين البحث عن العناصر
+        final regExp = RegExp(r'<item[^>]*>(.*?)<\/item>', dotAll: true, caseSensitive: false);
         final matches = regExp.allMatches(decoded);
         
-        final news = <String>[];
+        final List<String> news = [];
         for (var m in matches) {
           final itemStr = m.group(1) ?? '';
           
-          // محاولة جلب العنوان مع دعم CDATA أو بدونه
-          final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]><\/title>', dotAll: true).firstMatch(itemStr) 
-                          ?? RegExp(r'<title>(.*?)<\/title>', dotAll: true).firstMatch(itemStr);
+          final titleRegEx = RegExp(r'<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>', dotAll: true, caseSensitive: false);
+          final titleMatch = titleRegEx.firstMatch(itemStr);
           
           if (titleMatch != null) {
             String title = titleMatch.group(1) ?? '';
             
-            // تنظيف النص
             title = title
-                .replaceAll('&#39;', "'")
-                .replaceAll('&quot;', '"')
-                .replaceAll('&amp;', '&')
-                .replaceAll('<![CDATA[', '')
-                .replaceAll(']]>', '')
-                .trim();
+              .replaceAll('<![CDATA[', '')
+              .replaceAll(']]>', '')
+              .replaceAll('&#39;', "'")
+              .replaceAll('&quot;', '"')
+              .replaceAll('&amp;', '&')
+              .replaceAll('&lt;', '<')
+              .replaceAll('&gt;', '>')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
                 
             if (title.contains(' - ')) {
-              title = title.split(' - ')[0]; // حذف مصدر الخبر
+              title = title.split(' - ')[0]; 
             }
             
-            if (title.isNotEmpty && 
+            if (title.length > 5 && 
                 !title.contains('Google News') && 
                 !title.contains('أخبار Google')) {
-              news.add(title);
+              
+              // تطبيق فلتر الكلمات المفتاحية إذا وجد (فقط لأخبار التكنولوجيا)
+              if (filterKeywords != null) {
+                bool matches = false;
+                for (var keyword in filterKeywords) {
+                  if (title.contains(keyword)) {
+                    matches = true;
+                    break;
+                  }
+                }
+                if (matches) news.add(title);
+              } else {
+                news.add(title);
+              }
             }
           }
+          
+          // تحديد عدد الأخبار بـ 20 لضمان أداء سلس
+          if (news.length >= 20) break;
         }
         
         if (news.isNotEmpty) {
           targetList.assignAll(news);
+          AppLogger.logInfo('Successfully loaded ${news.length} items from $url');
         }
       }
     } catch (e) {
-      AppLogger.logError('Error fetching RSS news from $url', e);
+      AppLogger.logError('RSS Fetch Error ($url)', e);
     }
   }
 
   Future<List<String>> _getRssUrls() async {
-    final defaultUrls = [
-      'https://news.google.com/rss/search?q=%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1%20%D9%85%D8%B5%D8%B1%20%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar',
-      'https://news.google.com/rss/search?q=%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A1%20%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar'
-    ];
+    final defaultTechUrl = 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ar&gl=EG&ceid=EG:ar';
+    final defaultElecUrl = 'https://news.google.com/rss/search?q=%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1%20%D9%85%D8%B5%D8%B1%20%D8%B7%D8%A7%D9%82%D8%A9&hl=ar&gl=EG&ceid=EG:ar';
 
     try {
       final response = await Supabase.instance.client
@@ -634,16 +658,19 @@ class HomenavcontrollerImp extends Homenavcontroller {
             .map((e) => e['link_string'] as String)
             .toList();
             
-        // دمج الروابط المجلوبة مع الروابط الافتراضية لضمان وجود رابطين على الأقل
+        // استبدال الرابط الثاني دائماً برابط التكنولوجيا المستقر من جوجل
+        // لأن محرك البحث أحياناً يرجع نتائج فارغة للكلمات المفتاحية المحددة في القاعدة
         if (fetchedUrls.length < 2) {
-          fetchedUrls.add(defaultUrls[1]); // إضافة الرابط الافتراضي للتكنولوجيا
+          fetchedUrls.add(defaultTechUrl);
+        } else {
+          fetchedUrls[1] = defaultTechUrl; // Force Stable Topic URL
         }
         return fetchedUrls;
       }
     } catch (e) {
       AppLogger.logWarning('Failed to fetch RSS URLs from Supabase: $e');
     }
-    return defaultUrls;
+    return [defaultElecUrl, defaultTechUrl];
   }
 
   void _startLoadVariationTimer() {
