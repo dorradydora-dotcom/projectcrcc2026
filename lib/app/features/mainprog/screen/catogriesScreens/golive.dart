@@ -99,6 +99,10 @@ class CallNotificationService {
         }
       }
 
+      if (!GetPlatform.isMobile) {
+        debugPrint('📞 [CallNotificationService] CallKit ignored on this platform');
+        return;
+      }
       if (status == 'ended' || status == 'rejected') {
         debugPrint('📞 [CallNotificationService] Status is $status, ending CallKit.');
         final callId = data['call_id'];
@@ -157,6 +161,7 @@ class CallNotificationService {
       ),
     );
 
+    if (!GetPlatform.isMobile) return;
     await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 }
@@ -181,7 +186,9 @@ class GlobalCallService extends GetxService {
       }
     });
     startListening();
-    _listenToCallkitEvents();
+    if (GetPlatform.isMobile) {
+      _listenToCallkitEvents();
+    }
   }
 
   void _handleCallNavigation(GoLiveController controller, String channelName) {
@@ -202,6 +209,7 @@ class GlobalCallService extends GetxService {
   }
 
   void _listenToCallkitEvents() {
+    if (!GetPlatform.isMobile) return;
     FlutterCallkitIncoming.onEvent.listen((event) async {
       switch (event!.event) {
         case callkit.Event.actionCallIncoming:
@@ -439,12 +447,14 @@ class GoLiveController extends GetxController {
     isLocalVideoReady.value = false;
     isRemoteVideoReady.value = false;
     try {
-      final status = await [Permission.camera, Permission.microphone].request();
-      if (status[Permission.camera] != PermissionStatus.granted) {
-        throw 'صلاحية الكاميرا مطلوبة';
-      }
-      if (status[Permission.microphone] != PermissionStatus.granted) {
-        throw 'صلاحية الميكروفون مطلوبة';
+      if (GetPlatform.isMobile) {
+        final status = await [Permission.camera, Permission.microphone].request();
+        if (status[Permission.camera] != PermissionStatus.granted) {
+          throw 'صلاحية الكاميرا مطلوبة';
+        }
+        if (status[Permission.microphone] != PermissionStatus.granted) {
+          throw 'صلاحية الميكروفون مطلوبة';
+        }
       }
 
       if (_engine == null) {
@@ -487,7 +497,7 @@ class GoLiveController extends GetxController {
       localViewController.value = VideoViewController(
         rtcEngine: _engine!,
         canvas: const VideoCanvas(uid: 0),
-        useAndroidSurfaceView: true,
+        useAndroidSurfaceView: GetPlatform.isAndroid,
       );
     } catch (e) {
       debugPrint('Agora Error: $e');

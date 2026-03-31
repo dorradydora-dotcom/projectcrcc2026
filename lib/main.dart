@@ -47,12 +47,26 @@ Future<void> _initializeHeavyServicesInBackground() async {
     ]);
     
     // 2. تهيئة Firebase بعد تحميل الـ .env
-    await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (GetPlatform.isMobile) {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    } else {
+      // For now, we skip mobile-specific listeners and handle Firebase carefully on Windows.
+      try {
+        // Only try to initialize if we have a way to do so, 
+        // but since we haven't run flutterfire configure for Windows,
+        // we might want to skip it entirely or use a try-catch.
+        await Firebase.initializeApp().timeout(const Duration(seconds: 5));
+      } catch (e) {
+        AppLogger.logWarning('Firebase initialization skipped on Windows: $e');
+      }
+    }
 
     // 3. تهيئة الخدمات التي تعتمد على بعضها بالتتابع ولكن مع فواصل Frames
     await _initializeSupabaseInBackground();
-    await _setupNotificationsInBackground();
+    if (GetPlatform.isMobile) {
+      await _setupNotificationsInBackground();
+    }
 
     // 4. تهيئة WebView في الخلفية (للتطوير فقط)
     if (!kReleaseMode) {
@@ -61,8 +75,10 @@ Future<void> _initializeHeavyServicesInBackground() async {
     }
 
     // 5. تهيئة خدمة المكالمات بعد التأكد من جاهزية Supabase
-    Get.put(GlobalCallService(), permanent: true);
-    AppLogger.logSuccess('✅ GlobalCallService initialized after Supabase');
+    if (GetPlatform.isMobile) {
+      Get.put(GlobalCallService(), permanent: true);
+      AppLogger.logSuccess('✅ GlobalCallService initialized after Supabase');
+    }
 
     _isServicesInitialized = true;
     _servicesInitializedCompleter.complete();
