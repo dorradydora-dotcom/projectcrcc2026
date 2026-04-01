@@ -8,6 +8,7 @@ import 'package:amiraly/app/features/mainprog/screen/reportscreens/report1_scree
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/report2_screen.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/report3_screen.dart';
 import 'package:amiraly/app/features/mainprog/screen/reportscreens/report4_screen.dart';
+import 'package:amiraly/app/features/mainprog/screen/reportscreens/hourly_load_report.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -253,6 +254,9 @@ class OfferCard extends StatelessWidget {
                       break;
                     case 'network_faults':
                       Get.to(() => NetworkFaultsReportScreen());
+                      break;
+                    case 'hourly_load':
+                      Get.to(() => const HourlyLoadReportScreen());
                       break;
                      case 'report_1':
                        Get.to(() => const Report1Screen(),

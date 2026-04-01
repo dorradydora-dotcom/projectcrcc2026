@@ -162,7 +162,8 @@ class _HomeNavState extends State<HomeNav> {
                         title: 'تكنولوجيا',
                         icon: Icons.biotech,
                         velocity: -25.0,
-                        backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
+                        backgroundColor:
+                            Colors.blueAccent.withValues(alpha: 0.1),
                       ),
                     ],
                   );
@@ -271,7 +272,7 @@ class _HomeNavState extends State<HomeNav> {
           FadeInDown(
             child: HeadlineText(
               fontfamily: Appfontstring.ChangaLight,
-              fontSize: 15.00.sp,
+              fontSize: 13.00.sp,
               headlineText: Stringshomenav.newsHeadline,
               buttomheadlineText: '...',
               color1: Colors.white70,
@@ -287,7 +288,7 @@ class _HomeNavState extends State<HomeNav> {
           FadeInUp(
             child: HeadlineText(
               fontfamily: Appfontstring.ChangaLight,
-              fontSize: 15.00.sp,
+              fontSize: 13.00.sp,
               headlineText: Stringshomenav.cairoWeatherHeadline,
               buttomheadlineText: '...',
               color1: Colors.white70,
@@ -396,13 +397,15 @@ class _HomeNavState extends State<HomeNav> {
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                           vertical: 6.h, horizontal: 8.w),
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            Colors.black87,
-                                            Colors.black45,
+                                            Colors.black.withValues(alpha: 0.9),
+                                            Colors.black.withValues(alpha: 0.7),
+                                            Colors.black.withValues(alpha: 0.4),
                                             Colors.transparent
                                           ],
+                                          stops: const [0.0, 0.3, 0.6, 1.0],
                                           begin: Alignment.bottomCenter,
                                           end: Alignment.topCenter,
                                         ),
@@ -415,8 +418,17 @@ class _HomeNavState extends State<HomeNav> {
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 12.sp,
+                                          fontWeight: FontWeight.bold,
                                           fontFamily: Appfontstring.ChangaLight,
-                                          height: 1.2,
+                                          height: 1.3,
+                                          shadows: [
+                                            Shadow(
+                                              offset: const Offset(0, 1),
+                                              blurRadius: 3.0,
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.5),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -592,7 +604,7 @@ class _HomeNavState extends State<HomeNav> {
         FadeInLeft(
           child: HeadlineText(
             fontfamily: Appfontstring.ChangaLight,
-            fontSize: 14.sp,
+            fontSize: 13.sp,
             headlineText: Stringshomenav.networkLoadHeadline,
             buttomheadlineText: Stringshomenav.seeAll,
             color1: Colors.white70,
@@ -610,7 +622,7 @@ class _HomeNavState extends State<HomeNav> {
         FadeInRight(
           child: HeadlineText(
             fontfamily: Appfontstring.ChangaLight,
-            fontSize: 14.sp,
+            fontSize: 13.sp,
             headlineText: Stringshomenav.exchangeHeadline,
             buttomheadlineText: Stringshomenav.seeAll,
             color1: Colors.white70,
@@ -630,7 +642,7 @@ class _HomeNavState extends State<HomeNav> {
         SizedBox(height: 4.h),
         HeadlineText(
           fontfamily: Appfontstring.ChangaLight,
-          fontSize: 16.00.sp,
+          fontSize: 15.00.sp,
           headlineText: Stringshomenav.generationHeadline,
           buttomheadlineText: Stringshomenav.seeAll,
           color1: Colors.white70,
@@ -661,7 +673,7 @@ class _HomeNavState extends State<HomeNav> {
               error.isNotEmpty ? error : 'فشل في تحميل البيانات',
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: 14.sp,
+                fontSize: 13.sp,
                 fontFamily: Appfontstring.ChangaLight,
                 fontWeight: FontWeight.w500,
               ),
@@ -675,7 +687,7 @@ class _HomeNavState extends State<HomeNav> {
                 'إعادة المحاولة',
                 style: TextStyle(
                   color: Colors.blueAccent,
-                  fontSize: 12.sp,
+                  fontSize: 13.sp,
                   fontFamily: Appfontstring.ChangaLight,
                 ),
               ),

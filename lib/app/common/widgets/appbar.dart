@@ -104,6 +104,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
     return AppBar(
       centerTitle: true,
       backgroundColor: Appcolors.primaryColor,
+      leading: Navigator.canPop(context)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              onPressed: () => Get.back(),
+            )
+          : null,
       title: _buildAppBarTitle(context),
       actions: [
         if (widget.onRefresh != null)

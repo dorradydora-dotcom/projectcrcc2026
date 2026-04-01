@@ -316,28 +316,42 @@ class HomenavcontrollerImp extends Homenavcontroller {
     try {
       final rssUrls = await _getRssUrls();
 
-      // 10 صور عالية الجودة وسريعة التحميل (مضغوطة) للطاقة والتكنولوجيا
+      // 20 صورة عالية الجودة وسريعة التحميل (مضغوطة) تغطي مجالات الطاقة والتكنولوجيا والبرمجة
       final fallbackImages = [
-        'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=70', // توربينات رياح
-        'https://images.unsplash.com/photo-1509391366360-1e96191cb14b?w=600&q=70', // طاقة شمسية
-        'https://images.unsplash.com/photo-1548337138-e87f88ebcc8a?w=600&q=70', // خطوط كهرباء
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=70', // لوحة تقنية
-        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&q=70', // محطة توليد
-        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=70', // شبكة أجهزة
-        'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&q=70', // مصباح متوهج
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=70', // تقنية برمجيات
-        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70', // سيرفرات
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=70' // شبكة العالم الرقمي
+        'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80', // توربينات رياح
+        'https://images.unsplash.com/photo-1509391366360-1e96191cb14b?w=800&q=80', // طاقة شمسية
+        'https://images.unsplash.com/photo-1548337138-e87f88ebcc8a?w=800&q=80', // خطوط كهرباء
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80', // لوحة تقنية
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&q=80', // محطة توليد
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80', // شبكة أجهزة
+        'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=800&q=80', // مصباح متوهج
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80', // تقنية برمجيات
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=80', // سيرفرات
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', // شبكة العالم الرقمي
+        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80', // أمن سيبراني
+        'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80', // روبوت وذكاء اصطناعي
+        'https://images.unsplash.com/photo-1542336391-ae2936d8efe4?w=800&q=80', // طبيعة وطاقة
+        'https://images.unsplash.com/photo-1574689049594-37690225a7e5?w=800&q=80', // سدود وتوليد مائي
+        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80', // مهندس كهرباء
+        'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=800&q=80', // شرارات كهربائية
+        'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80', // لمسة تكنولوجية
+        'https://images.unsplash.com/photo-1525373612132-b3e2779a7efd?w=800&q=80', // علوم ومستقبل
+        'https://images.unsplash.com/photo-1460518451285-cd3af43043b1?w=800&q=80', // تجريد تقني
+        'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&q=80'  // سطور برمجية
       ];
-      int fallbackIndex = 0;
 
       List<AnnouncImagesModel> fetchedNews = [];
+      
+      // جلب كافة روابط الـ RSS بالتوازي لتوفير الوقت وتجنب الـ Timeout السلسلي
+      final List<Future<http.Response>> fetchTasks = rssUrls.map((url) => 
+        http.get(Uri.parse(url)).timeout(const Duration(seconds: 15))
+      ).toList();
 
-      for (var url in rssUrls) {
-        final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      final List<http.Response> responses = await Future.wait(fetchTasks);
+
+      for (var response in responses) {
         if (response.statusCode == 200) {
-          final decoded = utf8.decode(response.bodyBytes);
+          final decoded = utf8.decode(response.bodyBytes, allowMalformed: true);
           
           // تحسين البحث عن العناصر - دعم حالة الأحرف
           final regExp = RegExp(r'<item>(.*?)<\/item>', dotAll: true, caseSensitive: false);
@@ -381,8 +395,9 @@ class HomenavcontrollerImp extends Homenavcontroller {
               }
 
               if (imageUrl == null || imageUrl.isEmpty) {
-                imageUrl = fallbackImages[fallbackIndex % fallbackImages.length];
-                fallbackIndex++;
+                // استخدام منطق الـ Hash لضمان اختيار صورة بديلة متنوعة ولكن ثابتة لنفس الخبر
+                final int imageHash = title.hashCode.abs();
+                imageUrl = fallbackImages[imageHash % fallbackImages.length];
               }
 
               if (title.length > 10) {
@@ -394,8 +409,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
       }
 
       if (fetchedNews.isNotEmpty) {
-        fetchedNews.shuffle(); // تنويع الأخبار
-        _announcImages.assignAll(fetchedNews.take(10).toList());
+        fetchedNews.shuffle(); // تنويع الأخبار في العرض
+        _announcImages.assignAll(fetchedNews.take(20).toList()); // زيادة العدد لـ 20 لغزارة المحتوى
         return; // نجاح
       }
     } catch (e) {
@@ -441,7 +456,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
     try {
       final response = await http
           .get(Uri.parse(apiUrl))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['daily'] != null && data['current_weather'] != null) {
@@ -574,7 +589,7 @@ class HomenavcontrollerImp extends Homenavcontroller {
 
   Future<void> _fetchRssNews(String url, RxList<String> targetList, {List<String>? filterKeywords}) async {
     try {
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 12));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         // استخدام allowMalformed لتجنب أخطاء التحويل في حال وجود محارف غير صالحة
         final decoded = utf8.decode(response.bodyBytes, allowMalformed: true);

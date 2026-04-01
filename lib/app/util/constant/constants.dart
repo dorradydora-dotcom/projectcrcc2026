@@ -169,7 +169,7 @@ class Stringshomenav {
   static const String noStationData = 'No station data available';
   static const String noWeatherData = 'No weather data available';
   static const String retry = 'Retry';
-  static const String newsHeadline = 'الاخبـار';
+  static const String newsHeadline = 'عناوين الاخبار';
   static const String cairoWeatherHeadline = 'طقس القاهرة';
   static const String networkLoadHeadline = 'حمل شبكة القاهرة ';
   static const String exchangeHeadline = 'التبادلات مع التحكمات الاقليمية';
