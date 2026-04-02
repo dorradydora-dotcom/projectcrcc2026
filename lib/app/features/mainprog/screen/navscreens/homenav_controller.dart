@@ -174,58 +174,15 @@ class HomenavcontrollerImp extends Homenavcontroller {
     }
 
     try {
-      final client = Supabase.instance.client;
-      final results = await Future.wait([
-        client
-            .from(AppConstants.tableUserCm)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-        client
-            .from(AppConstants.tableUserStations)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-        client
-            .from(AppConstants.tableUserTop)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-        client
-            .from(AppConstants.tableUserCrcc)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-        client
-            .from(AppConstants.tableUserProject)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-        client
-            .from(AppConstants.tableUserOthers)
-            .select()
-            .eq('user_email', email)
-            .limit(1),
-      ]);
+      // 🚀 Optimization: Single RPC call instead of 6 parallel queries
+      final String result = await Supabase.instance.client
+          .rpc('get_user_group', params: {'email_param': email});
 
-      if (results[0].isNotEmpty) {
-        _userGroup.value = 'cm';
-      } else if (results[1].isNotEmpty) {
-        _userGroup.value = 'stations';
-      } else if (results[2].isNotEmpty) {
-        _userGroup.value = 'top';
-      } else if (results[3].isNotEmpty) {
-        _userGroup.value = 'crcc';
-      } else if (results[4].isNotEmpty) {
-        _userGroup.value = 'project';
-      } else if (results[5].isNotEmpty) {
-        _userGroup.value = 'others';
-      } else {
-        _userGroup.value = 'none';
-      }
+      _userGroup.value = result;
+      AppLogger.logSuccess('✅ User group identified as: $result (via RPC)');
     } catch (e) {
       _userGroup.value = 'none';
-      AppLogger.logError('Error checking user group', e);
+      AppLogger.logError('Error checking user group via RPC', e);
     }
   }
 
@@ -409,8 +366,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
       }
 
       if (fetchedNews.isNotEmpty) {
-        fetchedNews.shuffle(); // تنويع الأخبار في العرض
-        _announcImages.assignAll(fetchedNews.take(20).toList()); // زيادة العدد لـ 20 لغزارة المحتوى
+        // نأخذ أحدث 7 أخبار فقط لسرعة الأداء وتجنب أخطاء الصور
+        _announcImages.assignAll(fetchedNews.take(7).toList());
         return; // نجاح
       }
     } catch (e) {

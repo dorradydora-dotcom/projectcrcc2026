@@ -130,15 +130,13 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     final args = Get.arguments;
-    if (args is Map && args['route'] == 'call') {
-      debugPrint(
-          'SplashScreen: Detected call arguments, using Get.to to preserve flow');
-      Get.to(() => nextScreen,
-          arguments: args,
-          transition: Transition.noTransition);
+    final bool isCall = (args is Map && args['route'] == 'call');
+
+    if (isCall) {
+       debugPrint('SplashScreen: Call detected in arguments, navigating to Next with Get.offAll');
+       Get.offAll(() => nextScreen, arguments: args, transition: Transition.noTransition);
     } else {
-      Get.offAll(() => nextScreen,
-          transition: Transition.noTransition);
+       Get.offAll(() => nextScreen, transition: Transition.noTransition);
     }
   }
 

@@ -41,7 +41,7 @@ class CallNotificationService {
           'caller_name': callerName,
           'channel_name': channelName,
           'status': 'ringing',
-          'priority': 'HIGH',
+          'priority': 'high', // Standard high priority
           'timestamp': DateTime.now().toUtc().toIso8601String(),
         },
       );
@@ -74,6 +74,7 @@ class CallNotificationService {
           'route': 'call',
           'call_id': callId,
           'status': 'ended',
+          'timestamp': DateTime.now().toUtc().toIso8601String(),
         },
       );
       return response.status == 200;
@@ -87,15 +88,24 @@ class CallNotificationService {
       debugPrint('📞 [CallNotificationService] handleCallNotification received data: $data');
       final status = data['status'];
 
-      final timestampStr = data['timestamp'];
+      final String? timestampStr = data['timestamp']?.toString();
       if (timestampStr != null) {
-        final createdAt = DateTime.tryParse(timestampStr);
+        final createdAt = DateTime.tryParse(timestampStr)?.toUtc();
         if (createdAt != null) {
-           final diff = DateTime.now().toUtc().difference(createdAt).inSeconds.abs();
+           final now = DateTime.now().toUtc();
+           final diff = now.difference(createdAt).inSeconds.abs();
+           
+           // إذا كان الإشعار قديماً جداً (أكثر من 60 ثانية) نتجاهله
            if (diff > 60) {
-             debugPrint('📞 [CallNotificationService] Call notification is too old ($diff s). Ignoring.');
+             debugPrint('📞 [CallNotificationService] STALE MESSAGE DETECTED: diff=$diff s, createdAt=$createdAt, now=$now. Ignoring.');
              return;
            }
+        }
+      } else {
+        // إذا لم يوجد طابع زمني في رسالة رنين، يفضل تجاهلها لأمان النظام
+        if (status != 'ended' && status != 'rejected') {
+           debugPrint('📞 [CallNotificationService] WARNING: No timestamp found in ringing notification. Ignoring for safety.');
+           return;
         }
       }
 
@@ -188,6 +198,77 @@ class GlobalCallService extends GetxService {
     startListening();
     if (GetPlatform.isMobile) {
       _listenToCallkitEvents();
+      _checkCurrentCall(); // فحص المكالمة عند بدء التشغيل
+      _setupActiveCallMonitor(); // مراقبة المكالمة الحالية
+    }
+  }
+
+  StreamSubscription? _activeCallSubscription;
+
+  void _setupActiveCallMonitor() {
+    // مراقبة تغير currentCallId لبدء/إيقاف الاشتراك المخصص
+    ever(currentCallId, (callId) {
+      _activeCallSubscription?.cancel();
+      if (callId != null) {
+        debugPrint('📞 [GlobalCallService] Active monitor started for: $callId');
+        _activeCallSubscription = Supabase.instance.client
+            .from(AppConstants.tableCallsSignaling)
+            .stream(primaryKey: ['id'])
+            .eq('id', callId)
+            .listen((data) {
+              if (data.isNotEmpty) {
+                final snap = data.first;
+                final status = snap['status'];
+                if (status == 'ended' || status == 'rejected') {
+                  debugPrint('📞 [GlobalCallService] Monitor: Remote $status detect for $callId');
+                  if (Get.isRegistered<GoLiveController>()) {
+                    Get.find<GoLiveController>().endCall('Signaling monitor ($status)');
+                  }
+                }
+              }
+            }, onError: (e) => debugPrint('📞 [GlobalCallService] Monitor Error: $e'));
+      }
+    });
+  }
+
+  Future<void> _checkCurrentCall() async {
+    try {
+      final calls = await FlutterCallkitIncoming.activeCalls();
+      if (calls is List && calls.isNotEmpty) {
+        final call = calls.first;
+        final bool isAccepted = call['isAccepted'] ?? false;
+        if (isAccepted) {
+          final data = call['extra'] != null ? Map<String, dynamic>.from(call['extra']) : null;
+          if (data != null && (data['route'] == 'call' || data['call_id'] != null)) {
+            final callId = data['call_id'];
+            final channelName = data['channel_name'] ?? callId;
+            
+            if (callId != null) {
+              // 🔍 التحقق من حالة المكالمة في سوبابيز قبل محاولة الفتح
+              final callStatus = await Supabase.instance.client
+                  .from(AppConstants.tableCallsSignaling)
+                  .select('status')
+                  .eq('id', callId)
+                  .maybeSingle();
+
+              if (callStatus == null || 
+                  callStatus['status'] == 'ended' || 
+                  callStatus['status'] == 'rejected') {
+                debugPrint('📞 [GlobalCallService] Call $callId is already dead. Cleaning up.');
+                await FlutterCallkitIncoming.endCall(callId);
+                return; // لا تفتح الواجهة
+              }
+
+              debugPrint('📞 [GlobalCallService] Found valid active accepted call: $callId');
+              final controller = Get.put(GoLiveController(), permanent: true);
+              controller.respondToCall(callId, true, channelName);
+              _handleCallNavigation(controller, channelName);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking current call: $e');
     }
   }
 
@@ -199,10 +280,12 @@ class GlobalCallService extends GetxService {
         currentRoute.contains('Splash');
     
     if (isSplash) {
-       Future.delayed(const Duration(milliseconds: 500), () {
+       debugPrint('📞 [GlobalCallService] Navigation delayed (Route: $currentRoute)');
+       Future.delayed(const Duration(milliseconds: 800), () {
            _handleCallNavigation(controller, channelName);
        });
     } else {
+       debugPrint('📞 [GlobalCallService] Navigating to VideoCallPage (Target: $channelName)');
        Get.to(() => VideoCallPage(controller: controller, channelName: channelName),
            transition: Transition.noTransition);
     }
@@ -220,9 +303,24 @@ class GlobalCallService extends GetxService {
             final callId = data['call_id'];
             final channelName = data['channel_name'] ?? callId;
             if (callId != null) {
+              // 🔍 التحقق الإضافي عند حدث القبول المباشر
               final controller = Get.put(GoLiveController(), permanent: true);
-              controller.respondToCall(callId, true, channelName);
-              _handleCallNavigation(controller, channelName);
+              
+              final callStatus = await Supabase.instance.client
+                  .from(AppConstants.tableCallsSignaling)
+                  .select('status')
+                  .eq('id', callId)
+                  .maybeSingle();
+
+              if (callStatus != null && 
+                  (callStatus['status'] == 'ringing' || callStatus['status'] == 'accepted')) {
+                debugPrint('📞 [GlobalCallService] Valid event accept for call: $callId');
+                controller.respondToCall(callId, true, channelName);
+                _handleCallNavigation(controller, channelName);
+              } else {
+                debugPrint('📞 [GlobalCallService] Ignoring stale accept event for call: $callId');
+                await FlutterCallkitIncoming.endCall(callId);
+              }
             }
           }
           break;
@@ -259,16 +357,22 @@ class GlobalCallService extends GetxService {
         .eq('receiver_id', userId)
         .listen((List<Map<String, dynamic>> data) {
           debugPrint('📞 [GlobalCallService] Stream updated. Rows count: ${data.length}');
+
           if (data.isNotEmpty) {
             final activeCall = data.firstWhere(
               (call) {
+                // الفحص للمستقبل فقط فى حالة الرنين للاستجابة
                 if (call['status'] != 'ringing') return false;
                 final createdAtStr = call['created_at'];
                 if (createdAtStr != null) {
-                  final createdAt = DateTime.parse(createdAtStr).toUtc();
-                  if (DateTime.now().toUtc().difference(createdAt).inSeconds.abs() > 60) {
-                    debugPrint('📞 [GlobalCallService] Ignoring call ${call['id']} (older than 60s).');
-                    return false;
+                  final createdAt = DateTime.tryParse(createdAtStr)?.toUtc();
+                  if (createdAt != null) {
+                    final now = DateTime.now().toUtc();
+                    final diff = now.difference(createdAt).inSeconds.abs();
+                    if (diff > 60) {
+                      debugPrint('📞 [GlobalCallService] Stream stale call ignored: diff=$diff s');
+                      return false;
+                    }
                   }
                 }
                 return true;
@@ -319,6 +423,7 @@ class GlobalCallService extends GetxService {
   @override
   void onClose() {
     _signalingSubscription?.cancel();
+    _activeCallSubscription?.cancel();
     super.onClose();
   }
 }
@@ -349,7 +454,8 @@ class GoLiveController extends GetxController {
   static const String connectSound = 'lib/assets/sounds/connect.mp3';
   static const String hangupSound = 'lib/assets/sounds/hangup.mp3';
 
-  final Rx<String?> currentCallId = Rx<String?>(null);
+  // [Refactored] Use GlobalCallService.to.currentCallId instead
+  Rx<String?> get currentCallId => GlobalCallService.to.currentCallId;
 
   RtcEngine? _engine;
   RtcEngine? get engine => _engine;
@@ -602,7 +708,7 @@ class GoLiveController extends GetxController {
           .single();
 
       debugPrint('📞 [GoLiveController] Signaling record created. Call ID: ${response['id']}');
-      currentCallId.value = response['id'];
+      GlobalCallService.to.currentCallId.value = response['id'];
 
       if (receiverToken != null) {
         debugPrint('📞 [GoLiveController] Sending push notification to receiver...');
@@ -660,10 +766,11 @@ class GoLiveController extends GetxController {
     } catch (_) {}
   }
 
-  Future<void> endCall() async {
+  Future<void> endCall([String reason = 'Direct user action']) async {
+    debugPrint('📞 [GoLiveController] endCall triggered. Reason: $reason');
     _callTimeoutTimer?.cancel();
-    if (currentCallId.value != null) {
-      final callId = currentCallId.value!;
+    if (GlobalCallService.to.currentCallId.value != null) {
+      final callId = GlobalCallService.to.currentCallId.value!;
       
       final callData = await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
@@ -698,6 +805,20 @@ class GoLiveController extends GetxController {
     GlobalCallService.to.incomingCall.value = null;
     localViewController.value = null;
     remoteViewController.value = null;
+
+    // 🆕 إغلاق واجهة الفيديو بذكاء لتجنب الانغلاق المبكر
+    if (Get.isRegistered<GoLiveController>()) {
+        final String currentRoute = Get.currentRoute;
+        debugPrint('📞 [GoLiveController] Navigation check - Current Route: $currentRoute');
+        
+        if (currentRoute.contains('VideoCall') || currentRoute == '') {
+           if (currentRoute != 'Go live' && currentRoute != '/HomePage' && !currentRoute.contains('Splash')) {
+              debugPrint('📞 [GoLiveController] Closing VideoCallPage...');
+              Get.back();
+           }
+        }
+    }
+    GlobalCallService.to.currentCallId.value = null; // نغيرها في النهاية لضمان عمل الـ Cleanup
   }
 
   Future<void> disposeAgora() async {
