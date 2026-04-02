@@ -600,8 +600,8 @@ class HomenavcontrollerImp extends Homenavcontroller {
             }
           }
           
-          // تحديد عدد الأخبار بـ 20 لضمان أداء سلس
-          if (news.length >= 20) break;
+          // تحديد عدد الأخبار بـ 10 لضمان أداء سلس وتوفير الذاكرة
+          if (news.length >= 10) break;
         }
         
         if (news.isNotEmpty) {

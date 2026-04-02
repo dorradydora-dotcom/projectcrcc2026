@@ -12,6 +12,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:amiraly/app/common/models/appmodels.dart';
 import 'package:amiraly/app/common/widgets/appbar.dart';
 import 'package:amiraly/app/util/constant/constants.dart';
@@ -29,8 +30,10 @@ class CallNotificationService {
     required String channelName,
   }) async {
     try {
-      debugPrint('📞 [CallNotificationService] Preparing to send FCM to token: $deviceToken');
-      debugPrint('📞 [CallNotificationService] Payload: callId=$callId, channel=$channelName');
+      debugPrint(
+          '📞 [CallNotificationService] Preparing to send FCM to token: $deviceToken');
+      debugPrint(
+          '📞 [CallNotificationService] Payload: callId=$callId, channel=$channelName');
       final response = await Supabase.instance.client.functions.invoke(
         'send-fcm',
         body: {
@@ -45,14 +48,16 @@ class CallNotificationService {
           'timestamp': DateTime.now().toUtc().toIso8601String(),
         },
       );
-      
-      debugPrint('📞 [CallNotificationService] Edge function response status: ${response.status}');
+
+      debugPrint(
+          '📞 [CallNotificationService] Edge function response status: ${response.status}');
       if (response.status == 200) {
         AppLogger.logSuccess('Call notification sent via Edge Function');
         debugPrint('📞 [CallNotificationService] Success payload sent.');
         return true;
       }
-      debugPrint('📞 [CallNotificationService] Failed to send notification. Response body: ${response.data}');
+      debugPrint(
+          '📞 [CallNotificationService] Failed to send notification. Response body: ${response.data}');
       return false;
     } catch (e, stackTrace) {
       debugPrint('📞 [CallNotificationService] Exception during send-fcm: $e');
@@ -85,36 +90,28 @@ class CallNotificationService {
 
   static Future<void> handleCallNotification(Map<String, dynamic> data) async {
     try {
-      debugPrint('📞 [CallNotificationService] handleCallNotification received data: $data');
+      debugPrint(
+          '📞 [CallNotificationService] handleCallNotification received data: $data');
       final status = data['status'];
 
+      // Always show CallKit as the primary UNIFIED interface for answering
       final String? timestampStr = data['timestamp']?.toString();
       if (timestampStr != null) {
         final createdAt = DateTime.tryParse(timestampStr)?.toUtc();
         if (createdAt != null) {
-           final now = DateTime.now().toUtc();
-           final diff = now.difference(createdAt).inSeconds.abs();
-           
-           // إذا كان الإشعار قديماً جداً (أكثر من 60 ثانية) نتجاهله
-           if (diff > 60) {
-             debugPrint('📞 [CallNotificationService] STALE MESSAGE DETECTED: diff=$diff s, createdAt=$createdAt, now=$now. Ignoring.');
-             return;
-           }
-        }
-      } else {
-        // إذا لم يوجد طابع زمني في رسالة رنين، يفضل تجاهلها لأمان النظام
-        if (status != 'ended' && status != 'rejected') {
-           debugPrint('📞 [CallNotificationService] WARNING: No timestamp found in ringing notification. Ignoring for safety.');
-           return;
+          final now = DateTime.now().toUtc();
+          final diff = now.difference(createdAt).inSeconds.abs();
+          if (diff > 600) {
+            debugPrint(
+                '📞 [CallNotificationService] STALE MESSAGE DETECTED. Ignoring.');
+            return;
+          }
         }
       }
 
-      if (!GetPlatform.isMobile) {
-        debugPrint('📞 [CallNotificationService] CallKit ignored on this platform');
-        return;
-      }
+      if (!GetPlatform.isMobile) return;
+
       if (status == 'ended' || status == 'rejected') {
-        debugPrint('📞 [CallNotificationService] Status is $status, ending CallKit.');
         final callId = data['call_id'];
         if (callId != null) {
           await FlutterCallkitIncoming.endCall(callId);
@@ -123,7 +120,8 @@ class CallNotificationService {
         }
         return;
       }
-      debugPrint('📞 [CallNotificationService] Calling showCallKit...');
+
+      debugPrint('📞 [CallNotificationService] Showing Unified CallKit UI...');
       await showCallKit(data);
     } catch (e, stack) {
       debugPrint('Error handling call notification: $e\n$stack');
@@ -131,48 +129,52 @@ class CallNotificationService {
   }
 
   static Future<void> showCallKit(Map<String, dynamic> data) async {
-    final String? callId = data['call_id'];
-    if (callId == null) {
-      debugPrint('Cannot show CallKit: missing call_id in data');
-      return;
+    try {
+      final String callId =
+          data['call_id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final String callerName = data['caller_name'] ?? 'مكالمة واردة';
+      final String channelName = data['channel_name'] ?? callId;
+
+      // 🧹 Ensure strict Single UI by ending everything else first
+      await FlutterCallkitIncoming.endAllCalls();
+
+      final params = callkit.CallKitParams(
+        id: callId,
+        nameCaller: callerName,
+        appName: 'Amiraly GoLive',
+        handle: 'فيديو مباشر',
+        type: 1, // 0: Audio, 1: Video
+        duration: 60000,
+        textAccept: 'رد',
+        textDecline: 'رفض',
+        missedCallNotification: const callkit.NotificationParams(
+          showNotification: true,
+          isShowCallback: true,
+          subtitle: 'مكالمة فائتة',
+          callbackText: 'اتصال لاحقاً',
+        ),
+        extra: <String, dynamic>{
+          'route': 'call',
+          'call_id': callId,
+          'channel_name': channelName,
+          'caller_name': callerName,
+        },
+        android: const callkit.AndroidParams(
+          isCustomNotification: true,
+          isShowLogo: true,
+          ringtonePath: 'system_ringtone_default',
+          backgroundColor: '#071624',
+          actionColor: '#4CAF50',
+          incomingCallNotificationChannelName: "Incoming Call",
+          missedCallNotificationChannelName: "Missed Call",
+        ),
+      );
+
+      if (!GetPlatform.isMobile) return;
+      await FlutterCallkitIncoming.showCallkitIncoming(params);
+    } catch (e) {
+      debugPrint('Error in showCallKit: $e');
     }
-    final callerName = data['caller_name'] ?? 'محطة غير معروفة';
-    final channelName = data['channel_name'] ?? 'g-live';
-
-    final params = callkit.CallKitParams(
-      id: callId,
-      nameCaller: callerName,
-      appName: 'Amiraly GoLive',
-      handle: 'فيديو مباشر',
-      type: 1, // 0: Audio, 1: Video
-      duration: 60000,
-      textAccept: 'رد',
-      textDecline: 'رفض',
-      missedCallNotification: const callkit.NotificationParams(
-        showNotification: true,
-        isShowCallback: true,
-        subtitle: 'مكالمة فائتة',
-        callbackText: 'اتصال لاحقاً',
-      ),
-      extra: <String, dynamic>{
-        'route': 'call',
-        'call_id': callId,
-        'channel_name': channelName,
-        'caller_name': callerName,
-      },
-      android: const callkit.AndroidParams(
-        isCustomNotification: true,
-        isShowLogo: true,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#071624',
-        actionColor: '#4CAF50',
-        incomingCallNotificationChannelName: "Incoming Call",
-        missedCallNotificationChannelName: "Missed Call",
-      ),
-    );
-
-    if (!GetPlatform.isMobile) return;
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 }
 
@@ -181,7 +183,8 @@ class GlobalCallService extends GetxService {
 
   StreamSubscription? _signalingSubscription;
   final Rx<String?> currentCallId = Rx<String?>(null);
-  final Rx<Map<String, dynamic>?> incomingCall = Rx<Map<String, dynamic>?>(null);
+  final Rx<Map<String, dynamic>?> incomingCall =
+      Rx<Map<String, dynamic>?>(null);
 
   @override
   void onInit() {
@@ -210,7 +213,8 @@ class GlobalCallService extends GetxService {
     ever(currentCallId, (callId) {
       _activeCallSubscription?.cancel();
       if (callId != null) {
-        debugPrint('📞 [GlobalCallService] Active monitor started for: $callId');
+        debugPrint(
+            '📞 [GlobalCallService] Active monitor started for: $callId');
         _activeCallSubscription = Supabase.instance.client
             .from(AppConstants.tableCallsSignaling)
             .stream(primaryKey: ['id'])
@@ -220,13 +224,17 @@ class GlobalCallService extends GetxService {
                 final snap = data.first;
                 final status = snap['status'];
                 if (status == 'ended' || status == 'rejected') {
-                  debugPrint('📞 [GlobalCallService] Monitor: Remote $status detect for $callId');
+                  debugPrint(
+                      '📞 [GlobalCallService] Monitor: Remote $status detect for $callId');
                   if (Get.isRegistered<GoLiveController>()) {
-                    Get.find<GoLiveController>().endCall('Signaling monitor ($status)');
+                    Get.find<GoLiveController>()
+                        .endCall('Signaling monitor ($status)');
                   }
                 }
               }
-            }, onError: (e) => debugPrint('📞 [GlobalCallService] Monitor Error: $e'));
+            },
+                onError: (e) =>
+                    debugPrint('📞 [GlobalCallService] Monitor Error: $e'));
       }
     });
   }
@@ -238,11 +246,14 @@ class GlobalCallService extends GetxService {
         final call = calls.first;
         final bool isAccepted = call['isAccepted'] ?? false;
         if (isAccepted) {
-          final data = call['extra'] != null ? Map<String, dynamic>.from(call['extra']) : null;
-          if (data != null && (data['route'] == 'call' || data['call_id'] != null)) {
+          final data = call['extra'] != null
+              ? Map<String, dynamic>.from(call['extra'])
+              : null;
+          if (data != null &&
+              (data['route'] == 'call' || data['call_id'] != null)) {
             final callId = data['call_id'];
             final channelName = data['channel_name'] ?? callId;
-            
+
             if (callId != null) {
               // 🔍 التحقق من حالة المكالمة في سوبابيز قبل محاولة الفتح
               final callStatus = await Supabase.instance.client
@@ -251,17 +262,20 @@ class GlobalCallService extends GetxService {
                   .eq('id', callId)
                   .maybeSingle();
 
-              if (callStatus == null || 
-                  callStatus['status'] == 'ended' || 
+              if (callStatus == null ||
+                  callStatus['status'] == 'ended' ||
                   callStatus['status'] == 'rejected') {
-                debugPrint('📞 [GlobalCallService] Call $callId is already dead. Cleaning up.');
+                debugPrint(
+                    '📞 [GlobalCallService] Call $callId is already dead. Cleaning up.');
                 await FlutterCallkitIncoming.endCall(callId);
                 return; // لا تفتح الواجهة
               }
 
-              debugPrint('📞 [GlobalCallService] Found valid active accepted call: $callId');
+              debugPrint(
+                  '📞 [GlobalCallService] Found valid active accepted call: $callId');
               final controller = Get.put(GoLiveController(), permanent: true);
-              controller.respondToCall(callId, true, channelName);
+              controller.respondToCall(
+                  callId: callId, accept: true, channelName: channelName);
               _handleCallNavigation(controller, channelName);
             }
           }
@@ -274,20 +288,23 @@ class GlobalCallService extends GetxService {
 
   void _handleCallNavigation(GoLiveController controller, String channelName) {
     final String currentRoute = Get.currentRoute;
-    final bool isSplash = currentRoute == '/' || 
-        currentRoute == '/SplashScreen' || 
-        currentRoute == '' || 
+    final bool isSplash = currentRoute == '/' ||
+        currentRoute == '/SplashScreen' ||
+        currentRoute == '' ||
         currentRoute.contains('Splash');
-    
+
     if (isSplash) {
-       debugPrint('📞 [GlobalCallService] Navigation delayed (Route: $currentRoute)');
-       Future.delayed(const Duration(milliseconds: 800), () {
-           _handleCallNavigation(controller, channelName);
-       });
+      debugPrint(
+          '📞 [GlobalCallService] Navigation delayed (Route: $currentRoute)');
+      Future.delayed(const Duration(milliseconds: 800), () {
+        _handleCallNavigation(controller, channelName);
+      });
     } else {
-       debugPrint('📞 [GlobalCallService] Navigating to VideoCallPage (Target: $channelName)');
-       Get.to(() => VideoCallPage(controller: controller, channelName: channelName),
-           transition: Transition.noTransition);
+      debugPrint(
+          '📞 [GlobalCallService] Navigating to VideoCallPage (Target: $channelName)');
+      Get.to(
+          () => VideoCallPage(controller: controller, channelName: channelName),
+          transition: Transition.noTransition);
     }
   }
 
@@ -299,26 +316,31 @@ class GlobalCallService extends GetxService {
           break;
         case callkit.Event.actionCallAccept:
           final data = event.body['extra'];
-          if (data != null && (data['route'] == 'call' || data['call_id'] != null)) {
+          if (data != null &&
+              (data['route'] == 'call' || data['call_id'] != null)) {
             final callId = data['call_id'];
             final channelName = data['channel_name'] ?? callId;
             if (callId != null) {
               // 🔍 التحقق الإضافي عند حدث القبول المباشر
               final controller = Get.put(GoLiveController(), permanent: true);
-              
+
               final callStatus = await Supabase.instance.client
                   .from(AppConstants.tableCallsSignaling)
                   .select('status')
                   .eq('id', callId)
                   .maybeSingle();
 
-              if (callStatus != null && 
-                  (callStatus['status'] == 'ringing' || callStatus['status'] == 'accepted')) {
-                debugPrint('📞 [GlobalCallService] Valid event accept for call: $callId');
-                controller.respondToCall(callId, true, channelName);
+              if (callStatus != null &&
+                  (callStatus['status'] == 'ringing' ||
+                      callStatus['status'] == 'accepted')) {
+                debugPrint(
+                    '📞 [GlobalCallService] Valid event accept for call: $callId');
+                controller.respondToCall(
+                    callId: callId, accept: true, channelName: channelName);
                 _handleCallNavigation(controller, channelName);
               } else {
-                debugPrint('📞 [GlobalCallService] Ignoring stale accept event for call: $callId');
+                debugPrint(
+                    '📞 [GlobalCallService] Ignoring stale accept event for call: $callId');
                 await FlutterCallkitIncoming.endCall(callId);
               }
             }
@@ -342,21 +364,65 @@ class GlobalCallService extends GetxService {
     });
   }
 
-  void startListening() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
-      debugPrint('📞 [GlobalCallService] startListening: userId is null. Returning.');
+  StreamSubscription? _legacySignalingSubscription;
+
+  void startListening() async {
+    final authId = Supabase.instance.client.auth.currentUser?.id;
+    if (authId == null) {
+      debugPrint(
+          '📞 [GlobalCallService] startListening: authId is null. Returning.');
       return;
     }
-    
-    debugPrint('📞 [GlobalCallService] Starting stream listener for receiver_id: $userId');
+
+    // 1. Listen to Auth UID directly
+    _setupStreamListener(authId, isLegacy: false);
+
+    // 2. [Dual Listening] Try to find and listen to legacy Table ID as fallback
+    try {
+      final email = Supabase.instance.client.auth.currentUser?.email;
+      if (email != null) {
+        final legacyId = await _fetchLegacyTableId(email);
+        if (legacyId != null && legacyId != authId) {
+          debugPrint(
+              '📞 [GlobalCallService] Dual listening enabled for legacy ID: $legacyId');
+          _setupLegacyStreamListener(legacyId);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [GlobalCallService] Dual listening failed to setup: $e');
+    }
+  }
+
+  Future<String?> _fetchLegacyTableId(String email) async {
+    final tables = [
+      AppConstants.tableUserStations,
+      AppConstants.tableUserCrcc,
+      AppConstants.tableUserTop
+    ];
+    for (final table in tables) {
+      try {
+        final res = await Supabase.instance.client
+            .from(table)
+            .select('id')
+            .eq('user_email', email)
+            .maybeSingle();
+        if (res != null && res['id'] != null) return res['id'].toString();
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  void _setupStreamListener(String userId, {bool isLegacy = false}) {
+    debugPrint(
+        '📞 [GlobalCallService] Starting stream listener for ${isLegacy ? "Legacy" : "Auth"} ID: $userId');
     _signalingSubscription?.cancel();
     _signalingSubscription = Supabase.instance.client
         .from(AppConstants.tableCallsSignaling)
         .stream(primaryKey: ['id'])
         .eq('receiver_id', userId)
         .listen((List<Map<String, dynamic>> data) {
-          debugPrint('📞 [GlobalCallService] Stream updated. Rows count: ${data.length}');
+          debugPrint(
+              '📞 [GlobalCallService] Stream updated. Rows count: ${data.length}');
 
           if (data.isNotEmpty) {
             final activeCall = data.firstWhere(
@@ -369,8 +435,9 @@ class GlobalCallService extends GetxService {
                   if (createdAt != null) {
                     final now = DateTime.now().toUtc();
                     final diff = now.difference(createdAt).inSeconds.abs();
-                    if (diff > 60) {
-                      debugPrint('📞 [GlobalCallService] Stream stale call ignored: diff=$diff s');
+                    debugPrint('📞 [GlobalCallService] Time Match: Server=$createdAt, Local=$now, Diff=${diff}s');
+                    if (diff > 1200) { // نافذة 20 دقيقة لتجاوز فروق التوقيت الشديدة
+                      debugPrint('📞 [GlobalCallService] Ignoring old call (Drift > 20m): ID=${call['id']}');
                       return false;
                     }
                   }
@@ -381,16 +448,19 @@ class GlobalCallService extends GetxService {
             );
 
             if (activeCall.isNotEmpty) {
-              debugPrint('📞 [GlobalCallService] Active call found: ${activeCall['id']}');
+              debugPrint(
+                  '📞 [GlobalCallService] MATCHED active call: ${activeCall['id']}');
               final String callId = activeCall['id'];
               if (currentCallId.value != callId) {
                 currentCallId.value = callId;
                 incomingCall.value = activeCall;
-                debugPrint('📞 [GlobalCallService] Navigating to call: $callId');
+                debugPrint(
+                    '📞 [GlobalCallService] Navigating to call: $callId');
                 _navigateToCall(activeCall);
               }
             } else {
-              debugPrint('📞 [GlobalCallService] No active ringing calls within last 60s.');
+              debugPrint(
+                  '📞 [GlobalCallService] No active ringing calls within last 60s.');
               if (incomingCall.value != null &&
                   incomingCall.value!['status'] == 'ringing') {
                 incomingCall.value = null;
@@ -404,25 +474,75 @@ class GlobalCallService extends GetxService {
           }
         }, onError: (error) {
           debugPrint('Global signaling error: $error');
-          Future.delayed(const Duration(seconds: 5), () => startListening());
+          // 🚀 إعادة الاتصال الذكية عند حدوث خطأ 1006 أو أي عطل في القناة
+          if (error.toString().contains('1006') ||
+              error.toString().contains('channelError')) {
+            debugPrint(
+                '📞 [GlobalCallService] Realtime channel closed (1006). Reconnecting in 3s...');
+          }
+          Future.delayed(const Duration(seconds: 3), () {
+            if (Supabase.instance.client.auth.currentUser != null) {
+              startListening();
+            }
+          });
         });
   }
 
   void _navigateToCall(Map<String, dynamic> callData) {
-    if (Get.currentRoute != 'Go live') {
-      Get.toNamed('Go live', arguments: {
-        'route': 'call',
-        'call_id': callData['id'],
-        'caller_id': callData['caller_id'],
-        'channel_name': callData['channel_name'],
-        'accepted': callData['accepted'] ?? false,
-      });
+    // 🚫 DISABLED internal auto-navigation to avoid double UI.
+    // CallKit (CallNotificationService) handles the initial ringing interaction.
+    debugPrint(
+        '📞 [GlobalCallService] Internal navigation suppressed to keep UI unified via CallKit.');
+  }
+
+  void _setupLegacyStreamListener(String legacyId) {
+    _legacySignalingSubscription?.cancel();
+    _legacySignalingSubscription = Supabase.instance.client
+        .from(AppConstants.tableCallsSignaling)
+        .stream(primaryKey: ['id'])
+        .eq('receiver_id', legacyId)
+        .listen((data) {
+          if (data.isNotEmpty) {
+            debugPrint('📞 [GlobalCallService] LEGACY stream detected call!');
+            _handleInboundStream(data);
+          }
+        });
+  }
+
+  void _handleInboundStream(List<Map<String, dynamic>> data) {
+    if (data.isNotEmpty) {
+      final activeCall = data.firstWhere(
+        (call) {
+          if (call['status'] != 'ringing') return false;
+          final createdAtStr = call['created_at'];
+          if (createdAtStr != null) {
+            final createdAt = DateTime.tryParse(createdAtStr)?.toUtc();
+            if (createdAt != null) {
+              final now = DateTime.now().toUtc();
+              final diff = now.difference(createdAt).inSeconds.abs();
+              if (diff > 600) return false;
+            }
+          }
+          return true;
+        },
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (activeCall.isNotEmpty) {
+        final String callId = activeCall['id'];
+        if (currentCallId.value != callId) {
+          currentCallId.value = callId;
+          incomingCall.value = activeCall;
+          _navigateToCall(activeCall);
+        }
+      }
     }
   }
 
   @override
   void onClose() {
     _signalingSubscription?.cancel();
+    _legacySignalingSubscription?.cancel();
     _activeCallSubscription?.cancel();
     super.onClose();
   }
@@ -472,7 +592,9 @@ class GoLiveController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _syncUserIdentity();
 
+    // 🎧 Listen to global signaling for ring sounds
     ever(GlobalCallService.to.incomingCall, (call) {
       if (call != null && call['status'] == 'ringing') {
         playRinging();
@@ -480,6 +602,17 @@ class GoLiveController extends GetxController {
         stopRinging();
       }
     });
+
+    // 🚀 [Auto-Answer Check] If navigated with 'accepted', trigger connection immediately
+    final args = Get.arguments;
+    if (args is Map && args['route'] == 'call' && args['accepted'] == true) {
+      debugPrint(
+          '📞 [GoLiveController] Detected AUTO-ANSWER from arguments. Connecting...');
+      Future.delayed(const Duration(milliseconds: 500), () {
+        final channel = args['channel_name'];
+        respondToCall(channelName: channel);
+      });
+    }
   }
 
   @override
@@ -498,6 +631,8 @@ class GoLiveController extends GetxController {
           .select();
 
       final List<dynamic> data = response;
+      debugPrint(
+          '📞 [GoLiveController] fetchUsers raw sample: ${data.isNotEmpty ? data.first : 'Empty'}');
       final fetched =
           data.map((json) => StationModelCall.fromJson(json)).where((user) {
         final name = user.stationName ?? '';
@@ -554,7 +689,8 @@ class GoLiveController extends GetxController {
     isRemoteVideoReady.value = false;
     try {
       if (GetPlatform.isMobile) {
-        final status = await [Permission.camera, Permission.microphone].request();
+        final status =
+            await [Permission.camera, Permission.microphone].request();
         if (status[Permission.camera] != PermissionStatus.granted) {
           throw 'صلاحية الكاميرا مطلوبة';
         }
@@ -589,7 +725,7 @@ class GoLiveController extends GetxController {
               // إنهاء المكالمة تلقائياً إذا غادر الطرف الآخر
               endCall();
               if (Get.currentRoute != 'Go live') {
-                 Get.back();
+                Get.back();
               }
             },
           ),
@@ -597,6 +733,17 @@ class GoLiveController extends GetxController {
       }
 
       await _engine!.enableVideo();
+
+      // 🚀 تحسين الجودة المتوازنة (Balanced Quality) للعمل على 4G
+      await _engine!
+          .setVideoEncoderConfiguration(const VideoEncoderConfiguration(
+        dimensions: VideoDimensions(width: 640, height: 360),
+        frameRate: 24,
+        bitrate: 1000,
+        degradationPreference: DegradationPreference.maintainFramerate,
+        orientationMode: OrientationMode.orientationModeFixedPortrait,
+      ));
+
       await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
       await _engine!.startPreview();
 
@@ -659,6 +806,54 @@ class GoLiveController extends GetxController {
     return null;
   }
 
+  Future<void> _syncUserIdentity() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || user.email == null) return;
+
+    final userId = user.id;
+    final email = user.email!.trim().toLowerCase();
+
+    try {
+      // 🚀 جلب أحدث توكن للإشعارات لضمان وصول المكالمات
+      String? fcmToken;
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        debugPrint(
+            '⚠️ [GoLiveController] Could not fetch FCM token for sync: $e');
+      }
+
+      debugPrint(
+          '📞 [GoLiveController] Syncing identity & token for $email -> $userId');
+
+      const tables = [
+        AppConstants.tableUserStations,
+        AppConstants.tableUserCrcc,
+        AppConstants.tableUserTop
+      ];
+
+      for (final table in tables) {
+        final updateData = {'id': userId};
+        if (fcmToken != null) {
+          updateData['user_token'] = fcmToken;
+        }
+
+        final response = await Supabase.instance.client
+            .from(table)
+            .update(updateData)
+            .eq('user_email', email)
+            .select();
+
+        if ((response as List).isNotEmpty) {
+          debugPrint(
+              '✅ [GoLiveController] Identity & Token synced in $table for $email');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [GoLiveController] Identity sync failed: $e');
+    }
+  }
+
   Future<String> _getUserName(String userId) async {
     const tables = [
       AppConstants.tableUserStations,
@@ -681,7 +876,8 @@ class GoLiveController extends GetxController {
   }
 
   Future<void> makeCall(String receiverId) async {
-    debugPrint('📞 [GoLiveController] makeCall started for receiver: $receiverId');
+    debugPrint(
+        '📞 [GoLiveController] makeCall started for receiver: $receiverId');
     final userId = currentUserId;
     if (userId == null) {
       debugPrint('📞 [GoLiveController] makeCall failed: currentUserId is null');
@@ -689,13 +885,25 @@ class GoLiveController extends GetxController {
     }
 
     try {
+      // 🧹 ZOMBIE CLEANUP: Clear any existing ringing/accepted records for these users
+      await Supabase.instance.client
+          .from(AppConstants.tableCallsSignaling)
+          .delete()
+          .or('caller_id.eq.$userId,receiver_id.eq.$userId,caller_id.eq.$receiverId,receiver_id.eq.$receiverId')
+          .inFilter('status', ['ringing', 'accepted']);
+      
+      debugPrint('📞 [GoLiveController] Zombie cleanup finished. Starting fresh call.');
+
       debugPrint('📞 [GoLiveController] Fetching tokens...');
       final callerToken = await _getReceiverToken(userId);
       final receiverToken = await _getReceiverToken(receiverId);
-      debugPrint('📞 [GoLiveController] callerToken fetched: ${callerToken != null}');
-      debugPrint('📞 [GoLiveController] receiverToken fetched: ${receiverToken != null}');
+      debugPrint(
+          '📞 [GoLiveController] callerToken fetched: ${callerToken != null}');
+      debugPrint(
+          '📞 [GoLiveController] receiverToken fetched: ${receiverToken != null}');
 
-      debugPrint('📞 [GoLiveController] Inserting signaling record...');
+      debugPrint(
+          '📞 [GoLiveController] Signaling data: caller=$userId, receiver=$receiverId');
       final response = await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
           .insert({
@@ -707,11 +915,13 @@ class GoLiveController extends GetxController {
           .select()
           .single();
 
-      debugPrint('📞 [GoLiveController] Signaling record created. Call ID: ${response['id']}');
+      debugPrint(
+          '📞 [GoLiveController] Signaling record created. Call ID: ${response['id']}');
       GlobalCallService.to.currentCallId.value = response['id'];
 
       if (receiverToken != null) {
-        debugPrint('📞 [GoLiveController] Sending push notification to receiver...');
+        debugPrint(
+            '📞 [GoLiveController] Sending push notification to receiver...');
         final callerName = await _getUserName(userId);
         await CallNotificationService.sendCallNotification(
           deviceToken: receiverToken,
@@ -722,9 +932,10 @@ class GoLiveController extends GetxController {
           channelName: receiverId,
         );
       } else {
-        debugPrint('📞 [GoLiveController] WARNING: Receiver token is NULL! Push notification will not be sent.');
+        debugPrint(
+            '📞 [GoLiveController] WARNING: Receiver token is NULL! Push notification will not be sent.');
       }
-      
+
       debugPrint('📞 [GoLiveController] Joining Agora channel...');
       await joinChannel(receiverId, callerToken);
 
@@ -743,27 +954,42 @@ class GoLiveController extends GetxController {
     }
   }
 
-  Future<void> respondToCall(String callId, bool accept, [String? fallbackChannel]) async {
+  Future<void> respondToCall(
+      {String? callId, bool accept = true, String? channelName}) async {
+    debugPrint(
+        '📞 [GoLiveController] respondToCall triggered. Accept: $accept');
+    stopRinging();
+
+    final effectiveCallId = callId ?? GlobalCallService.to.currentCallId.value;
+    if (effectiveCallId == null) {
+      debugPrint('📞 [GoLiveController] Cannot respond: callId is null.');
+      return;
+    }
+
     try {
-      await Supabase.instance.client
-          .from(AppConstants.tableCallsSignaling)
-          .update({'status': accept ? 'accepted' : 'rejected'}).eq(
-              'id', callId);
       if (accept) {
-        stopRinging();
-        final call = GlobalCallService.to.incomingCall.value;
-        final targetChannel = call != null ? call['channel_name'] : fallbackChannel;
-        if (targetChannel != null && currentUserId != null) {
-          final myToken = await _getReceiverToken(currentUserId!);
-          await joinChannel(targetChannel, myToken);
+        // 1. Update status in DB first to sync status across all devices
+        await Supabase.instance.client
+            .from(AppConstants.tableCallsSignaling)
+            .update({'status': 'accepted', 'accepted': true}).eq(
+                'id', effectiveCallId);
+
+        // 2. Initialize and Join
+        final channel = channelName ?? currentUserId;
+        if (channel != null) {
+          await joinChannel(channel, null);
+          debugPrint(
+              '✅ [GoLiveController] Successfully connected after respondToCall.');
         }
       } else {
-        stopRinging();
-        await leaveChannel();
-        await disposeAgora();
-        currentCallId.value = null;
+        await Supabase.instance.client
+            .from(AppConstants.tableCallsSignaling)
+            .update({'status': 'rejected'}).eq('id', effectiveCallId);
+        endCall('User rejected');
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('⚠️ [GoLiveController] Error responding to call: $e');
+    }
   }
 
   Future<void> endCall([String reason = 'Direct user action']) async {
@@ -771,7 +997,7 @@ class GoLiveController extends GetxController {
     _callTimeoutTimer?.cancel();
     if (GlobalCallService.to.currentCallId.value != null) {
       final callId = GlobalCallService.to.currentCallId.value!;
-      
+
       final callData = await Supabase.instance.client
           .from(AppConstants.tableCallsSignaling)
           .select('receiver_id, caller_id')
@@ -783,24 +1009,26 @@ class GoLiveController extends GetxController {
           .update({'status': 'ended'}).eq('id', callId);
 
       if (callData != null) {
-         final receiverId = callData['receiver_id'];
-         final callerId = callData['caller_id'];
-         final targetUserId = currentUserId == callerId ? receiverId : callerId;
-         if (targetUserId != null) {
-             final targetToken = await _getReceiverToken(targetUserId.toString());
-             if (targetToken != null) {
-                 CallNotificationService.sendCancelNotification(
-                     deviceToken: targetToken,
-                     callId: callId,
-                 );
-             }
-         }
+        final receiverId = callData['receiver_id'];
+        final callerId = callData['caller_id'];
+        final targetUserId = currentUserId == callerId ? receiverId : callerId;
+        if (targetUserId != null) {
+          final targetToken = await _getReceiverToken(targetUserId.toString());
+          if (targetToken != null) {
+            CallNotificationService.sendCancelNotification(
+              deviceToken: targetToken,
+              callId: callId,
+            );
+          }
+        }
       }
     }
     stopRinging();
     playHangup();
     await leaveChannel();
-    await disposeAgora(); // يتم تدمير المحرك بالكامل لإغلاق الكاميرا والمايكروفون
+    await disposeAgora();
+    await FlutterCallkitIncoming.endAllCalls(); // Ensure system UI is cleared
+
     currentCallId.value = null;
     GlobalCallService.to.incomingCall.value = null;
     localViewController.value = null;
@@ -808,17 +1036,21 @@ class GoLiveController extends GetxController {
 
     // 🆕 إغلاق واجهة الفيديو بذكاء لتجنب الانغلاق المبكر
     if (Get.isRegistered<GoLiveController>()) {
-        final String currentRoute = Get.currentRoute;
-        debugPrint('📞 [GoLiveController] Navigation check - Current Route: $currentRoute');
-        
-        if (currentRoute.contains('VideoCall') || currentRoute == '') {
-           if (currentRoute != 'Go live' && currentRoute != '/HomePage' && !currentRoute.contains('Splash')) {
-              debugPrint('📞 [GoLiveController] Closing VideoCallPage...');
-              Get.back();
-           }
+      final String currentRoute = Get.currentRoute;
+      debugPrint(
+          '📞 [GoLiveController] Navigation check - Current Route: $currentRoute');
+
+      if (currentRoute.contains('VideoCall') || currentRoute == '') {
+        if (currentRoute != 'Go live' &&
+            currentRoute != '/HomePage' &&
+            !currentRoute.contains('Splash')) {
+          debugPrint('📞 [GoLiveController] Closing VideoCallPage...');
+          Get.back();
         }
+      }
     }
-    GlobalCallService.to.currentCallId.value = null; // نغيرها في النهاية لضمان عمل الـ Cleanup
+    GlobalCallService.to.currentCallId.value =
+        null; // نغيرها في النهاية لضمان عمل الـ Cleanup
   }
 
   Future<void> disposeAgora() async {
@@ -1226,9 +1458,7 @@ class UsersPage extends StatelessWidget {
       GoLiveController controller, String receiverId) async {
     // 1. Navigate immediately to VideoCallPage (Messenger Style)
     Get.to(
-      () => VideoCallPage(
-          controller: controller,
-          channelName: receiverId),
+      () => VideoCallPage(controller: controller, channelName: receiverId),
     );
 
     try {
@@ -1304,8 +1534,8 @@ class UsersPage extends StatelessWidget {
                               child: const Icon(Iconsax.call_remove5,
                                   color: Colors.white),
                             ),
-                            onPressed: () =>
-                                controller.respondToCall(call['id'], false),
+                            onPressed: () => controller.respondToCall(
+                                callId: call['id'], accept: false),
                           ),
                           IconButton(
                             icon: Container(
@@ -1317,7 +1547,8 @@ class UsersPage extends StatelessWidget {
                                   color: Colors.white),
                             ),
                             onPressed: () {
-                              controller.respondToCall(call['id'], true);
+                              controller.respondToCall(
+                                  callId: call['id'], accept: true);
                               Get.to(
                                 () => VideoCallPage(
                                     controller: controller,
@@ -1408,150 +1639,155 @@ class VideoCallPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        // إغلاق الواجهة فوراً ثم إنهاء الاتصال في الخلفية لتفادي وميض (جاري الاتصال)
-        controller.endCall();
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-        children: [
-          // Remote Video (Full Screen)
-          Positioned.fill(
-            child: Obx(() {
-              if (controller.remoteUid.value != null &&
-                  controller.engine != null) {
-                return AgoraVideoView(
-                  controller: VideoViewController.remote(
-                    rtcEngine: controller.engine!,
-                    canvas: VideoCanvas(
-                        uid: controller.remoteUid.value!,
-                        renderMode: RenderModeType.renderModeHidden),
-                    connection: RtcConnection(
-                        channelId: channelName,
-                        localUid: controller.currentUserId.hashCode & 0x7FFFFFFF),
-                    useAndroidSurfaceView: true,
-                  ),
-                );
-              }
-              return Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SpinKitRipple(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      size: 100.r,
-                    ),
-                    SizedBox(height: 24.h),
-                    Text(
-                      'جاري الاتصال...',
-                      style: TextStyle(
-                        fontFamily: Appfontstring.ChangaLight,
-                        fontSize: 18.sp,
-                        color: Colors.white70,
+        canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          // إغلاق الواجهة فوراً ثم إنهاء الاتصال في الخلفية لتفادي وميض (جاري الاتصال)
+          controller.endCall();
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              // Remote Video (Full Screen)
+              Positioned.fill(
+                child: Obx(() {
+                  if (controller.remoteUid.value != null &&
+                      controller.engine != null) {
+                    return AgoraVideoView(
+                      controller: VideoViewController.remote(
+                        rtcEngine: controller.engine!,
+                        canvas: VideoCanvas(
+                            uid: controller.remoteUid.value!,
+                            renderMode: RenderModeType.renderModeHidden),
+                        connection: RtcConnection(
+                            channelId: channelName,
+                            localUid:
+                                controller.currentUserId.hashCode & 0x7FFFFFFF),
+                        useAndroidSurfaceView: true,
+                      ),
+                    );
+                  }
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
                       ),
                     ),
-                  ],
-                ),
-              );
-            }),
-          ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SpinKitRipple(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          size: 100.r,
+                        ),
+                        SizedBox(height: 24.h),
+                        Text(
+                          controller.canInitiateCalls.value &&
+                                  controller.remoteUid.value == null
+                              ? 'جاري الاتصال...'
+                              : 'جاري الانضمام للمكالمة...',
+                          style: TextStyle(
+                            fontFamily: Appfontstring.ChangaLight,
+                            fontSize: 18.sp,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
 
-          // Local Video (Overlay)
-          Obx(() {
-            if (controller.localViewController.value != null) {
-              return AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                top: 50.h,
-                right: controller.remoteUid.value != null
-                    ? 20.w
-                    : (1.sw - 150.w) / 2,
+              // Local Video (Overlay)
+              Obx(() {
+                if (controller.localViewController.value != null) {
+                  return AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    top: 50.h,
+                    right: controller.remoteUid.value != null
+                        ? 20.w
+                        : (1.sw - 150.w) / 2,
+                    child: Container(
+                      width: controller.remoteUid.value != null ? 120.w : 150.w,
+                      height:
+                          controller.remoteUid.value != null ? 180.h : 220.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(color: Colors.white24, width: 2),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black54, blurRadius: 10)
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18.r),
+                        child: AgoraVideoView(
+                            controller: controller.localViewController.value!),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+
+              // Header
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
                 child: Container(
-                  width: controller.remoteUid.value != null ? 120.w : 150.w,
-                  height: controller.remoteUid.value != null ? 180.h : 220.h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: Colors.white24, width: 2),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black54, blurRadius: 10)
-                    ],
+                  padding: EdgeInsets.only(
+                      top: ScreenUtil().statusBarHeight + 10,
+                      left: 20,
+                      right: 20,
+                      bottom: 20),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black87, Colors.transparent],
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18.r),
-                    child: AgoraVideoView(
-                        controller: controller.localViewController.value!),
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-
-          // Header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.only(
-                  top: ScreenUtil().statusBarHeight + 10,
-                  left: 20,
-                  right: 20,
-                  bottom: 20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black87, Colors.transparent],
-                ),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios,
-                        color: Colors.white70, size: 20.sp),
-                    onPressed: () => _handleBack(),
-                  ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Row(
                     children: [
-                      Text(
-                        'مكالمة فيديو',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontFamily: Appfontstring.ChangaLight),
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios,
+                            color: Colors.white70, size: 20.sp),
+                        onPressed: () => _handleBack(),
                       ),
-                      Text(
-                        'آمنة ومشفرة',
-                        style:
-                            TextStyle(color: Colors.white54, fontSize: 10.sp),
+                      const Spacer(),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'مكالمة فيديو',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontFamily: Appfontstring.ChangaLight),
+                          ),
+                          Text(
+                            'آمنة ومشفرة',
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 10.sp),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // Controls
-          Positioned(
-              bottom: 40.h,
-              left: 0,
-              right: 0,
-              child: _buildControls(controller)),
-        ],
-      ),
-    ));
+              // Controls
+              Positioned(
+                  bottom: 40.h,
+                  left: 0,
+                  right: 0,
+                  child: _buildControls(controller)),
+            ],
+          ),
+        ));
   }
 
   void _handleBack() {
