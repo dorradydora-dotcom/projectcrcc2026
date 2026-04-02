@@ -38,7 +38,8 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
     try {
       // Automatic cleanup: Delete records older than 7 days (Today + 6 previous days)
       final retentionDate = DateTime.now().subtract(const Duration(days: 6));
-      final formattedRetentionDate = intl.DateFormat('yyyy-MM-dd').format(retentionDate);
+      final formattedRetentionDate =
+          intl.DateFormat('yyyy-MM-dd').format(retentionDate);
       await _supabase
           .from(AppConstants.tableHourlyMaxLoads)
           .delete()
@@ -104,7 +105,6 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
             children: [
               _buildHeader(),
               _buildDaysScroller(),
-              _buildDatePicker(),
               Expanded(
                 child: _isLoading
                     ? const Center(
@@ -121,7 +121,7 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
   Widget _buildDaysScroller() {
     final now = DateTime.now();
     return Container(
-      height: 40.h,
+      height: 58.h,
       margin: EdgeInsets.only(bottom: 8.h),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -131,7 +131,7 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
           final date = now.subtract(Duration(days: index));
           final isSelected = intl.DateFormat('yyyy-MM-dd').format(date) ==
               intl.DateFormat('yyyy-MM-dd').format(_selectedDate);
-          
+
           String label;
           if (index == 0) {
             label = 'اليوم';
@@ -143,6 +143,8 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
             label = intl.DateFormat('EEEE', 'ar').format(date);
           }
 
+          final dateLabel = intl.DateFormat('dd/MM').format(date);
+
           return GestureDetector(
             onTap: () {
               setState(() => _selectedDate = date);
@@ -151,32 +153,50 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               margin: EdgeInsets.symmetric(horizontal: 4.w),
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: isSelected ? Appcolors.gold : Colors.white.withValues(alpha: 0.05),
+                color: isSelected
+                    ? Appcolors.gold
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: isSelected ? Appcolors.gold : Colors.white.withValues(alpha: 0.1),
+                  color: isSelected
+                      ? Appcolors.gold
+                      : Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
-                boxShadow: isSelected ? [
-                  BoxShadow(
-                    color: Appcolors.gold.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  )
-                ] : [],
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Appcolors.gold.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
+                    : [],
               ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white70,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontFamily: Appfontstring.ChangaLight,
-                    fontSize: 11.sp,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white70,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontFamily: Appfontstring.ChangaLight,
+                      fontSize: 11.sp,
+                    ),
                   ),
-                ),
+                  Text(
+                    dateLabel,
+                    style: TextStyle(
+                      color: isSelected ? Colors.black54 : Colors.white38,
+                      fontFamily: Appfontstring.digital,
+                      fontSize: 10.sp,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -223,73 +243,6 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDatePicker() {
-    return GestureDetector(
-      onTap: () async {
-        final DateTime? picked = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime.now().subtract(const Duration(days: 6)),
-          lastDate: DateTime.now(),
-          locale: const Locale('ar', 'EG'),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.dark(
-                  primary: Appcolors.gold,
-                  onPrimary: Colors.black,
-                  surface: Color(0xFF163C5E),
-                  onSurface: Colors.white,
-                ),
-              ),
-              child: child!,
-            );
-          },
-        );
-        if (picked != null && picked != _selectedDate) {
-          setState(() => _selectedDate = picked);
-          _fetchData();
-        }
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.white60, size: 18.sp),
-                SizedBox(width: 8.w),
-                Text(
-                  'تاريخ التقرير:',
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13.sp,
-                      fontFamily: Appfontstring.ChangaLight),
-                ),
-              ],
-            ),
-            Text(
-              intl.DateFormat('yyyy / MM / dd').format(_selectedDate),
-              style: TextStyle(
-                color: Appcolors.gold,
-                fontSize: 15.sp,
-                fontFamily: Appfontstring.digital,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -417,13 +370,19 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
                           pw.Text(
                               PdfHelper.prepareArabic(
                                   'الشركة المصرية لنقل الكهرباء'),
+                              textDirection: pw.TextDirection.ltr,
+                              textAlign: pw.TextAlign.right,
                               style: pw.TextStyle(fontSize: 12, font: ttf)),
                           pw.Text(
                               PdfHelper.prepareArabic('قطاع التحكم القاهره'),
+                              textDirection: pw.TextDirection.ltr,
+                              textAlign: pw.TextAlign.right,
                               style: pw.TextStyle(fontSize: 10, font: ttf)),
                         ],
                       ),
                       pw.Text(PdfHelper.prepareArabic('تقرير الأحمال اليومي'),
+                          textDirection: pw.TextDirection.ltr,
+                          textAlign: pw.TextAlign.right,
                           style: pw.TextStyle(
                               fontSize: 18,
                               font: ttf,
@@ -440,10 +399,14 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
                       children: [
                         pw.Text(
                             PdfHelper.prepareArabic('تاريخ التقرير: $dateStr'),
+                            textDirection: pw.TextDirection.ltr,
+                            textAlign: pw.TextAlign.right,
                             style: pw.TextStyle(fontSize: 12, font: ttf)),
                         pw.Text(
                             PdfHelper.prepareArabic(
-                                'تم استخراجة بواسطة تطبيق أميرالي'),
+                                'تم استخراجة بواسطة تطبيق التحكم الاقليمى للقاهرة الكبرى'),
+                            textDirection: pw.TextDirection.ltr,
+                            textAlign: pw.TextAlign.right,
                             style: pw.TextStyle(fontSize: 10, font: ttf)),
                       ],
                     ),
@@ -467,11 +430,15 @@ class _HourlyLoadReportScreenState extends State<HourlyLoadReportScreen> {
                                         pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(PdfHelper.prepareArabic('الساعة'),
+                                          textDirection: pw.TextDirection.ltr,
+                                          textAlign: pw.TextAlign.right,
                                           style: pw.TextStyle(
                                               fontSize: 9,
                                               font: ttf,
                                               fontWeight: pw.FontWeight.bold)),
                                       pw.Text(PdfHelper.prepareArabic('الحمل'),
+                                          textDirection: pw.TextDirection.ltr,
+                                          textAlign: pw.TextAlign.right,
                                           style: pw.TextStyle(
                                               fontSize: 9,
                                               font: ttf,

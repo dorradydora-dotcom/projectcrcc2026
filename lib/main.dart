@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -33,7 +34,8 @@ void main() async {
   runApp(const MyApp());
 
   // تهيئة الخدمات الثقيلة في الخلفية بعد عرض الفريم الأول
-  Future.delayed(const Duration(milliseconds: 100), () => _initializeHeavyServicesInBackground());
+  Future.delayed(const Duration(milliseconds: 100),
+      () => _initializeHeavyServicesInBackground());
 }
 
 Future<void> _initializeHeavyServicesInBackground() async {
@@ -45,7 +47,7 @@ Future<void> _initializeHeavyServicesInBackground() async {
       dotenv.load(fileName: ".env"),
       initializeDateFormatting('ar', null),
     ]);
-    
+
     // 2. تهيئة Firebase بعد تحميل الـ .env
     if (GetPlatform.isMobile) {
       await Firebase.initializeApp();
@@ -53,7 +55,7 @@ Future<void> _initializeHeavyServicesInBackground() async {
     } else {
       // For now, we skip mobile-specific listeners and handle Firebase carefully on Windows.
       try {
-        // Only try to initialize if we have a way to do so, 
+        // Only try to initialize if we have a way to do so,
         // but since we haven't run flutterfire configure for Windows,
         // we might want to skip it entirely or use a try-catch.
         await Firebase.initializeApp().timeout(const Duration(seconds: 5));
@@ -83,7 +85,6 @@ Future<void> _initializeHeavyServicesInBackground() async {
     _isServicesInitialized = true;
     _servicesInitializedCompleter.complete();
     AppLogger.logSuccess('✅ All background services initialized');
-
   } catch (e, stackTrace) {
     AppLogger.logError('❌ Background initialization failed', e, stackTrace);
     _servicesInitializedCompleter.completeError(e);
@@ -166,6 +167,17 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           initialBinding: AppBindings(),
           title: 'CRCC App',
+          locale: const Locale('ar', 'EG'),
+          fallbackLocale: const Locale('en', 'US'),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ar', 'EG'),
+            Locale('en', 'US'),
+          ],
           theme: ThemeData(
             primarySwatch: Colors.blue,
             useMaterial3: true,
