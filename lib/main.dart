@@ -145,6 +145,7 @@ class AppBindings implements Bindings {
     Get.lazyPut(() => StationLoadController(), fenix: true);
     Get.lazyPut(() => FavoritesController(), fenix: true);
     Get.lazyPut(() => CarouselSliderController(), fenix: true);
+    Get.lazyPut(() => GoLiveController(), fenix: true);
   }
 }
 
