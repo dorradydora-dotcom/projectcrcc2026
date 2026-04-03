@@ -389,11 +389,16 @@ class GlobalCallService extends GetxService {
         currentCallId.value = null;
       }
     });
-    startListening();
+    // 🚀 Start listening immediately only if session is already present
+    // because onAuthStateChange might not fire for the initial session in some versions
+    if (Supabase.instance.client.auth.currentUser != null) {
+      startListening();
+    }
+
     if (GetPlatform.isMobile) {
       _listenToCallkitEvents();
-      _checkCurrentCall(); // فحص المكالمة عند بدء التشغيل
-      _setupActiveCallMonitor(); // مراقبة المكالمة الحالية
+      _checkCurrentCall(); 
+      _setupActiveCallMonitor(); 
     }
   }
 
@@ -572,9 +577,11 @@ class GlobalCallService extends GetxService {
 
   void startListening() async {
     final authId = Supabase.instance.client.auth.currentUser?.id;
-    if (authId == null) {
-      debugPrint(
-          '📞 [GlobalCallService] startListening: authId is null. Returning.');
+    if (authId == null) return;
+
+    // 🛡️ Deduplication Guard
+    if (_signalingSubscription != null) {
+      debugPrint('📞 [GlobalCallService] Listening already active for: $authId (Deduplicated)');
       return;
     }
 
@@ -617,9 +624,10 @@ class GlobalCallService extends GetxService {
   }
 
   void _setupStreamListener(String userId, {bool isLegacy = false}) {
+    if (_signalingSubscription != null) return; // 🛡️ Idempotent check
+    
     debugPrint(
         '📞 [GlobalCallService] Starting stream listener for ${isLegacy ? "Legacy" : "Auth"} ID: $userId');
-    _signalingSubscription?.cancel();
     _signalingSubscription = Supabase.instance.client
         .from(AppConstants.tableCallsSignaling)
         .stream(primaryKey: ['id'])
@@ -1121,7 +1129,7 @@ class GoLiveController extends GetxController {
         }
       } catch (_) {}
     }
-    return 'محطة';
+    return 'اتصال فيديو';
   }
 
   Future<void> makeCall(String receiverId) async {
@@ -1303,9 +1311,12 @@ class GoLiveController extends GetxController {
     }
     stopRinging();
     playHangup();
+    
+    // 🧹 Immediate release of hardware resources
     await leaveChannel();
     await disposeAgora();
-    await FlutterCallkitIncoming.endAllCalls(); // Ensure system UI is cleared
+    
+    await FlutterCallkitIncoming.endAllCalls(); 
 
     currentCallId.value = null;
     GlobalCallService.to.incomingCall.value = null;
@@ -1329,6 +1340,12 @@ class GoLiveController extends GetxController {
     }
     GlobalCallService.to.currentCallId.value =
         null; // نغيرها في النهاية لضمان عمل الـ Cleanup
+    
+    // 🗑️ Optional: Remove controller from memory if no call is active and we are not in GoLive screen
+    if (Get.isRegistered<GoLiveController>() && Get.currentRoute != 'Go live') {
+      debugPrint('📞 [GoLiveController] Self-disposing to save memory...');
+      Get.delete<GoLiveController>();
+    }
   }
 
   Future<void> disposeAgora() async {
@@ -1382,7 +1399,10 @@ class UsersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(GoLiveController(), permanent: true);
+    // 🚀 Use Get.find or non-permanent put. Default is lazy initialized in main.dart
+    final controller = Get.isRegistered<GoLiveController>() 
+        ? Get.find<GoLiveController>() 
+        : Get.put(GoLiveController());
 
     return Scaffold(
       backgroundColor: Appcolors.primaryColor,

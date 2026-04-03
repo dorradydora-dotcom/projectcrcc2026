@@ -53,37 +53,42 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // بدء تهيئة الخدمات في الخلفية
     final servicesFuture = ensureServicesInitialized();
+    final minDisplayFuture = Future.delayed(const Duration(milliseconds: 1200));
 
-    // تايمر مدته 3 ثوانٍ بالضبط (0.01 كل 30 ملي ثانية)
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
+    // مراقبة التقدم التقريبي (بصري فقط)
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
       }
-      
-      // زيادة التقدم
-      if (_progress.value < 1.0) {
-        _progress.value = (_progress.value + 0.01).clamp(0.0, 1.0);
+      if (_progress.value < 0.9) {
+        _progress.value += 0.02;
       }
+    });
+
+    // الانتظار الفعلي لكلا الشرطين: جاهزية الخدمات + انتهاء الحد الأدنى للوقت (1.2 ثانية)
+    Future.wait([servicesFuture, minDisplayFuture]).then((_) async {
+      if (!mounted) return;
+      _progressTimer?.cancel();
+      _progress.value = 1.0;
       
-      // عند الوصول إلى 100% بعد 3 ثوانٍ
-      if (_progress.value >= 1.0) {
-        timer.cancel();
-        
-        try {
-          // ننتظر الخدمات لتأكيد انتهائها (عادةً ستكون قد انتهت أصلاً)
-          await servicesFuture;
-          if (!mounted) return;
-          _completeProcess();
-        } catch (e) {
-          if (!mounted) return;
-          AppLogger.logError('App initialization failed', e);
-          setState(() {
-            _hasError = true;
-            _errorMessage = 'حدث خطأ تقني أثناء تهيئة الخدمات الأساسية.';
-          });
-        }
+      try {
+        _completeProcess();
+      } catch (e) {
+        AppLogger.logError('App initialization failed', e);
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'حدث خطأ تقني أثناء تهيئة الخدمات الأساسية.';
+        });
       }
+    }).catchError((e) {
+      if (!mounted) return;
+      _progressTimer?.cancel();
+      AppLogger.logError('App initialization error', e);
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'فشلت عملية تهيئة الخدمات.';
+      });
     });
   }
 
